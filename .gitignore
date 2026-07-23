@@ -1,0 +1,16 @@
+# Local-only working material: raw source photos, planning docs, run book,
+# asset-prep script. Never published. See ./local/ .
+local/
+
+# Claude Code runtime/session state - machine/session-specific, not source.
+.claude/
+
+# OS / editor cruft
+.DS_Store
+*.swp
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/

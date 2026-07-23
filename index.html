@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>dubisnake</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="description" content="Nokia-style snake with a profile-photo head and popcorn food.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'none';">
+<style>
+  :root { color-scheme: dark; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    background: #14100e;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    /* touch-action left at its default (auto) here, not "none": pinch-zoom is
+       already fully blocked page-wide by the viewport meta's
+       maximum-scale=1/user-scalable=no (a gesture-level block, distinct from
+       touch-action), so body doesn't need touch-action:none too. That matters
+       because touch-action:none also blocks touch-driven *scrolling*, not
+       just zooming - if it were set here it would break #wrap's
+       overflow-y:auto safety net (small-viewport fallback), making it
+       unreachable by touch (only a mouse wheel would still work). Game
+       controls (canvas, #playBtn, #dpad button) additionally get
+       touch-action:none of their own so a swipe/tap there can't be
+       misinterpreted as a scroll gesture. */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #f2e9dd;
+  }
+  #wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    box-sizing: border-box;
+  }
+  #hud {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: clamp(13px, 2.6vmin, 18px);
+    letter-spacing: 0.02em;
+    padding: 0 2px;
+    box-sizing: border-box;
+  }
+  #hud span b { color: #ffd27a; }
+  canvas {
+    background: #1c1815;
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 12px 30px rgba(0,0,0,0.45);
+    touch-action: none;
+    display: block;
+  }
+  #overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    background: rgba(10, 8, 7, 0.82);
+    border-radius: 10px;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  #overlay.hidden { display: none; }
+  #overlay h1 {
+    margin: 0;
+    font-size: clamp(28px, 7vmin, 46px);
+    color: #ffd27a;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  }
+  #overlay p {
+    margin: 2px 0;
+    font-size: clamp(13px, 2.6vmin, 16px);
+    max-width: 32ch;
+    line-height: 1.4;
+    color: #e8dcc8;
+  }
+  #overlay .stat { font-size: clamp(15px, 3vmin, 20px); color: #fff; }
+  #playBtn {
+    margin-top: 8px;
+    padding: 12px 34px;
+    font-size: clamp(16px, 3.2vmin, 20px);
+    font-weight: 700;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #ffcf6b, #e69b1f);
+    color: #2a1a05;
+    box-shadow: 0 6px 16px rgba(230,155,31,0.4);
+    cursor: pointer;
+    touch-action: none;
+  }
+  #playBtn:active { transform: translateY(1px); }
+  #playBtn:disabled { opacity: 0.55; cursor: default; }
+  #levelFlash {
+    position: absolute;
+    top: 14%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  #levelFlash.show { opacity: 1; }
+  #levelFlash img {
+    width: clamp(48px, 12vmin, 84px);
+    height: clamp(48px, 12vmin, 84px);
+    object-fit: contain;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+  }
+  .splashPic {
+    width: clamp(56px, 14vmin, 96px);
+    height: clamp(56px, 14vmin, 96px);
+    object-fit: contain;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.45));
+  }
+  #levelFlash span {
+    font-size: clamp(18px, 4vmin, 30px);
+    font-weight: 800;
+    color: #ffd27a;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    letter-spacing: 0.06em;
+  }
+  /* #dpad used to be position:fixed at the viewport bottom while
+     resizeCanvas() tried to reserve matching space by subtracting a fixed
+     px budget from window.innerHeight. That broke because body centers
+     #wrap with align-items:center/justify-content:center: the "reserved"
+     gap got split into equal top+bottom margins around #wrap instead of
+     landing entirely below the content, so the fixed pad visually
+     overlapped the canvas/footer on common phone sizes (verified ~30-60px
+     overlap on iPhone SE/Android/landscape/iPad mini). Fix: put #dpad back
+     in normal document flow as a sibling of #hud/canvas/#footer inside
+     #wrap. The flexbox then sizes and centers everything as one block, so
+     the pad can never sit on top of the canvas or footer - worst case on a
+     very small viewport, #wrap's existing overflow-y:auto (see the touch-
+     action comment above) lets the user scroll to it instead of it being
+     clipped or overlapping. */
+  #dpad {
+    display: none;
+    grid-template-columns: repeat(3, 56px);
+    grid-template-rows: repeat(3, 56px);
+    gap: 6px;
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+  @media (pointer: coarse) {
+    #dpad.enabled { display: grid; }
+  }
+  #dpad button {
+    grid-area: auto;
+    width: 56px;
+    height: 56px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08);
+    color: #f2e9dd;
+    font-size: 20px;
+    touch-action: none;
+  }
+  #dpad button:active { background: rgba(255,210,122,0.35); }
+  #up { grid-column: 2; grid-row: 1; }
+  #left { grid-column: 1; grid-row: 2; }
+  #down { grid-column: 2; grid-row: 3; }
+  #right { grid-column: 3; grid-row: 2; }
+  #mid { grid-column: 2; grid-row: 2; visibility: hidden; }
+  #footer {
+    font-size: clamp(10px, 2vmin, 12px);
+    color: #8a7c6b;
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="hud">
+    <span>Score <b id="scoreVal">0</b></span>
+    <span>Level <b id="levelVal">1</b></span>
+    <span>High <b id="hiVal">0</b></span>
+  </div>
+  <div style="position:relative; overflow:hidden;">
+    <canvas id="game"></canvas>
+    <div id="levelFlash"><img id="levelFlashImg" alt=""><span id="levelFlashText">LEVEL 2</span></div>
+    <div id="overlay">
+      <h1>dubisnake</h1>
+      <p>Guide the head through the grid, eat the popcorn, don't hit the walls or yourself. Speed rises every 5 pieces.</p>
+      <p class="stat">Arrows/WASD, swipe, or the D-pad. Space pauses.</p>
+      <button id="playBtn" type="button" disabled>Loading&hellip;</button>
+    </div>
+  </div>
+  <div id="footer">assets/ holds the sprites &middot; high score saved locally</div>
+  <div id="dpad">
+    <button id="up" aria-label="up">&#9650;</button>
+    <button id="left" aria-label="left">&#9664;</button>
+    <div id="mid"></div>
+    <button id="right" aria-label="right">&#9654;</button>
+    <button id="down" aria-label="down">&#9660;</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- constants ----------
+  var GRID_N = 19;                // fixed logical grid, both axes
+  var BASE_STEP_MS = 160;         // level 1 step interval
+  var MIN_STEP_MS = 70;           // floor
+  var STEP_DECAY = 0.92;          // ~8% faster per level
+  var POPCORN_PER_LEVEL = 5;
+  var SWIPE_THRESHOLD = 35;       // px
+  var HI_KEY = "dubisnake_hi";
+
+  var DIRS = {
+    up: { x: 0, y: -1 },
+    down: { x: 0, y: 1 },
+    left: { x: -1, y: 0 },
+    right: { x: 1, y: 0 }
+  };
+
+  // ---------- DOM ----------
+  var canvas = document.getElementById("game");
+  var ctx = canvas.getContext("2d");
+  var wrap = document.getElementById("wrap");
+  var hudScore = document.getElementById("scoreVal");
+  var hudLevel = document.getElementById("levelVal");
+  var hudHi = document.getElementById("hiVal");
+  var overlay = document.getElementById("overlay");
+  var playBtn = document.getElementById("playBtn");
+  var levelFlash = document.getElementById("levelFlash");
+  var levelFlashImg = document.getElementById("levelFlashImg");
+  var levelFlashText = document.getElementById("levelFlashText");
+  var dpad = document.getElementById("dpad");
+
+  // ---------- image preload with colored-circle fallback ----------
+  // No getImageData is used anywhere so this stays file:// safe.
+  var ASSET_LIST = [
+    { key: "head1", src: "./assets/head-1.png", fallback: "#e0a458" },
+    { key: "head2", src: "./assets/head-2.png", fallback: "#c97b63" },
+    { key: "head3", src: "./assets/head-3.png", fallback: "#a56a9e" },
+    { key: "food", src: "./assets/food.png", fallback: "#ffd166" },
+    { key: "splash", src: "./assets/splash.png", fallback: "#ffcf6b" }
+  ];
+  var assets = {};       // key -> HTMLImageElement (only if it loaded ok)
+  var assetFallback = {};// key -> color string, used when image failed
+  var assetsReady = 0;
+  var assetsTotal = ASSET_LIST.length;
+
+  function makeFallbackCanvas(color) {
+    var c = document.createElement("canvas");
+    c.width = 64; c.height = 64;
+    var cx = c.getContext("2d");
+    cx.beginPath();
+    cx.arc(32, 32, 30, 0, Math.PI * 2);
+    cx.fillStyle = color;
+    cx.fill();
+    return c;
+  }
+
+  // A stalled request (neither load nor error ever fires - flaky mobile
+  // networks do this) must not be able to hang the game forever: the rAF
+  // loop only starts after all ASSET_LIST entries "settle", so one dead
+  // request would otherwise mean assetsReady never reaches assetsTotal,
+  // done() never runs, and the board never starts moving even after the
+  // static Play button is tapped. Give every image a hard deadline and fall
+  // back to the colored-circle canvas if it hasn't settled by then.
+  var ASSET_TIMEOUT_MS = 4000;
+
+  function preloadAssets(done) {
+    ASSET_LIST.forEach(function (a) {
+      var img = new Image();
+      var settled = false;
+      var timeoutId = setTimeout(function () {
+        assetFallback[a.key] = makeFallbackCanvas(a.fallback);
+        finish();
+      }, ASSET_TIMEOUT_MS);
+      function finish() {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
+        assetsReady++;
+        if (assetsReady >= assetsTotal) done();
+      }
+      img.onload = function () {
+        // guard against a 200-response truncated/corrupt/zero-byte image:
+        // onload can fire before naturalWidth is meaningful in some engines,
+        // so only accept it as "loaded" when it actually has pixels.
+        if (img.naturalWidth > 0) {
+          assets[a.key] = img;
+        } else {
+          assetFallback[a.key] = makeFallbackCanvas(a.fallback);
+        }
+        finish();
+      };
+      img.onerror = function () {
+        assetFallback[a.key] = makeFallbackCanvas(a.fallback);
+        finish();
+      };
+      img.src = a.src;
+    });
+  }
+
+  function drawable(key) {
+    return assets[key] || assetFallback[key];
+  }
+
+  // usable <img>-src string for a key, whether it's a real loaded image or
+  // the colored-circle-canvas fallback - used for the splash.png shown on
+  // the level-up flash and the game-over screen.
+  // 1x1 transparent GIF - fail-closed placeholder so an <img src> is never
+  // set to "" (which some browsers/embedders re-request as the current doc).
+  var BLANK_PIXEL_SRC = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
+  function assetSrc(key) {
+    if (assets[key]) return assets[key].src;
+    if (assetFallback[key]) return assetFallback[key].toDataURL();
+    return BLANK_PIXEL_SRC;
+  }
+
+  // ---------- head cycle / per-level body tint (predefined, no getImageData) ----------
+  var HEAD_KEYS = ["head1", "head2", "head3"];
+  // Warm per-level tint pool (spec: "warm per-level tint"), cycles with the heads.
+  var LEVEL_TINTS = [
+    { core: "#ffb347", edge: "#7a4a12" },
+    { core: "#ff8c69", edge: "#7a2f12" },
+    { core: "#e85d04", edge: "#5c2506" }
+  ];
+
+  // ---------- responsive canvas sizing ----------
+  var dpr = 1;
+  var boardCssPx = 0;
+  var cellPx = 0;
+  var MIN_BOARD_PX = GRID_N * 4;   // sane floor (76px) so the board is never
+                                    // unusably tiny. On a very cramped
+                                    // viewport this floor can still force
+                                    // boardCssPx above the height budget
+                                    // computed below (mainly landscape
+                                    // phones) - #wrap's overflow-y:auto is
+                                    // the deliberate fallback for that case
+                                    // (scroll to see the rest), not overlap:
+                                    // #dpad/#footer are normal flow siblings
+                                    // of the canvas now, not position:fixed,
+                                    // so they get pushed down/scrollable
+                                    // instead of being painted over.
+  var MAX_BOARD_PX = 720;          // cap so 4K/8K desktops don't get a huge board
+  var DPAD_RESERVE_PX = 56 * 3 + 6 * 2 + 14 + 24; // pad height + gaps + a little slack
+  var HUD_FOOTER_RESERVE_PX = 90;
+
+  // Reads env(safe-area-inset-bottom) via a hidden probe element, since JS
+  // can't read CSS env() values directly.
+  function getSafeAreaBottomPx() {
+    var probe = document.createElement("div");
+    probe.style.cssText = "position:fixed;left:0;bottom:0;width:0;height:0;" +
+      "padding-bottom:env(safe-area-inset-bottom);visibility:hidden;pointer-events:none;";
+    document.body.appendChild(probe);
+    var v = parseFloat(getComputedStyle(probe).paddingBottom) || 0;
+    document.body.removeChild(probe);
+    return v;
+  }
+
+  function resizeCanvas() {
+    dpr = window.devicePixelRatio || 1;
+    var margin = 24;
+    var coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    var dpadReserve = coarse ? (DPAD_RESERVE_PX + getSafeAreaBottomPx()) : 0;
+
+    var available = Math.min(window.innerWidth, window.innerHeight) - margin;
+    // Leave room for HUD + footer text, and for the D-pad when it will
+    // actually be shown, so the whole stack (hud/canvas/footer/dpad) tends
+    // to fit in one screen without scrolling. #dpad is a normal-flow sibling
+    // (not position:fixed) so an under-estimate here just means #wrap's own
+    // overflow-y:auto kicks in - it can no longer mean the pad overlaps the
+    // canvas/footer.
+    available = Math.min(
+      available,
+      window.innerHeight - HUD_FOOTER_RESERVE_PX - dpadReserve,
+      window.innerWidth - 16
+    );
+    available = Math.min(available, MAX_BOARD_PX);
+    // Do not force the board above what the viewport can actually contain -
+    // let it shrink down to MIN_BOARD_PX instead of clipping HUD/footer.
+    available = Math.max(MIN_BOARD_PX, available);
+
+    boardCssPx = Math.floor(available / GRID_N) * GRID_N; // keep divisible by grid for crisp cells
+    if (boardCssPx <= 0) boardCssPx = GRID_N * 4;
+    cellPx = boardCssPx / GRID_N;
+
+    canvas.style.width = boardCssPx + "px";
+    canvas.style.height = boardCssPx + "px";
+    canvas.width = Math.round(boardCssPx * dpr);
+    canvas.height = Math.round(boardCssPx * dpr);
+    // Scale by the *actual* achieved backing-store ratio, not the raw dpr -
+    // fractional DPRs (1.5, 1.75, 2.625...) don't survive Math.round() cleanly,
+    // so this keeps drawing coordinates aligned to true device pixels.
+    var sx = canvas.width / boardCssPx;
+    var sy = canvas.height / boardCssPx;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(sx, sy);
+
+    render(); // repaint immediately at new size, even if paused/menu
+  }
+
+  // ---------- game state ----------
+  // "loading" is the real boot state (not "menu"): the rAF loop and the
+  // first real render() only start once preloadAssets() finishes, so the
+  // Play button must not be able to do anything before that - see the
+  // disabled attribute on the static #playBtn and the guard at the top of
+  // startOrResume(). Only preloadAssets()'s callback advances "loading" -> "menu".
+  var state = "loading"; // loading | menu | playing | paused | dead | won
+  var snake = null, dir = { x: 1, y: 0 }, queuedDir = null, food = null;
+  var score = 0, popcornCount = 0, level = 1, stepMs = BASE_STEP_MS, hi = 0;
+  var acc = 0;
+  var lastTs = 0;
+  var flashTimer = 0;
+
+  function newGame() {
+    var cx = Math.floor(GRID_N / 2);
+    var cy = Math.floor(GRID_N / 2);
+    snake = [
+      { x: cx, y: cy },
+      { x: cx - 1, y: cy },
+      { x: cx - 2, y: cy }
+    ];
+    dir = { x: 1, y: 0 };
+    queuedDir = null;
+    score = 0;
+    popcornCount = 0;
+    level = 1;
+    stepMs = BASE_STEP_MS;
+    acc = 0;
+    flashTimer = 0;
+    levelFlash.classList.remove("show"); // clear any banner left "show" from
+                                          // a death that interrupted a flash
+    placeFood();
+    updateHud();
+  }
+
+  function cellFree(x, y) {
+    for (var i = 0; i < snake.length; i++) {
+      if (snake[i].x === x && snake[i].y === y) return false;
+    }
+    return true;
+  }
+
+  function placeFood() {
+    var attempts = 0;
+    var x, y;
+    do {
+      x = Math.floor(Math.random() * GRID_N);
+      y = Math.floor(Math.random() * GRID_N);
+      attempts++;
+    } while (!cellFree(x, y) && attempts < 500);
+    if (!cellFree(x, y)) {
+      // Random search failed (board is nearly full): fall back to a
+      // deterministic scan instead of placing food on an occupied cell,
+      // which would otherwise force a false self-collision death on the
+      // next valid grow move.
+      var found = false;
+      for (var gy = 0; gy < GRID_N && !found; gy++) {
+        for (var gx = 0; gx < GRID_N && !found; gx++) {
+          if (cellFree(gx, gy)) { x = gx; y = gy; found = true; }
+        }
+      }
+      if (!found) {
+        // The board is completely full - there is nowhere left to place
+        // food, so treat this as a win rather than a forced death.
+        food = null;
+        win();
+        return;
+      }
+    }
+    food = { x: x, y: y };
+  }
+
+  function currentHeadKey() {
+    return HEAD_KEYS[(level - 1) % HEAD_KEYS.length];
+  }
+
+  function currentTint() {
+    return LEVEL_TINTS[(level - 1) % LEVEL_TINTS.length];
+  }
+
+  function updateHud() {
+    hudScore.textContent = String(score);
+    hudLevel.textContent = String(level);
+    hudHi.textContent = String(hi);
+  }
+
+  // hi is a module-level var, so an in-session high score still works even
+  // when persistence is unavailable (private mode / quota / disabled
+  // storage) - persistOk just tracks whether we can also survive a reload,
+  // and surfaces a one-time notice in the footer when we can't.
+  var persistOk = true;
+
+  function notePersistFailure() {
+    if (persistOk) return;
+    var footerEl = document.getElementById("footer");
+    if (footerEl && footerEl.dataset.persistNoted !== "1") {
+      footerEl.textContent = "assets/ holds the sprites · high score not saved this session (storage unavailable)";
+      footerEl.dataset.persistNoted = "1";
+    }
+  }
+
+  function loadHi() {
+    try {
+      var v = parseInt(localStorage.getItem(HI_KEY), 10);
+      hi = isNaN(v) ? 0 : v;
+    } catch (e) {
+      hi = 0;
+      persistOk = false;
+      notePersistFailure();
+    }
+  }
+
+  function saveHi() {
+    if (score > hi) {
+      hi = score;
+      try {
+        localStorage.setItem(HI_KEY, String(hi));
+      } catch (e) {
+        persistOk = false;
+        notePersistFailure();
+      }
+    }
+  }
+
+  // ---------- input: queue at most one turn per step, forbid 180 into neck ----------
+  function requestTurn(name) {
+    var d = DIRS[name];
+    if (!d) return;
+    // Compare against the direction that will actually be committed next:
+    // if a turn is already queued this tick, check against *that*, not the
+    // stale committed dir - otherwise two opposite key presses within the
+    // same step interval can both individually pass the anti-reversal check
+    // and the second overwrites queuedDir, reversing the snake into its neck.
+    var ref = queuedDir || dir;
+    if (d.x === -ref.x && d.y === -ref.y) return;
+    queuedDir = d;
+  }
+
+  function applyQueuedTurn() {
+    if (queuedDir) {
+      // guard again in case dir changed since queuing (shouldn't, but safe)
+      if (!(queuedDir.x === -dir.x && queuedDir.y === -dir.y)) {
+        dir = queuedDir;
+      }
+      queuedDir = null;
+    }
+  }
+
+  // ---------- step / update ----------
+  function step() {
+    applyQueuedTurn();
+
+    var head = snake[0];
+    var nx = head.x + dir.x;
+    var ny = head.y + dir.y;
+
+    if (nx < 0 || nx >= GRID_N || ny < 0 || ny >= GRID_N) {
+      return die();
+    }
+    // self collision: check against body (excluding tail cell, which will move away
+    // unless we just ate - handled by only excluding when not growing)
+    var willGrow = (nx === food.x && ny === food.y);
+    var bodyToCheck = willGrow ? snake : snake.slice(0, snake.length - 1);
+    for (var i = 0; i < bodyToCheck.length; i++) {
+      if (bodyToCheck[i].x === nx && bodyToCheck[i].y === ny) {
+        return die();
+      }
+    }
+
+    snake.unshift({ x: nx, y: ny });
+    if (willGrow) {
+      score += 1;
+      popcornCount += 1;
+      if (popcornCount % POPCORN_PER_LEVEL === 0) {
+        levelUp();
+      }
+      placeFood();
+    } else {
+      snake.pop();
+    }
+  }
+
+  function levelUp() {
+    level += 1;
+    stepMs = Math.max(MIN_STEP_MS, stepMs * STEP_DECAY);
+    flashTimer = 1000; // ms, ~1s banner, does not pause play
+    levelFlashImg.src = assetSrc("splash"); // spec: splash.png graphic for the level-up flash
+    levelFlashText.textContent = "LEVEL " + level;
+    levelFlash.classList.add("show");
+  }
+
+  function die() {
+    state = "dead";
+    saveHi();
+    updateHud();
+    showOverlayDead();
+  }
+
+  function win() {
+    // Reachable only when the snake fills every cell of the grid.
+    state = "won";
+    saveHi();
+    updateHud();
+    showOverlayWon();
+  }
+
+  // ---------- overlay screens ----------
+  function showOverlayMenu() {
+    overlay.classList.remove("hidden");
+    overlay.innerHTML =
+      '<h1>dubisnake</h1>' +
+      '<p>Guide the head through the grid, eat the popcorn, don\'t hit the walls or yourself. Speed rises every 5 pieces.</p>' +
+      '<p class="stat">Arrows/WASD, swipe, or the D-pad. Space pauses.</p>' +
+      '<button id="playBtn" type="button">Play</button>';
+    bindPlayBtn();
+  }
+
+  function showOverlayDead() {
+    overlay.classList.remove("hidden");
+    overlay.innerHTML =
+      '<img class="splashPic" src="' + assetSrc("splash") + '" alt="">' +
+      '<h1>Game Over</h1>' +
+      '<p class="stat">Score: ' + score + '</p>' +
+      '<p class="stat">High score: ' + hi + '</p>' +
+      '<p>Tap Play, hit Enter, or tap the board to try again.</p>' +
+      '<button id="playBtn" type="button">Play Again</button>';
+    bindPlayBtn();
+  }
+
+  function showOverlayWon() {
+    overlay.classList.remove("hidden");
+    overlay.innerHTML =
+      '<img class="splashPic" src="' + assetSrc("splash") + '" alt="">' +
+      '<h1>You Win!</h1>' +
+      '<p class="stat">The board is full - score: ' + score + '</p>' +
+      '<p class="stat">High score: ' + hi + '</p>' +
+      '<p>Tap Play, hit Enter, or tap the board to play again.</p>' +
+      '<button id="playBtn" type="button">Play Again</button>';
+    bindPlayBtn();
+  }
+
+  function showOverlayPaused() {
+    overlay.classList.remove("hidden");
+    overlay.innerHTML =
+      '<h1>Paused</h1>' +
+      '<p class="stat">Score: ' + score + '</p>' +
+      '<p>Space / tap Resume to continue.</p>' +
+      '<button id="playBtn" type="button">Resume</button>';
+    bindPlayBtn();
+  }
+
+  function bindPlayBtn() {
+    var btn = document.getElementById("playBtn");
+    if (!btn) return;
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      startOrResume();
+    });
+  }
+
+  function hideOverlay() {
+    overlay.classList.add("hidden");
+  }
+
+  function startOrResume() {
+    // Assets aren't ready yet: #playBtn is disabled in this state so a real
+    // click can't normally reach here, but the board/canvas tap-to-start
+    // handlers call this too, so guard explicitly rather than relying only
+    // on the disabled attribute.
+    if (state === "loading") return;
+    if (state === "menu" || state === "dead" || state === "won") {
+      newGame();
+      state = "playing";
+      hideOverlay();
+      render(); // paint the fresh snake immediately, don't wait for the next rAF tick
+    } else if (state === "paused") {
+      state = "playing";
+      hideOverlay();
+    }
+  }
+
+  function togglePause() {
+    if (state === "playing") {
+      state = "paused";
+      showOverlayPaused();
+    } else if (state === "paused") {
+      state = "playing";
+      hideOverlay();
+    }
+  }
+
+  // ---------- rendering ----------
+  function render() {
+    var w = boardCssPx, h = boardCssPx;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#1c1815";
+    ctx.fillRect(0, 0, w, h);
+
+    // subtle grid
+    ctx.strokeStyle = "rgba(255,255,255,0.035)";
+    ctx.lineWidth = 1;
+    for (var g = 1; g < GRID_N; g++) {
+      var p = Math.round(g * cellPx) + 0.5;
+      ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(w, p); ctx.stroke();
+    }
+
+    if (!snake) return;
+
+    // food, slightly larger than a cell, soft shadow
+    // (food can legitimately be null once the board is completely full - win())
+    if (food) {
+      var foodImg = drawable("food");
+      var fSize = cellPx * 1.3;
+      var fx = food.x * cellPx + cellPx / 2;
+      var fy = food.y * cellPx + cellPx / 2;
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.55)";
+      ctx.shadowBlur = cellPx * 0.4;
+      ctx.shadowOffsetY = cellPx * 0.12;
+      if (assets.food) {
+        ctx.drawImage(foodImg, fx - fSize / 2, fy - fSize / 2, fSize, fSize);
+      } else {
+        ctx.beginPath();
+        ctx.arc(fx, fy, fSize / 2, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffd166";
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // body, warm per-level tint circles, fading toward tail, smaller than head
+    var tint = currentTint();
+    var bodyLen = snake.length - 1;
+    for (var i = snake.length - 1; i >= 1; i--) {
+      var seg = snake[i];
+      var t = bodyLen > 1 ? (i - 1) / (bodyLen - 1) : 0; // 0 near head, 1 near tail
+      var size = cellPx * (0.82 - 0.22 * t);
+      var alpha = 0.95 - 0.45 * t;
+      var cxp = seg.x * cellPx + cellPx / 2;
+      var cyp = seg.y * cellPx + cellPx / 2;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(cxp, cyp, size / 2, 0, Math.PI * 2);
+      ctx.fillStyle = tint.core;
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, cellPx * 0.05);
+      ctx.strokeStyle = tint.edge;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // head: circular photo rotated toward travel direction
+    var headSeg = snake[0];
+    var hx = headSeg.x * cellPx + cellPx / 2;
+    var hy = headSeg.y * cellPx + cellPx / 2;
+    var hSize = cellPx * 0.95;
+    var angle = Math.atan2(dir.y, dir.x);
+    var headKey = currentHeadKey();
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.arc(0, 0, hSize / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.save();
+    ctx.clip();
+    if (assets[headKey]) {
+      ctx.drawImage(assets[headKey], -hSize / 2, -hSize / 2, hSize, hSize);
+    } else {
+      ctx.fillStyle = tint.core;
+      ctx.fillRect(-hSize / 2, -hSize / 2, hSize, hSize);
+    }
+    ctx.restore();
+    ctx.lineWidth = Math.max(1, cellPx * 0.06);
+    ctx.strokeStyle = "rgba(0,0,0,0.35)";
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---------- fixed-timestep rAF loop ----------
+  function frame(ts) {
+    if (!lastTs) lastTs = ts;
+    var dt = ts - lastTs;
+    lastTs = ts;
+    if (dt > 250) dt = 250; // clamp huge gaps (tab backgrounded)
+
+    if (flashTimer > 0) {
+      flashTimer -= dt;
+      if (flashTimer <= 0) {
+        flashTimer = 0;
+        levelFlash.classList.remove("show");
+      }
+    }
+
+    if (state === "playing") {
+      acc += dt;
+      // Snapshot stepMs for this frame: step() can call levelUp(), which
+      // mutates stepMs mid-loop. Without the snapshot, a single frame could
+      // execute an extra step at the newly-faster rate right at a level
+      // boundary (an uncommanded burst of movement).
+      var stepSnapshot = stepMs;
+      while (acc >= stepSnapshot) {
+        acc -= stepSnapshot;
+        if (state === "playing") step();
+        else break;
+      }
+    }
+
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- keyboard ----------
+  var KEY_DIR = {
+    ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right",
+    w: "up", s: "down", a: "left", d: "right",
+    W: "up", S: "down", A: "left", D: "right"
+  };
+
+  window.addEventListener("keydown", function (e) {
+    if (KEY_DIR[e.key]) {
+      e.preventDefault();
+      if (state === "playing") requestTurn(KEY_DIR[e.key]);
+      return;
+    }
+    if (e.key === " ") {
+      e.preventDefault();
+      if (state === "playing" || state === "paused") togglePause();
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      startOrResume();
+    }
+  }, { passive: false });
+
+  // ---------- touch: swipe on canvas + D-pad ----------
+  var touchStart = null;
+
+  canvas.addEventListener("touchstart", function (e) {
+    if (e.touches.length !== 1) return;
+    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    e.preventDefault();
+  }, { passive: false });
+
+  canvas.addEventListener("touchmove", function (e) {
+    e.preventDefault(); // block scroll/zoom even where touch-action is imperfect
+  }, { passive: false });
+
+  canvas.addEventListener("touchend", function (e) {
+    e.preventDefault();
+    if (state === "menu" || state === "dead" || state === "won") {
+      startOrResume();
+      touchStart = null;
+      return;
+    }
+    if (!touchStart) return;
+    var t = e.changedTouches[0];
+    var dx = t.clientX - touchStart.x;
+    var dy = t.clientY - touchStart.y;
+    touchStart = null;
+    if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) return;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      requestTurn(dx > 0 ? "right" : "left");
+    } else {
+      requestTurn(dy > 0 ? "down" : "up");
+    }
+  }, { passive: false });
+
+  // block long-press context menu / selection on canvas
+  canvas.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+  function bindDpadButton(id, name) {
+    var el = document.getElementById(id);
+    // Some engines still synthesize a click after touchstart/touchend even
+    // when preventDefault was called, which could double-fire requestTurn
+    // for one physical tap. Guard the click handler with a short-lived flag
+    // set by the touch handlers so only one input source wins per press.
+    var touchHandledUntil = 0;
+    el.addEventListener("touchstart", function (e) {
+      e.preventDefault();
+      touchHandledUntil = Date.now() + 500;
+      if (state === "playing") requestTurn(name);
+      else startOrResume();
+    }, { passive: false });
+    // also allow mouse for coarse-pointer devices that report click (defensive)
+    el.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (Date.now() < touchHandledUntil) return; // suppress synthesized click
+      if (state === "playing") requestTurn(name);
+      else startOrResume();
+    });
+  }
+  bindDpadButton("up", "up");
+  bindDpadButton("down", "down");
+  bindDpadButton("left", "left");
+  bindDpadButton("right", "right");
+
+  // show D-pad only on coarse pointer (touch) devices
+  function updateDpadVisibility() {
+    var coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    if (coarse) dpad.classList.add("enabled");
+    else dpad.classList.remove("enabled");
+  }
+
+  // tap board to restart/resume when overlay hidden but state not playing (defensive)
+  wrap.addEventListener("click", function () {
+    if (state === "menu" || state === "dead" || state === "won") startOrResume();
+  });
+
+  playBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    startOrResume();
+  });
+
+  // ---------- boot ----------
+  loadHi();
+  updateHud();
+
+  // Coalesce resize/orientationchange bursts (e.g. iOS Safari's chrome
+  // auto-hide/show firing repeated resize events) into one rAF-scheduled
+  // pass, and keep the D-pad's visibility in sync with layout changes too
+  // (docking/undocking a mouse on 2-in-1s and iPads can change pointer
+  // capability at runtime without a page reload).
+  var resizeScheduled = false;
+  function scheduleResize() {
+    if (resizeScheduled) return;
+    resizeScheduled = true;
+    requestAnimationFrame(function () {
+      resizeScheduled = false;
+      updateDpadVisibility();
+      resizeCanvas();
+    });
+  }
+  window.addEventListener("resize", scheduleResize);
+  window.addEventListener("orientationchange", scheduleResize);
+
+  if (window.matchMedia) {
+    var coarseMq = window.matchMedia("(pointer: coarse)");
+    if (coarseMq.addEventListener) coarseMq.addEventListener("change", scheduleResize);
+    else if (coarseMq.addListener) coarseMq.addListener(scheduleResize); // older Safari
+  }
+
+  // Re-check devicePixelRatio when it changes (moving a window between
+  // displays with different DPR, or OS-level scale changes) - these don't
+  // fire a window resize event, so without this the canvas stays blurry
+  // until some unrelated resize happens.
+  function watchDprChange() {
+    if (!window.matchMedia) return;
+    var mq = window.matchMedia("(resolution: " + (window.devicePixelRatio || 1) + "dppx)");
+    function handler() {
+      scheduleResize();
+      watchDprChange(); // re-subscribe at the new dpr
+    }
+    if (mq.addEventListener) mq.addEventListener("change", handler, { once: true });
+    else if (mq.addListener) mq.addListener(handler); // older Safari fallback
+  }
+  watchDprChange();
+
+  updateDpadVisibility();
+  resizeCanvas();
+
+  preloadAssets(function () {
+    // Guard rather than unconditionally reset: state can only still be
+    // "loading" here in the current code (Play is disabled/no-op until this
+    // fires), but this keeps a future change from silently reintroducing a
+    // bug where finishing asset load stomps an already-started game back to
+    // the menu and pops the overlay over live play.
+    if (state === "loading") {
+      state = "menu";
+      showOverlayMenu();
+    }
+    render();
+    requestAnimationFrame(frame);
+  });
+})();
+</script>
+</body>
+</html>

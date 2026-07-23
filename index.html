@@ -359,6 +359,8 @@
   .howto {
     --ht-stage: min(146px, calc(var(--board-px, 300px) * 0.44));
     --ht-travel: calc(var(--ht-stage) * 0.30);
+    --ht-nudge: calc(var(--ht-stage) * 0.055);
+    --ht-keydrop: calc(var(--ht-stage) * 0.028);
     position: relative;
     width: var(--ht-stage);
     height: var(--ht-stage);
@@ -407,11 +409,22 @@
   .htSnake i:nth-child(3) { width: calc(var(--ht-stage)*0.155); height: calc(var(--ht-stage)*0.155); background: #ffd166; border-color: #7a5a12; }
   /* Near-instant snaps between phases (the 1% ramps), matching how the real
      snake turns on a grid rather than sweeping around. */
+  /* The rotate comes BEFORE the nudge, so translateX always moves the snake
+     along the direction it is currently facing - one small "step" per phase,
+     timed to land with the arrow/keycap lighting up. */
   @keyframes htSnakeTurn {
-    0%,   24%  { transform: translate(-50%, -50%) rotate(0deg); }
-    25%,  49%  { transform: translate(-50%, -50%) rotate(90deg); }
-    50%,  74%  { transform: translate(-50%, -50%) rotate(180deg); }
-    75%, 100%  { transform: translate(-50%, -50%) rotate(270deg); }
+    0%,   3%   { transform: translate(-50%, -50%) rotate(0deg)   translateX(0); }
+    9%,  20%   { transform: translate(-50%, -50%) rotate(0deg)   translateX(var(--ht-nudge)); }
+    24%        { transform: translate(-50%, -50%) rotate(0deg)   translateX(0); }
+    25%, 28%   { transform: translate(-50%, -50%) rotate(90deg)  translateX(0); }
+    34%, 45%   { transform: translate(-50%, -50%) rotate(90deg)  translateX(var(--ht-nudge)); }
+    49%        { transform: translate(-50%, -50%) rotate(90deg)  translateX(0); }
+    50%, 53%   { transform: translate(-50%, -50%) rotate(180deg) translateX(0); }
+    59%, 70%   { transform: translate(-50%, -50%) rotate(180deg) translateX(var(--ht-nudge)); }
+    74%        { transform: translate(-50%, -50%) rotate(180deg) translateX(0); }
+    75%, 78%   { transform: translate(-50%, -50%) rotate(270deg) translateX(0); }
+    84%, 95%   { transform: translate(-50%, -50%) rotate(270deg) translateX(var(--ht-nudge)); }
+    99%, 100%  { transform: translate(-50%, -50%) rotate(270deg) translateX(0); }
   }
   .htHand {
     font-size: calc(var(--ht-stage) * 0.30);
@@ -465,7 +478,7 @@
     border: 2px solid #4a6b3a;
     background: #22301a;
     color: #cfe8c0;
-    box-shadow: 0 calc(var(--ht-stage) * 0.022) 0 #0d1408;
+    box-shadow: 0 var(--ht-keydrop) 0 #0d1408, 0 0 0 rgba(0,229,255,0);
     animation: htKeyPress 8s linear infinite;
   }
   /* Inverted-T, i.e. how the keys physically sit on a keyboard. */
@@ -476,12 +489,15 @@
   /* Solid colours (not gradients) so every animated property interpolates
      reliably; the keycap "presses" by dropping onto its own shadow. */
   @keyframes htKeyPress {
-    0%, 5%     { transform: translateY(0); background: #22301a; color: #cfe8c0;
-                 box-shadow: 0 calc(var(--ht-stage) * 0.022) 0 #0d1408; }
-    9%, 20%    { transform: translateY(calc(var(--ht-stage) * 0.022)); background: #00e5ff; color: #05242a;
-                 box-shadow: 0 0 0 #0d1408; }
-    25%, 100%  { transform: translateY(0); background: #22301a; color: #cfe8c0;
-                 box-shadow: 0 calc(var(--ht-stage) * 0.022) 0 #0d1408; }
+    0%, 4%     { transform: translateY(0) scale(1); background: #22301a; color: #cfe8c0;
+                 border-color: #4a6b3a;
+                 box-shadow: 0 var(--ht-keydrop) 0 #0d1408, 0 0 0 rgba(0,229,255,0); }
+    9%, 20%    { transform: translateY(var(--ht-keydrop)) scale(0.95); background: #00e5ff; color: #05242a;
+                 border-color: #7ff4ff;
+                 box-shadow: 0 0 0 #0d1408, 0 0 calc(var(--ht-stage) * 0.09) rgba(0,229,255,0.75); }
+    26%, 100%  { transform: translateY(0) scale(1); background: #22301a; color: #cfe8c0;
+                 border-color: #4a6b3a;
+                 box-shadow: 0 var(--ht-keydrop) 0 #0d1408, 0 0 0 rgba(0,229,255,0); }
   }
   /* Touch devices get the swipe demo, everything else the key cluster. */
   .howtoTouch { display: none; }
@@ -557,17 +573,25 @@
        --board-px-derived one, the same pattern the rest of this file uses,
        so the card shrinks with the real container instead of clipping
        against #boardWrap's overflow:hidden on small/landscape boards. */
-    gap: min(14px, calc(var(--board-px, 300px) * 0.038));
-    max-width: min(96%, calc(var(--board-px, 300px) * 0.97));
-    padding: min(18px, calc(var(--board-px, 300px) * 0.05)) min(20px, calc(var(--board-px, 300px) * 0.055));
-    border-radius: 14px;
+    /* Stretched to a fixed share of the board rather than hugging its
+       contents, so it reads as a proper level *screen*. Both width and the
+       ceiling are board-relative and box-sizing is border-box (below), so the
+       card scales with whatever device is playing and can never spill past
+       #boardWrap - the row of three monsters at 2x2 cells each comes to
+       ~0.67 of the board, against ~0.80 of usable width inside the padding,
+       so it always has slack. */
+    width: calc(var(--board-px, 300px) * 0.92);
+    max-width: 96%;
+    gap: min(18px, calc(var(--board-px, 300px) * 0.05));
+    padding: min(26px, calc(var(--board-px, 300px) * 0.07)) min(22px, calc(var(--board-px, 300px) * 0.06));
+    border-radius: min(20px, calc(var(--board-px, 300px) * 0.05));
     background: linear-gradient(180deg, #18200f 0%, #0a0e06 100%);
     border: 3px solid #00e5ff; /* recoloured per level from JS (level tint) */
     text-align: center;
     box-sizing: border-box;
   }
   #levelFlashTitle {
-    font-size: min(clamp(17px, 4.2vmin, 28px), calc(var(--board-px, 300px) * 0.082));
+    font-size: min(clamp(19px, 4.8vmin, 34px), calc(var(--board-px, 300px) * 0.1));
     font-weight: 800;
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -591,9 +615,9 @@
     filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6));
   }
   #levelOkBtn {
-    min-height: 40px;
-    padding: 0 min(26px, calc(var(--board-px, 300px) * 0.07));
-    font-size: min(clamp(14px, 3vmin, 18px), calc(var(--board-px, 300px) * 0.055));
+    min-height: 44px;
+    padding: 0 min(38px, calc(var(--board-px, 300px) * 0.11));
+    font-size: min(clamp(15px, 3.4vmin, 21px), calc(var(--board-px, 300px) * 0.062));
     font-weight: 800;
     letter-spacing: 0.14em;
     font-family: inherit;

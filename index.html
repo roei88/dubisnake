@@ -346,6 +346,115 @@
     color: #00e5ff;
     text-shadow: 0 2px 10px rgba(0,229,255,0.35);
   }
+  /* Menu-only "how to play" demo loop, replacing the old written controls
+     line: a hand glyph swipes out along each of the four directions in
+     turn, the matching cartoon arrow lights up, and a mini snake rotates
+     to face that way - the pattern mobile games use on first launch.
+     Deliberately pure CSS keyframes: no JS, no timers, no rAF, so it can
+     neither interact with the fixed-timestep game loop nor add work to it,
+     and nothing needs teardown when the overlay's innerHTML is rebuilt
+     (language switch / state change). Sizes all derive from --board-px
+     (already published by resizeCanvas()) so it scales with the board
+     instead of introducing a new fixed-px block into the overlay stack. */
+  .howto {
+    --ht-stage: min(146px, calc(var(--board-px, 300px) * 0.44));
+    --ht-travel: calc(var(--ht-stage) * 0.30);
+    position: relative;
+    width: var(--ht-stage);
+    height: var(--ht-stage);
+    flex: none;
+  }
+  /* Base centering for every child; the arrows then override with their own
+     offset transforms. Keyframes below re-declare the full transform
+     (including this translate) because animating `transform` replaces it. */
+  .howto > * { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+  .htArrow {
+    font-size: calc(var(--ht-stage) * 0.22);
+    line-height: 1;
+    color: #00e5ff;
+    text-shadow: 0 0 8px rgba(0,229,255,0.45);
+    opacity: 0.16;
+    animation: htArrowPulse 8s linear infinite;
+  }
+  /* 8s loop = four 2s phases. Each arrow runs the SAME keyframe (lit during
+     its first quarter) offset by a negative delay, so exactly one is lit at
+     a time, in the order right -> down -> left -> up. */
+  .htRight { transform: translate(calc(-50% + var(--ht-stage) * 0.38), -50%); animation-delay: 0s; }
+  .htDown  { transform: translate(-50%, calc(-50% + var(--ht-stage) * 0.38)); animation-delay: -6s; }
+  .htLeft  { transform: translate(calc(-50% - var(--ht-stage) * 0.38), -50%); animation-delay: -4s; }
+  .htUp    { transform: translate(-50%, calc(-50% - var(--ht-stage) * 0.38)); animation-delay: -2s; }
+  @keyframes htArrowPulse {
+    0%   { opacity: 0.16; }
+    6%   { opacity: 1; }
+    20%  { opacity: 1; }
+    26%  { opacity: 0.16; }
+    100% { opacity: 0.16; }
+  }
+  .htSnake {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--ht-stage) * 0.02);
+    animation: htSnakeTurn 8s linear infinite;
+  }
+  .htSnake i {
+    display: block;
+    border-radius: 50%;
+    background: #00e676;
+    border: 1px solid #00693e;
+  }
+  .htSnake i:nth-child(1) { width: calc(var(--ht-stage)*0.10); height: calc(var(--ht-stage)*0.10); opacity: 0.55; }
+  .htSnake i:nth-child(2) { width: calc(var(--ht-stage)*0.125); height: calc(var(--ht-stage)*0.125); opacity: 0.8; }
+  .htSnake i:nth-child(3) { width: calc(var(--ht-stage)*0.155); height: calc(var(--ht-stage)*0.155); background: #ffd166; border-color: #7a5a12; }
+  /* Near-instant snaps between phases (the 1% ramps), matching how the real
+     snake turns on a grid rather than sweeping around. */
+  @keyframes htSnakeTurn {
+    0%,   24%  { transform: translate(-50%, -50%) rotate(0deg); }
+    25%,  49%  { transform: translate(-50%, -50%) rotate(90deg); }
+    50%,  74%  { transform: translate(-50%, -50%) rotate(180deg); }
+    75%, 100%  { transform: translate(-50%, -50%) rotate(270deg); }
+  }
+  .htHand {
+    font-size: calc(var(--ht-stage) * 0.30);
+    line-height: 1;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.55));
+    animation: htHandSwipe 8s ease-in-out infinite;
+  }
+  @keyframes htHandSwipe {
+    0%   { transform: translate(-50%, -50%); opacity: 0; }
+    4%   { transform: translate(-50%, -50%); opacity: 1; }
+    20%  { transform: translate(calc(-50% + var(--ht-travel)), -50%); opacity: 1; }
+    24%  { transform: translate(calc(-50% + var(--ht-travel)), -50%); opacity: 0; }
+    25%  { transform: translate(-50%, -50%); opacity: 0; }
+    29%  { transform: translate(-50%, -50%); opacity: 1; }
+    45%  { transform: translate(-50%, calc(-50% + var(--ht-travel))); opacity: 1; }
+    49%  { transform: translate(-50%, calc(-50% + var(--ht-travel))); opacity: 0; }
+    50%  { transform: translate(-50%, -50%); opacity: 0; }
+    54%  { transform: translate(-50%, -50%); opacity: 1; }
+    70%  { transform: translate(calc(-50% - var(--ht-travel)), -50%); opacity: 1; }
+    74%  { transform: translate(calc(-50% - var(--ht-travel)), -50%); opacity: 0; }
+    75%  { transform: translate(-50%, -50%); opacity: 0; }
+    79%  { transform: translate(-50%, -50%); opacity: 1; }
+    95%  { transform: translate(-50%, calc(-50% - var(--ht-travel))); opacity: 1; }
+    99%  { transform: translate(-50%, calc(-50% - var(--ht-travel))); opacity: 0; }
+    100% { transform: translate(-50%, -50%); opacity: 0; }
+  }
+  /* Motion-sensitive users still get the meaning: all four arrows lit and
+     the hand parked in the middle, just held still. */
+  @media (prefers-reduced-motion: reduce) {
+    .htArrow, .htSnake, .htHand { animation: none; }
+    .htArrow { opacity: 0.9; }
+    /* Parked off-centre so the still hand doesn't sit on top of the mini
+       snake (they only overlap for an instant mid-animation). */
+    .htHand {
+      opacity: 1;
+      transform: translate(calc(-50% + var(--ht-travel) * 0.55), calc(-50% + var(--ht-travel) * 0.55));
+    }
+  }
+  /* Very short viewports (landscape phones): drop the demo entirely rather
+     than push the Play button into #overlay's scroll region. */
+  @media (max-height: 460px) {
+    .howto { display: none; }
+  }
   #playBtn {
     /* QA fix: same board-px-based shrink pattern as the rest of #overlay's
        children (see comment above #overlay h1 and .splashPic) - these three
@@ -577,7 +686,11 @@
       <div class="overlayInner">
         <h1>דוביסנייק</h1>
         <p class="tagline">אכלו את הפופקורן!</p>
-        <p class="stat">חצים, החלקה, או לוח הכיוונים. לחץ ספייס כדי לעצור.</p>
+        <!-- dir="ltr" is load-bearing: .htSnake is a flex row, and flex rows
+             reverse under an inherited dir="rtl" - that would put the snake's
+             head on the wrong end and contradict the rotation keyframes. Same
+             reasoning as the #mobileHelp arrows. -->
+        <div class="howto" dir="ltr" aria-hidden="true"><span class="htArrow htUp">&#8593;</span><span class="htArrow htRight">&#8594;</span><span class="htArrow htDown">&#8595;</span><span class="htArrow htLeft">&#8592;</span><span class="htSnake"><i></i><i></i><i></i></span><span class="htHand">&#128070;</span></div>
         <button id="playBtn" type="button" disabled>טוען&hellip;</button>
       </div>
     </div>
@@ -619,13 +732,14 @@
   // logic), and on the same 720px board it gives ~80px cells - large, clearly
   // readable head/body circles, at the cost of a smaller grid to navigate.
   var GRID_N = 9;                 // fixed logical grid, both axes
-  // Both endpoints scaled by 1.3x (160->208, 70->91) to slow the whole
-  // level 1..max progression by ~30% uniformly, per request. STEP_DECAY
-  // (the relative per-level ramp) is untouched - it's a ratio, not an
-  // absolute speed, so scaling the endpoints alone already slows every
-  // level in the curve by the same 30%.
-  var BASE_STEP_MS = 208;         // level 1 step interval
-  var MIN_STEP_MS = 91;           // floor
+  // Endpoints scaled twice on request: first by 1.3x (160->208, 70->91) for
+  // the "30% slower" pass, then doubled (208->416, 91->182) for the "50%
+  // slower" pass - halving speed means doubling the per-cell interval.
+  // STEP_DECAY (the relative per-level ramp) stays untouched both times:
+  // it's a ratio, not an absolute speed, so scaling only the endpoints
+  // already slows every level in the curve by the same proportion.
+  var BASE_STEP_MS = 416;         // level 1 step interval
+  var MIN_STEP_MS = 182;          // floor
   var STEP_DECAY = 0.92;          // ~8% faster per level
   var POPCORN_PER_LEVEL = 5;
   var SWIPE_THRESHOLD = 35;       // px
@@ -685,10 +799,6 @@
       // explainer) - rendered bigger/bolder via the .tagline class, not the
       // plain #overlay p style; the controls line below is unchanged.
       menuInstructions: "אכלו את הפופקורן!",
-      // WASD removed as a movement input - see KEY_DIR - so it's no longer
-      // mentioned here; on-screen D-pad also removed (touch = swipe only),
-      // corrected space-key phrasing per explicit spec.
-      menuControls: "חצים או החלקה. לחץ ספייס כדי לעצור.",
       mobileHelpText: "החליקו כדי לזוז",
       loadingBtn: "טוען…",
       playBtn: "שחק",
@@ -724,7 +834,6 @@
       brandTitle: "dubisnake",
       // Matches the simplified Hebrew tagline - see the "he" entry above.
       menuInstructions: "Eat the popcorn!",
-      menuControls: "Arrows or swipe. Press space to pause.",
       mobileHelpText: "Swipe to move",
       loadingBtn: "Loading…",
       playBtn: "Play",
@@ -1131,6 +1240,16 @@
   // head contact matters. Per-index axis preference keeps multiple
   // chasers approaching from different directions instead of merging
   // into one stacked blob.
+  //
+  // A chaser NEVER steps onto the head's own cell. Before this rule, being
+  // adjacent to a chaser on a move where it also stepped was an unavoidable
+  // death: the player slipped safely PAST the ghost (into a different cell,
+  // no overlap), and the ghost's own move in that same tick then landed on
+  // top of them - so the effective hitbox was radius 1, not 0, and passing
+  // beside a ghost read as a phantom hit. With the rule, death by chaser is
+  // exactly "you moved into it", the same contract as walls and self
+  // collision, and the ghosts act as pursuing blockers that corner you
+  // instead of insta-killing at range 1.
   function moveChasers() {
     var head = snake[0];
     for (var i = 0; i < chasers.length; i++) {
@@ -1142,9 +1261,16 @@
       if (i % 3 === 1) preferX = true;
       else if (i % 3 === 2) preferX = false;
       else preferX = Math.abs(dx) >= Math.abs(dy);
-      if (preferX && sx !== 0) c.x += sx;
-      else if (sy !== 0) c.y += sy;
-      else if (sx !== 0) c.x += sx;
+      var stepX = { x: c.x + sx, y: c.y };
+      var stepY = { x: c.x, y: c.y + sy };
+      var opts = preferX ? [stepX, stepY] : [stepY, stepX];
+      for (var k = 0; k < opts.length; k++) {
+        var o = opts[k];
+        if (o.x === c.x && o.y === c.y) continue;       // already aligned on that axis
+        if (o.x === head.x && o.y === head.y) continue; // never step onto the head
+        c.x = o.x; c.y = o.y;
+        break;
+      }
     }
   }
 
@@ -1263,11 +1389,11 @@
     else if (state === "loading") {
       var loadingH1 = overlay.querySelector("h1");
       var loadingTagline = overlay.querySelector(".tagline");
-      var loadingControls = overlay.querySelector(".stat");
       var loadingBtn = document.getElementById("playBtn");
       if (loadingH1) loadingH1.textContent = s.brandTitle;
       if (loadingTagline) loadingTagline.textContent = s.menuInstructions;
-      if (loadingControls) loadingControls.textContent = s.menuControls;
+      // (no controls line any more - the .howto demo is icon-only, so there
+      // is nothing here to re-translate)
       if (loadingBtn) loadingBtn.textContent = s.loadingBtn;
     }
 
@@ -1380,14 +1506,13 @@
       snake.pop();
     }
 
-    // chasers: dying by walking INTO a ghost, then their own half-speed
-    // pursuit move (once per two snake steps), which can also catch the head
+    // chasers: you die by walking INTO a ghost - and only that. Their own
+    // half-speed pursuit move (once per two snake steps) can close in and
+    // block, but never lands on the head, so it needs no death check of its
+    // own. See moveChasers() for why that rule exists.
     if (chaserAt(nx, ny)) return die();
     chaserTick = 1 - chaserTick;
-    if (chaserTick === 0) {
-      moveChasers();
-      if (chaserAt(snake[0].x, snake[0].y)) return die();
-    }
+    if (chaserTick === 0) moveChasers();
   }
 
   function levelUp() {
@@ -1451,7 +1576,10 @@
       '<div class="overlayInner">' +
       '<h1>' + S().brandTitle + '</h1>' +
       '<p class="tagline">' + S().menuInstructions + '</p>' +
-      '<p class="stat">' + S().menuControls + '</p>' +
+      // Language-independent (icons only), so it needs no S() lookup and
+      // survives applyLanguage()'s rebuild unchanged. dir="ltr" pins the
+      // flex-row snake against RTL reversal - see the static markup comment.
+      '<div class="howto" dir="ltr" aria-hidden="true"><span class="htArrow htUp">&#8593;</span><span class="htArrow htRight">&#8594;</span><span class="htArrow htDown">&#8595;</span><span class="htArrow htLeft">&#8592;</span><span class="htSnake"><i></i><i></i><i></i></span><span class="htHand">&#128070;</span></div>' +
       '<button id="playBtn" type="button">' + S().playBtn + '</button>' +
       '</div>';
     bindPlayBtn();

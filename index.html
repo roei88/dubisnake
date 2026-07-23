@@ -5,6 +5,7 @@
 <title>dubisnake</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="description" content="Customized retro snake game.">
+<meta name="theme-color" content="#14100e">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'none';">
 <style>
   :root { color-scheme: dark; }
@@ -28,6 +29,10 @@
     justify-content: center;
     user-select: none;
     -webkit-user-select: none;
+    /* iOS: suppress the long-press callout sheet (copy/share) anywhere on
+       the page - a long-press mid-swipe on the board or a held button must
+       never pop system UI over the game. Purely additive on Android. */
+    -webkit-touch-callout: none;
     /* touch-action left at its default (auto) here, not "none": pinch-zoom is
        already fully blocked page-wide by the viewport meta's
        maximum-scale=1/user-scalable=no (a gesture-level block, distinct from
@@ -57,6 +62,12 @@
     align-items: center;
     gap: 8px;
     max-height: 100vh;
+    /* iOS Safari: 100vh includes the space behind the collapsible toolbar,
+       so the frame could exceed the actually-visible viewport and force a
+       small scroll while the toolbar is expanded. dvh tracks the *dynamic*
+       visible height; browsers without dvh support ignore this line and
+       keep the 100vh above (progressive enhancement, no risk). */
+    max-height: 100dvh;
     overflow-y: auto;
     padding-top: 22px;
     padding-bottom: 12px;
@@ -1529,8 +1540,27 @@
     }
   }, { passive: false });
 
-  // ---------- touch: swipe on canvas + D-pad ----------
+  // ---------- touch: swipe on canvas ----------
   var touchStart = null;
+
+  // Shared by the touchmove and touchend handlers below: if the drag from
+  // `touchStart` to (x,y) crosses SWIPE_THRESHOLD, request the turn and
+  // re-anchor touchStart to (x,y) so a continued drag (finger still down)
+  // can chain further turns without lifting. Returns nothing useful - the
+  // re-anchor IS the state change. requestTurn() already owns queueing and
+  // anti-reversal, exactly as for repeated keyboard input.
+  function maybeSwipeTurn(x, y) {
+    if (!touchStart) return;
+    var dx = x - touchStart.x;
+    var dy = y - touchStart.y;
+    if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) return;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      requestTurn(dx > 0 ? "right" : "left");
+    } else {
+      requestTurn(dy > 0 ? "down" : "up");
+    }
+    touchStart = { x: x, y: y };
+  }
 
   canvas.addEventListener("touchstart", function (e) {
     if (e.touches.length !== 1) return;
@@ -1540,6 +1570,14 @@
 
   canvas.addEventListener("touchmove", function (e) {
     e.preventDefault(); // block scroll/zoom even where touch-action is imperfect
+    // Mobile responsiveness: recognize the swipe the moment the finger
+    // crosses the threshold, DURING the drag - not only on touchend. The
+    // old lift-to-turn behavior added the whole remaining finger-down time
+    // as input latency on every single turn, which is the main reason
+    // touch controls felt sluggish next to a keyboard's instant keydown.
+    if (state === "playing" && e.touches.length === 1) {
+      maybeSwipeTurn(e.touches[0].clientX, e.touches[0].clientY);
+    }
   }, { passive: false });
 
   canvas.addEventListener("touchend", function (e) {
@@ -1549,17 +1587,14 @@
       touchStart = null;
       return;
     }
-    if (!touchStart) return;
-    var t = e.changedTouches[0];
-    var dx = t.clientX - touchStart.x;
-    var dy = t.clientY - touchStart.y;
-    touchStart = null;
-    if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) return;
-    if (Math.abs(dx) > Math.abs(dy)) {
-      requestTurn(dx > 0 ? "right" : "left");
-    } else {
-      requestTurn(dy > 0 ? "down" : "up");
+    // Tail segment of the drag (post-last-re-anchor): still honored, so a
+    // short flick that never fired during touchmove turns on release just
+    // like before - touchmove recognition above is additive, not replacing.
+    if (touchStart) {
+      var t = e.changedTouches[0];
+      maybeSwipeTurn(t.clientX, t.clientY);
     }
+    touchStart = null;
   }, { passive: false });
 
   // block long-press context menu / selection on canvas
@@ -1659,6 +1694,14 @@
   }
   window.addEventListener("resize", scheduleResize);
   window.addEventListener("orientationchange", scheduleResize);
+  // iOS Safari's toolbar collapse/expand and Android Chrome's URL-bar hide
+  // change the *visual* viewport without always firing a window resize (or
+  // firing it with stale innerHeight on older iOS). visualViewport's own
+  // resize event is the authoritative signal there; scheduleResize is
+  // rAF-coalesced so the extra listener costs nothing when both fire.
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleResize);
+  }
 
   // rAF is paused/throttled while a tab is backgrounded, so a resize that
   // fires while hidden can leave scheduleResize()'s queued rAF callback

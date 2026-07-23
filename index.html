@@ -438,10 +438,61 @@
     99%  { transform: translate(-50%, calc(-50% - var(--ht-travel))); opacity: 0; }
     100% { transform: translate(-50%, -50%); opacity: 0; }
   }
+  /* Desktop variant of the same demo: a cartoon arrow-key cluster in the
+     real inverted-T layout, each keycap pressing down and lighting up in
+     the same right/down/left/up order while the mini snake turns to match.
+     Which variant is shown is decided purely by the pointer media query
+     below - CSS, not JS - so it also follows a mouse being docked or
+     undocked at runtime with no page reload. */
+  .howtoKeys .htSnake { top: 24%; }
+  .htKeys {
+    top: 70%;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    grid-template-rows: repeat(2, auto);
+    gap: calc(var(--ht-stage) * 0.03);
+  }
+  .htKey {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(var(--ht-stage) * 0.24);
+    height: calc(var(--ht-stage) * 0.24);
+    font-size: calc(var(--ht-stage) * 0.15);
+    font-weight: 700;
+    line-height: 1;
+    border-radius: calc(var(--ht-stage) * 0.05);
+    border: 2px solid #4a6b3a;
+    background: #22301a;
+    color: #cfe8c0;
+    box-shadow: 0 calc(var(--ht-stage) * 0.022) 0 #0d1408;
+    animation: htKeyPress 8s linear infinite;
+  }
+  /* Inverted-T, i.e. how the keys physically sit on a keyboard. */
+  .htkUp    { grid-column: 2; grid-row: 1; animation-delay: -2s; }
+  .htkLeft  { grid-column: 1; grid-row: 2; animation-delay: -4s; }
+  .htkDown  { grid-column: 2; grid-row: 2; animation-delay: -6s; }
+  .htkRight { grid-column: 3; grid-row: 2; animation-delay: 0s; }
+  /* Solid colours (not gradients) so every animated property interpolates
+     reliably; the keycap "presses" by dropping onto its own shadow. */
+  @keyframes htKeyPress {
+    0%, 5%     { transform: translateY(0); background: #22301a; color: #cfe8c0;
+                 box-shadow: 0 calc(var(--ht-stage) * 0.022) 0 #0d1408; }
+    9%, 20%    { transform: translateY(calc(var(--ht-stage) * 0.022)); background: #00e5ff; color: #05242a;
+                 box-shadow: 0 0 0 #0d1408; }
+    25%, 100%  { transform: translateY(0); background: #22301a; color: #cfe8c0;
+                 box-shadow: 0 calc(var(--ht-stage) * 0.022) 0 #0d1408; }
+  }
+  /* Touch devices get the swipe demo, everything else the key cluster. */
+  .howtoTouch { display: none; }
+  @media (pointer: coarse) {
+    .howtoTouch { display: block; }
+    .howtoKeys { display: none; }
+  }
   /* Motion-sensitive users still get the meaning: all four arrows lit and
      the hand parked in the middle, just held still. */
   @media (prefers-reduced-motion: reduce) {
-    .htArrow, .htSnake, .htHand { animation: none; }
+    .htArrow, .htSnake, .htHand, .htKey { animation: none; }
     .htArrow { opacity: 0.9; }
     /* Parked off-centre so the still hand doesn't sit on top of the mini
        snake (they only overlap for an instant mid-animation). */
@@ -708,7 +759,8 @@
              reverse under an inherited dir="rtl" - that would put the snake's
              head on the wrong end and contradict the rotation keyframes. Same
              reasoning as the #mobileHelp arrows. -->
-        <div class="howto" dir="ltr" aria-hidden="true"><span class="htArrow htUp">&#8593;</span><span class="htArrow htRight">&#8594;</span><span class="htArrow htDown">&#8595;</span><span class="htArrow htLeft">&#8592;</span><span class="htSnake"><i></i><i></i><i></i></span><span class="htHand">&#128070;</span></div>
+        <div class="howto howtoTouch" dir="ltr" aria-hidden="true"><span class="htArrow htUp">&#8593;</span><span class="htArrow htRight">&#8594;</span><span class="htArrow htDown">&#8595;</span><span class="htArrow htLeft">&#8592;</span><span class="htSnake"><i></i><i></i><i></i></span><span class="htHand">&#128070;</span></div>
+        <div class="howto howtoKeys" dir="ltr" aria-hidden="true"><span class="htSnake"><i></i><i></i><i></i></span><span class="htKeys"><b class="htKey htkUp">&#8593;</b><b class="htKey htkLeft">&#8592;</b><b class="htKey htkDown">&#8595;</b><b class="htKey htkRight">&#8594;</b></span></div>
         <button id="playBtn" type="button" disabled>טוען&hellip;</button>
       </div>
     </div>
@@ -1581,7 +1633,8 @@
       // Language-independent (icons only), so it needs no S() lookup and
       // survives applyLanguage()'s rebuild unchanged. dir="ltr" pins the
       // flex-row snake against RTL reversal - see the static markup comment.
-      '<div class="howto" dir="ltr" aria-hidden="true"><span class="htArrow htUp">&#8593;</span><span class="htArrow htRight">&#8594;</span><span class="htArrow htDown">&#8595;</span><span class="htArrow htLeft">&#8592;</span><span class="htSnake"><i></i><i></i><i></i></span><span class="htHand">&#128070;</span></div>' +
+      '<div class="howto howtoTouch" dir="ltr" aria-hidden="true"><span class="htArrow htUp">&#8593;</span><span class="htArrow htRight">&#8594;</span><span class="htArrow htDown">&#8595;</span><span class="htArrow htLeft">&#8592;</span><span class="htSnake"><i></i><i></i><i></i></span><span class="htHand">&#128070;</span></div>' +
+      '<div class="howto howtoKeys" dir="ltr" aria-hidden="true"><span class="htSnake"><i></i><i></i><i></i></span><span class="htKeys"><b class="htKey htkUp">&#8593;</b><b class="htKey htkLeft">&#8592;</b><b class="htKey htkDown">&#8595;</b><b class="htKey htkRight">&#8594;</b></span></div>' +
       '<button id="playBtn" type="button">' + S().playBtn + '</button>' +
       '</div>';
     bindPlayBtn();

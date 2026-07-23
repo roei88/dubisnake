@@ -15,7 +15,9 @@ best score is remembered on the device you play on.
 ## Controls
 
 - **Desktop:** Arrow keys to steer, Space to pause or dismiss a level
-  banner, Enter to start/restart.
+  banner, Enter to start/restart. The menu shows an animated arrow-key
+  cluster; touch devices get a swipe demo instead (chosen by pointer
+  type, so it follows a mouse being docked or undocked).
 - **Mobile:** swipe on the board (recognised mid-drag, no need to lift);
   tap to start/restart.
 

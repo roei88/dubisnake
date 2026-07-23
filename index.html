@@ -58,6 +58,13 @@
     letter-spacing: 0.02em;
     padding: 0 2px;
     box-sizing: border-box;
+    /* Defense-in-depth alongside #boardWrap's flex-shrink:0 (see comment
+       above it): #hud/#footer/#dpad don't have overflow:hidden so they
+       aren't vulnerable to the zero-automatic-min-size flex behavior that
+       motivated that fix, but pinning them too means #wrap's overflow-y:auto
+       is the fallback for *any* over-tall stack, not just ones caused by
+       the board specifically. */
+    flex-shrink: 0;
   }
   #hud span b { color: #ffd27a; }
   /* flex-shrink:0 is load-bearing: #boardWrap has overflow:hidden, and per
@@ -219,6 +226,7 @@
     grid-template-rows: repeat(3, 56px);
     gap: 6px;
     margin-bottom: env(safe-area-inset-bottom);
+    flex-shrink: 0; /* see #hud comment: never let flex compress the d-pad */
   }
   @media (pointer: coarse) {
     #dpad.enabled { display: grid; }
@@ -245,6 +253,7 @@
   #footer {
     font-size: clamp(10px, 2vmin, 12px);
     color: #8a7c6b;
+    flex-shrink: 0; /* see #hud comment: never let flex compress this below its text */
   }
 </style>
 </head>

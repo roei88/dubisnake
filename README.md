@@ -2,9 +2,12 @@
 
 A Nokia-style Snake game where the head is a profile photo instead of a plain
 block, the food is a piece of popcorn, and the head photo swaps to the next
-one every time you level up (looping 1 -> 2 -> 3 -> 1 ...). Walls and self
-collisions end the run, speed ramps up each level, and your best score is
-remembered on the device you play on.
+one every time you level up (looping 1 -> 2 -> 3 -> 1 ...). Pac-Man-style
+ghost chasers (a friend's cartooned face on classic red/pink/cyan ghost
+bodies) pursue the snake's head at half its speed - one chaser on level 1,
+two on level 2, three from level 3 on - and touching one head-on ends the
+run, as do walls and self collisions. Speed ramps up each level, and your
+best score is remembered on the device you play on.
 
 **Play it live:** https://roei88.github.io/dubisnake/
 

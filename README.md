@@ -25,9 +25,12 @@ of its own (the enlarged head photo for the level being entered, plus a
 one-line blurb) instead of the splash graphic. If an image fails to load, the
 game falls back to a plain colored circle so it keeps working.
 
-All in-game UI text is localized to Hebrew/RTL, and the play grid is 13x13
-cells (down from 19x19) for bigger, more readable cells; gameplay control
-semantics (arrow keys, swipe, D-pad) are unchanged.
+All in-game UI text is localized to Hebrew/RTL, and the play grid is 9x9 cells
+(down from 19x19, then 13x13) for bigger, more readable cells; gameplay
+control semantics (arrow keys, swipe, D-pad) are unchanged. A small circular
+avatar showing the current head photo sits in the top-left corner of the HUD
+at all times (menu, playing, paused, game over) alongside the score/level/
+high-score readout.
 
 Everything runs from a single self-contained `index.html` (vanilla JS +
 canvas), no build step and no external libraries, so it also works by opening

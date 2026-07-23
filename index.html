@@ -53,6 +53,8 @@
   #hud {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 8px;
     width: 100%;
     font-size: clamp(13px, 2.6vmin, 18px);
     letter-spacing: 0.02em;
@@ -65,8 +67,71 @@
        is the fallback for *any* over-tall stack, not just ones caused by
        the board specifically. */
     flex-shrink: 0;
+    /* --cell-px is written from JS in resizeCanvas() (the single existing
+       place --board-px is already set) - the one source of truth every size
+       constant, including the avatar below, derives from. --avatar-px is a
+       declarative CSS custom property computed from it (3 cells). The 240px
+       ceiling is a defensive fallback ONLY, not a real-world design cap: it
+       must stay >= 3 * (MAX_BOARD_PX / GRID_N) = 3 * 80 = 240px (the JS-side
+       bound on cellPx - see MAX_BOARD_PX/GRID_N below), otherwise it quietly
+       overrides the "avatar is genuinely >=3 cells, in both dimensions, at
+       every viewport size" requirement. A previous revision capped this at
+       96px on the theory that it "doesn't dominate a compact HUD bar on
+       larger screens" - that reasoning is exactly backwards for this
+       requirement: it measurably broke down to as little as ~1.2-1.5 cells
+       once cellPx exceeded 32px (confirmed live at a real 768x646 viewport:
+       cellPx 63px -> avatar stuck at 96px -> 1.52 cells, not >=3). If
+       MAX_BOARD_PX or GRID_N ever change, this 240px must be revisited
+       together with them - it is not independently derived. */
+    --avatar-px: min(calc(var(--cell-px, 16px) * 3), 240px);
   }
-  #hud span b { color: #ffd27a; }
+  #hud span b { color: #00e5ff; }
+  /* Always-visible avatar HUD element (menu/playing/paused/dead/won - never
+     gated to "after first play"). A genuine flex item now (NOT
+     position:absolute). It used to be pinned top:0;left:0 on the theory that
+     "top-left is the one corner not already claimed by the RTL-anchored
+     score/level/hi-score text, which visually sits toward the right" - that
+     theory only held for the FIRST of the three <span> children. Under
+     dir="rtl" with justify-content:space-between, the LAST DOM span (the
+     high-score "שיא" one) is the one flexbox pushes to the physical LEFT
+     edge - the exact corner the avatar was pinned to. Confirmed by measuring
+     real layout: avatar rect x:108-204/y:0-96 vs the "שיא" span's rect
+     x:110-152/y:38-58 - a dead overlap, and not an edge case, since the
+     avatar's own minimum width (48px, see --avatar-px above) already exceeds
+     the ~2px inner padding where that span starts, at every achievable
+     cellPx. Making #avatarHud a real flex item instead removes the collision
+     structurally: flexbox distributes all 4 items (avatar + 3 spans) with
+     guaranteed non-overlap, instead of trusting a manually reasoned absolute
+     offset that only covered one of the three spans. #avatarHud is placed
+     LAST in DOM source order (after the three spans) specifically because,
+     under dir="rtl" row flex, the last DOM child lands at the physical LEFT
+     edge (mirror image of LTR, where the last child lands on the right) -
+     putting it first would land it at the physical top-RIGHT instead, which
+     was tried and confirmed wrong. This ordering is what actually keeps the
+     avatar in the intended top-left corner, with real gap between every
+     item and no overlap. */
+  #avatarHud {
+    width: var(--avatar-px, 48px);
+    height: var(--avatar-px, 48px);
+    flex-shrink: 0;
+    border-radius: 50%;
+    /* small dark chip behind the image so it doesn't float directly against
+       the light HUD text */
+    background: #1c1815;
+    box-shadow: 0 0 0 2px #00e5ff, 0 2px 8px rgba(0,0,0,0.4);
+    overflow: hidden;
+    pointer-events: none;
+  }
+  #avatarHud img {
+    width: 100%;
+    height: 100%;
+    /* head-N.png are confirmed 512x512 square with content filling to the
+       image edges (no transparent margin - checked via PIL getbbox() before
+       implementation), so object-fit:cover is safe: it will not crop into
+       transparent padding. */
+    object-fit: cover;
+    display: block;
+  }
   /* flex-shrink:0 is load-bearing: #boardWrap has overflow:hidden, and per
      the flex spec an overflow:hidden item's automatic min-height becomes 0
      (instead of its content size), so without this the flex column in #wrap
@@ -91,15 +156,49 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     text-align: center;
-    gap: 10px;
     background: rgba(10, 8, 7, 0.82);
     border-radius: 10px;
     padding: 20px;
     box-sizing: border-box;
+    /* QA fix: the dead/won content stack (splash image + h1 + 2 stat lines +
+       instructions + button) can be taller than #boardWrap on cramped/
+       landscape viewports even after every child's own board-px-based clamp
+       below - #boardWrap's own overflow:hidden then clips it, and since
+       #overlay used to be vertically centered via justify-content:center,
+       there was no way to scroll to the clipped part: #wrap's outer
+       overflow-y:auto only moves the whole (already internally-clipped)
+       #boardWrap block, it can't reveal more of #overlay's own clipped
+       content. Verified live at a real 568x326 viewport: #boardWrap
+       bottom~306-308px, #playBtn bottom~324.7-334.3px - ~60% of the "שחק שוב"
+       button (its entire label) invisible and untappable, at scrollTop 0,
+       with nothing to trigger a fix. Making #overlay itself the scrollable
+       box (its own overflow-y:auto, independent of #boardWrap's) means any
+       remaining overflow is always reachable by a normal scroll-down
+       gesture - see .overlayInner below for how vertical centering still
+       works in the common (non-overflowing) case. */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   #overlay.hidden { display: none; }
+  /* Centers vertically via margin:auto instead of justify-content:center on
+     #overlay. This is the standard fix for "can't scroll to see overflowing
+     centered flex content": auto margins consume any extra space when there
+     is room (identical visual result to justify-content:center in the
+     everyday case), but resolve to 0 - not negative - when there isn't,
+     which is exactly flex-start: content starts flush at the top of #overlay
+     and any overflow lands entirely at the bottom, inside the normal
+     scroll-down direction #overlay's own overflow-y:auto (above) now
+     provides. justify-content:center could not be scrolled past on the
+     "before" side in any browser, which is exactly what made the button
+     unreachable at 568x326 (see #overlay comment). */
+  .overlayInner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: min(10px, calc(var(--board-px, 300px) * 0.03));
+    margin: auto 0;
+  }
   /* h1/p/.stat below are each clamped with the same min(vmin-clamp,
      --board-px-derived) pattern already used by #levelFlashCard's children
      (see the comment on #levelFlashCard). Without this, text sized purely
@@ -123,15 +222,19 @@
   }
   #overlay .stat { font-size: min(clamp(15px, 3vmin, 20px), calc(var(--board-px, 300px) * 0.065)); color: #fff; }
   #playBtn {
-    margin-top: 8px;
-    padding: 12px 34px;
-    font-size: clamp(16px, 3.2vmin, 20px);
+    /* QA fix: same board-px-based shrink pattern as the rest of #overlay's
+       children (see comment above #overlay h1 and .splashPic) - these three
+       were previously fixed px regardless of how small the board got, which
+       contributed to the dead/won overlay overflowing #boardWrap. */
+    margin-top: min(8px, calc(var(--board-px, 300px) * 0.025));
+    padding: min(12px, calc(var(--board-px, 300px) * 0.035)) min(34px, calc(var(--board-px, 300px) * 0.1));
+    font-size: min(clamp(16px, 3.2vmin, 20px), calc(var(--board-px, 300px) * 0.075));
     font-weight: 700;
     border: none;
     border-radius: 999px;
-    background: linear-gradient(180deg, #ffcf6b, #e69b1f);
-    color: #2a1a05;
-    box-shadow: 0 6px 16px rgba(230,155,31,0.4);
+    background: linear-gradient(180deg, #ff3d81, #c9006b);
+    color: #2a0714;
+    box-shadow: 0 6px 16px rgba(201,0,107,0.4);
     cursor: pointer;
     touch-action: none;
   }
@@ -186,8 +289,14 @@
     box-shadow: 0 0 0 3px rgba(255,255,255,0.5), 0 6px 18px rgba(0,0,0,0.55);
   }
   .splashPic {
-    width: clamp(56px, 14vmin, 96px);
-    height: clamp(56px, 14vmin, 96px);
+    /* QA fix: unlike #overlay's h1/p/.stat (which already min() against
+       --board-px, see the comment above #overlay h1), this used to be
+       vmin-only, so on a small/landscape board it did not shrink to match
+       the actual (clipped-down) #boardWrap container - one of the
+       contributors to the dead/won overlay overflowing #boardWrap's box
+       (see #overlay comment). Now capped the same way as its siblings. */
+    width: min(clamp(56px, 14vmin, 96px), calc(var(--board-px, 300px) * 0.3));
+    height: min(clamp(56px, 14vmin, 96px), calc(var(--board-px, 300px) * 0.3));
     object-fit: contain;
     filter: drop-shadow(0 4px 10px rgba(0,0,0,0.45));
   }
@@ -244,7 +353,7 @@
     font-size: 20px;
     touch-action: none;
   }
-  #dpad button:active { background: rgba(255,210,122,0.35); }
+  #dpad button:active { background: rgba(0,229,255,0.35); }
   #up { grid-column: 2; grid-row: 1; }
   #left { grid-column: 1; grid-row: 2; }
   #down { grid-column: 2; grid-row: 3; }
@@ -263,6 +372,7 @@
     <span>ניקוד <b id="scoreVal">0</b></span>
     <span>רמה <b id="levelVal">1</b></span>
     <span>שיא <b id="hiVal">0</b></span>
+    <div id="avatarHud"><img id="avatarHudImg" alt=""></div>
   </div>
   <div id="boardWrap" style="position:relative; overflow:hidden;">
     <canvas id="game"></canvas>
@@ -274,10 +384,12 @@
       </div>
     </div>
     <div id="overlay">
-      <h1>dubisnake</h1>
-      <p>נווטו עם הראש ברשת, אכלו את הפופקורן, ואל תפגעו בקירות או בעצמכם. המהירות עולה כל 5 חתיכות.</p>
-      <p class="stat">חצים/WASD, החלקה, או לוח הכיוונים. מקש הרווח משהה.</p>
-      <button id="playBtn" type="button" disabled>טוען&hellip;</button>
+      <div class="overlayInner">
+        <h1>dubisnake</h1>
+        <p>נווטו עם הראש ברשת, אכלו את הפופקורן, ואל תפגעו בקירות או בעצמכם. המהירות עולה כל 5 חתיכות.</p>
+        <p class="stat">חצים/WASD, החלקה, או לוח הכיוונים. מקש הרווח משהה.</p>
+        <button id="playBtn" type="button" disabled>טוען&hellip;</button>
+      </div>
     </div>
   </div>
   <div id="footer">התיקייה <bdi>assets/</bdi> מכילה את הגרפיקה &middot; השיא נשמר מקומית במכשיר</div>
@@ -302,15 +414,15 @@
   "use strict";
 
   // ---------- constants ----------
-  // GRID_N was 19 (720px board => ~38px cells), which made the circular head
-  // photo hard to read at a glance and the game punishingly hard to track.
-  // 13 is chosen over 11/12: it's still a "real" grid-snake cell count (not
-  // toy-sized), it's odd so Math.floor(GRID_N/2) gives a true center cell
-  // for the snake's start position (same as before), and on the same 720px
-  // board it gives ~55px cells - about 45% bigger than at 19 - so the head
-  // image and body segments read clearly at a glance while still being a
-  // real grid to navigate.
-  var GRID_N = 13;                // fixed logical grid, both axes
+  // GRID_N was 19 (720px board => ~38px cells), then cut to 13 (~55px cells)
+  // for readability. Per the Product-approved grid/avatar/palette spec, it is
+  // now cut again to 9: a ~30.8% reduction from 13 (the closest odd integer
+  // to the requested ~35%; 8 would be 38.5% but breaks the odd/center-cell
+  // invariant this comment is about). It's odd so Math.floor(GRID_N/2) still
+  // gives a true center cell for the snake's start position (unchanged spawn
+  // logic), and on the same 720px board it gives ~80px cells - large, clearly
+  // readable head/body circles, at the cost of a smaller grid to navigate.
+  var GRID_N = 9;                 // fixed logical grid, both axes
   var BASE_STEP_MS = 160;         // level 1 step interval
   var MIN_STEP_MS = 70;           // floor
   var STEP_DECAY = 0.92;          // ~8% faster per level
@@ -333,6 +445,7 @@
   var hudScore = document.getElementById("scoreVal");
   var hudLevel = document.getElementById("levelVal");
   var hudHi = document.getElementById("hiVal");
+  var avatarHudImg = document.getElementById("avatarHudImg");
   var overlay = document.getElementById("overlay");
   var playBtn = document.getElementById("playBtn");
   var levelFlash = document.getElementById("levelFlash");
@@ -429,11 +542,16 @@
 
   // ---------- head cycle / per-level body tint (predefined, no getImageData) ----------
   var HEAD_KEYS = ["head1", "head2", "head3"];
-  // Warm per-level tint pool (spec: "warm per-level tint"), cycles with the heads.
+  // Per-level tint pool, cycles with the heads. Per the grid/avatar/palette
+  // spec, this is no longer a warm amber cluster (~20-25deg hue spread) - it's
+  // three genuinely varied hues (green ~140deg, blue ~220deg, magenta ~330deg)
+  // deliberately kept clear of the HUD accent cyan (~190deg, see #hud span b
+  // and the avatar ring in CSS) so "stable UI chrome" (HUD/avatar) and
+  // "per-level game state" (these tints) never share a color.
   var LEVEL_TINTS = [
-    { core: "#ffb347", edge: "#7a4a12" },
-    { core: "#ff8c69", edge: "#7a2f12" },
-    { core: "#e85d04", edge: "#5c2506" }
+    { core: "#00e676", edge: "#00693e" }, // vivid green
+    { core: "#2979ff", edge: "#0d3f9e" }, // electric blue
+    { core: "#ff3d81", edge: "#8f0046" }  // hot magenta
   ];
   // Short, dry, PG snake/popcorn/speed one-liners for the level-details
   // screen (levelUp()) - one per head/tint in the cycle, in Hebrew per the
@@ -459,12 +577,15 @@
   // at *4 the worst-case cell would only be 4px regardless of grid size,
   // which defeats the point of moving to fewer/bigger cells for
   // readability. *8 guarantees at least an 8px cell whenever the viewport can
-  // actually fit it, while 13*8=104px is still a small floor. This is the
-  // *ideal* floor, not an absolute one any more - see SAFETY_MIN_BOARD_PX and
-  // its use in resizeCanvas() below: unconditionally forcing every viewport
-  // up to this floor (the old behavior) is exactly what caused #wrap to have
-  // to scroll on short landscape phones that used to fit at GRID_N=19/*4.
-  var MIN_BOARD_PX = GRID_N * 8;   // preferred floor (104px) for legible cells,
+  // actually fit it. This is the *ideal* floor, not an absolute one any more -
+  // see SAFETY_MIN_BOARD_PX and its use in resizeCanvas() below:
+  // unconditionally forcing every viewport up to this floor (the old
+  // behavior) is exactly what caused #wrap to have to scroll on short
+  // landscape phones that used to fit at GRID_N=19/*4. GRID_N was cut again
+  // to 9 per the grid/avatar/palette spec - MIN_BOARD_PX derives from GRID_N
+  // so it now floors at 9*8=72px (was 104px at GRID_N=13); no parallel
+  // constant to keep in sync.
+  var MIN_BOARD_PX = GRID_N * 8;   // preferred floor (72px) for legible cells,
                                     // honored whenever the viewport fits it
                                     // without forcing scroll/clipping.
   // Absolute last-resort floor (same *4 multiplier the pre-13x13 build used)
@@ -473,12 +594,12 @@
   // MIN_BOARD_PX would itself force #wrap to scroll - i.e. it never
   // overrides a fit budget that's already between the two floors, it only
   // stops the board from going to zero when even that fit budget is
-  // negative/near-zero.
+  // negative/near-zero. Derives from GRID_N (9*4=36px, was 52px at GRID_N=13).
   var SAFETY_MIN_BOARD_PX = GRID_N * 4;
   var MAX_BOARD_PX = 720;          // cap so 4K/8K desktops don't get a huge board;
-                                    // unchanged - at GRID_N=13 this already yields
-                                    // ~55px cells (vs ~38px at the old GRID_N=19),
-                                    // plenty large on desktop without further tuning.
+                                    // unchanged - at GRID_N=9 this yields ~80px
+                                    // cells, plenty large on desktop without
+                                    // further tuning.
 
   // Reads env(safe-area-inset-bottom) via a hidden probe element, since JS
   // can't read CSS env() values directly.
@@ -528,38 +649,75 @@
     dpr = window.devicePixelRatio || 1;
     var margin = 24;
     var coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
-    var reservePx = measureReservePx(coarse);
 
-    var available = Math.min(window.innerWidth, window.innerHeight) - margin;
-    // Leave room for HUD + footer text, and for the D-pad when it will
-    // actually be shown, so the whole stack (hud/canvas/footer/dpad) tends
-    // to fit in one screen without scrolling. #dpad is a normal-flow sibling
-    // (not position:fixed) so an under-estimate here just means #wrap's own
-    // overflow-y:auto kicks in - it can no longer mean the pad overlaps the
-    // canvas/footer.
-    available = Math.min(
-      available,
-      window.innerHeight - reservePx,
-      window.innerWidth - 16
-    );
-    available = Math.min(available, MAX_BOARD_PX);
-    // Only pull the board up to the *ideal* readability floor when the
-    // viewport can actually fit that floor without forcing a scroll (i.e.
-    // `available` - the real fit budget computed above - already meets or
-    // exceeds it, so this is a no-op). When the fit budget is smaller than
-    // the ideal floor, honor the fit budget itself (keeps the no-scroll
-    // requirement intact) and only clamp up to the much smaller
-    // SAFETY_MIN_BOARD_PX as an absolute last resort against a near-zero
-    // board on a truly pathological viewport - the old unconditional
-    // `Math.max(MIN_BOARD_PX, available)` is what forced scrolling on short
-    // landscape phones that used to fit at the previous GRID_N/floor tuning.
-    if (available < MIN_BOARD_PX) {
-      available = Math.max(SAFETY_MIN_BOARD_PX, available);
+    // QA fix: the HUD's real rendered height depends on --avatar-px, a CSS
+    // calc() driven by --cell-px (min(cellPx*3, 240px) - see #hud CSS), but
+    // --cell-px is only known once *this function* has already picked a
+    // board size - and measureReservePx() below reads the HUD's height
+    // BEFORE that happens, so the board used to get sized against a stale
+    // (pre-avatar-growth) HUD height, with no second pass to compensate once
+    // the avatar actually grew. Verified concretely at 593x646: cellPx
+    // settled at 63px -> avatar/HUD height 189px -> #wrap needed ~787px in a
+    // 646px container, a persistent 141px forced scroll on first paint - and
+    // nothing guarantees a real static session (no resize/orientationchange/
+    // visibilitychange/DPR-change) ever gets a corrective second pass.
+    // Fix: solve it as a small fixed-point iteration right here instead of
+    // depending on some future external event. Each pass writes the
+    // tentative --cell-px so the *next* measureReservePx() call reflects the
+    // HUD height that cellPx would actually produce. The feedback loop is a
+    // contraction (bigger cellPx -> bigger avatar -> bigger reserve ->
+    // smaller available -> smaller cellPx), so it stabilizes to (at, or very
+    // close to) a fixed point within a handful of iterations - the GRID_N
+    // quantization of boardCssPx can make the very last step or two hunt by
+    // one grid unit rather than land exactly, so the loop always uses
+    // whichever value it lands on at the cap rather than assuming exact
+    // equality is reached; the hard iteration cap is a defensive bound only,
+    // in case a future CSS change ever broke the contraction outright.
+    var available = 0;
+    var prevBoardCssPx = -1;
+    for (var iter = 0; iter < 8; iter++) {
+      var reservePx = measureReservePx(coarse);
+
+      available = Math.min(window.innerWidth, window.innerHeight) - margin;
+      // Leave room for HUD + footer text, and for the D-pad when it will
+      // actually be shown, so the whole stack (hud/canvas/footer/dpad) tends
+      // to fit in one screen without scrolling. #dpad is a normal-flow
+      // sibling (not position:fixed) so an under-estimate here just means
+      // #wrap's own overflow-y:auto kicks in - it can no longer mean the pad
+      // overlaps the canvas/footer.
+      available = Math.min(
+        available,
+        window.innerHeight - reservePx,
+        window.innerWidth - 16
+      );
+      available = Math.min(available, MAX_BOARD_PX);
+      // Only pull the board up to the *ideal* readability floor when the
+      // viewport can actually fit that floor without forcing a scroll (i.e.
+      // `available` - the real fit budget computed above - already meets or
+      // exceeds it, so this is a no-op). When the fit budget is smaller than
+      // the ideal floor, honor the fit budget itself (keeps the no-scroll
+      // requirement intact) and only clamp up to the much smaller
+      // SAFETY_MIN_BOARD_PX as an absolute last resort against a near-zero
+      // board on a truly pathological viewport - the old unconditional
+      // `Math.max(MIN_BOARD_PX, available)` is what forced scrolling on
+      // short landscape phones that used to fit at the previous
+      // GRID_N/floor tuning.
+      if (available < MIN_BOARD_PX) {
+        available = Math.max(SAFETY_MIN_BOARD_PX, available);
+      }
+
+      boardCssPx = Math.floor(available / GRID_N) * GRID_N; // keep divisible by grid for crisp cells
+      if (boardCssPx <= 0) boardCssPx = GRID_N * 4;
+      cellPx = boardCssPx / GRID_N;
+      // --cell-px is set on #wrap (the shared ancestor of #hud and
+      // #boardWrap) so it cascades to #hud's --avatar-px calc() (see #hud
+      // CSS) - written every iteration (not just once at the end) so the
+      // *next* iteration's measureReservePx() sees the HUD height this
+      // cellPx would actually produce, which is the whole point of the loop.
+      if (wrap) wrap.style.setProperty("--cell-px", cellPx + "px");
+      if (boardCssPx === prevBoardCssPx) break; // converged, stop early
+      prevBoardCssPx = boardCssPx;
     }
-
-    boardCssPx = Math.floor(available / GRID_N) * GRID_N; // keep divisible by grid for crisp cells
-    if (boardCssPx <= 0) boardCssPx = GRID_N * 4;
-    cellPx = boardCssPx / GRID_N;
 
     canvas.style.width = boardCssPx + "px";
     canvas.style.height = boardCssPx + "px";
@@ -628,6 +786,7 @@
                        // interrupted a flash
     placeFood();
     updateHud();
+    updateAvatarHud(); // level just reset to 1 - keep the avatar in sync
   }
 
   function cellFree(x, y) {
@@ -677,6 +836,18 @@
 
   function currentBlurb() {
     return LEVEL_BLURBS[(level - 1) % LEVEL_BLURBS.length];
+  }
+
+  // Always-visible avatar HUD (#avatarHud/#avatarHudImg): shows the same
+  // head1/head2/head3 image already driving the snake head and
+  // #levelFlashImg. Reuses assetSrc()'s existing fallback chain (real image
+  // src, or the makeFallbackCanvas() colored-circle dataURL, or
+  // BLANK_PIXEL_SRC) - no new naive <img src> that can hang/blank on a failed
+  // load. Called at boot (once assets are ready) and from newGame()/levelUp()
+  // so it can never drift out of sync with either the snake head or the
+  // level-up flash image.
+  function updateAvatarHud() {
+    if (avatarHudImg) avatarHudImg.src = assetSrc(currentHeadKey());
   }
 
   function updateHud() {
@@ -803,9 +974,13 @@
     // snake's own head this level) - splash.png stays reserved for the
     // game-over/win screens only, per spec.
     levelFlashImg.src = assetSrc(currentHeadKey());
+    // Update the always-visible avatar HUD at this exact same point (same
+    // currentHeadKey() call site) so it and #levelFlashImg can never drift
+    // out of sync with each other.
+    updateAvatarHud();
     levelFlashText.textContent = "רמה " + level;
     levelFlashBlurb.textContent = currentBlurb();
-    // Color-pop background accent tinted to the level's warm color, so each
+    // Color-pop background accent tinted to the level's tint color, so each
     // level-up reads as visually distinct, not just a text change.
     levelFlashCard.style.background =
       "linear-gradient(160deg, " + tint.core + "e6, " + tint.edge + "e6)";
@@ -834,44 +1009,52 @@
   function showOverlayMenu() {
     overlay.classList.remove("hidden");
     overlay.innerHTML =
+      '<div class="overlayInner">' +
       '<h1>dubisnake</h1>' +
       '<p>נווטו עם הראש ברשת, אכלו את הפופקורן, ואל תפגעו בקירות או בעצמכם. המהירות עולה כל 5 חתיכות.</p>' +
       '<p class="stat">חצים/WASD, החלקה, או לוח הכיוונים. מקש הרווח משהה.</p>' +
-      '<button id="playBtn" type="button">שחק</button>';
+      '<button id="playBtn" type="button">שחק</button>' +
+      '</div>';
     bindPlayBtn();
   }
 
   function showOverlayDead() {
     overlay.classList.remove("hidden");
     overlay.innerHTML =
+      '<div class="overlayInner">' +
       '<img class="splashPic" src="' + assetSrc("splash") + '" alt="">' +
       '<h1>המשחק נגמר</h1>' +
       '<p class="stat">ניקוד: ' + score + '</p>' +
       '<p class="stat">שיא: ' + hi + '</p>' +
       '<p>הקישו שחק, לחצו Enter, או הקישו על הלוח כדי לנסות שוב.</p>' +
-      '<button id="playBtn" type="button">שחק שוב</button>';
+      '<button id="playBtn" type="button">שחק שוב</button>' +
+      '</div>';
     bindPlayBtn();
   }
 
   function showOverlayWon() {
     overlay.classList.remove("hidden");
     overlay.innerHTML =
+      '<div class="overlayInner">' +
       '<img class="splashPic" src="' + assetSrc("splash") + '" alt="">' +
       '<h1>ניצחת!</h1>' +
       '<p class="stat">הלוח מלא - ניקוד: ' + score + '</p>' +
       '<p class="stat">שיא: ' + hi + '</p>' +
       '<p>הקישו שחק, לחצו Enter, או הקישו על הלוח כדי לשחק שוב.</p>' +
-      '<button id="playBtn" type="button">שחק שוב</button>';
+      '<button id="playBtn" type="button">שחק שוב</button>' +
+      '</div>';
     bindPlayBtn();
   }
 
   function showOverlayPaused() {
     overlay.classList.remove("hidden");
     overlay.innerHTML =
+      '<div class="overlayInner">' +
       '<h1>מושהה</h1>' +
       '<p class="stat">ניקוד: ' + score + '</p>' +
       '<p>רווח / הקישו המשך כדי להמשיך.</p>' +
-      '<button id="playBtn" type="button">המשך</button>';
+      '<button id="playBtn" type="button">המשך</button>' +
+      '</div>';
     bindPlayBtn();
   }
 
@@ -1214,6 +1397,8 @@
       state = "menu";
       showOverlayMenu();
     }
+    updateAvatarHud(); // always-visible avatar HUD: show it as soon as assets
+                        // are ready, even before the first game starts
     render();
     requestAnimationFrame(frame);
   });

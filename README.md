@@ -20,7 +20,9 @@ remembered on the device you play on.
 The `assets/` folder holds the five sprites the game draws from: the three
 cycling profile heads (`head-1.png`, `head-2.png`, `head-3.png`), the popcorn
 food (`food.png`), and the splash graphic used on the game-over/win screen
-(`splash.png`). Leveling up shows a short, non-blocking "level details" pop
+(`splash.png`). It also holds `banner.png` (1200x630), the cartoon
+Open Graph card shown when the game link is shared in DMs and social
+platforms - generated from the game's own head/popcorn art. Leveling up shows a short, non-blocking "level details" pop
 of its own (the enlarged head photo for the level being entered, plus a
 one-line blurb) instead of the splash graphic. If an image fails to load, the
 game falls back to a plain colored circle so it keeps working.

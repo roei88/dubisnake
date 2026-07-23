@@ -5,7 +5,7 @@
 <title>dubisnake</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="description" content="Customized retro snake game.">
-<meta name="theme-color" content="#d3e2af">
+<meta name="theme-color" content="#75855a">
 <!-- Link-preview card (WhatsApp/Telegram/iMessage/Slack/X etc.). Absolute
      URLs are required - scrapers don't resolve relative paths. The banner
      is generated from the real game assets (assets/banner.png, 1200x630,
@@ -38,7 +38,7 @@
        decorative page background, no box-model participation in #wrap's own
        sizing (see the #wrap comment), so it can't reopen the sizing-budget
        bugs this file has already been through more than once. */
-    background: radial-gradient(120% 140% at 50% 20%, #e9f2d2 0%, #d3e2af 55%, #b9cf95 100%);
+    background: radial-gradient(120% 140% at 50% 20%, #93a375 0%, #75855a 55%, #576743 100%);
     -webkit-tap-highlight-color: transparent;
   }
   /* Nostalgic wallpaper behind the phone frame: a repeating inline-SVG tile
@@ -51,7 +51,7 @@
   body {
     background:
       url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22480%22%20height=%22480%22%20viewBox=%220%200%20480%20480%22%3E%3Cg%20opacity=%220.30%22%3E%3Cg%20transform=%22translate(52,74)%20rotate(-12)%22%3E%3Crect%20x=%220%22%20y=%220%22%20width=%2292%22%20height=%22196%22%20rx=%2226%22%20fill=%22none%22%20stroke=%22%2357633a%22%20stroke-width=%225%22/%3E%3Crect%20x=%2216%22%20y=%2226%22%20width=%2260%22%20height=%2246%22%20rx=%226%22%20fill=%22none%22%20stroke=%22%233f5a26%22%20stroke-width=%224%22/%3E%3Crect%20x=%2224%22%20y=%2252%22%20width=%227%22%20height=%227%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2231%22%20y=%2252%22%20width=%227%22%20height=%227%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2238%22%20y=%2252%22%20width=%227%22%20height=%227%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2238%22%20y=%2245%22%20width=%227%22%20height=%227%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2252%22%20y=%2238%22%20width=%226%22%20height=%226%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2230%22%20y=%2284%22%20width=%2232%22%20height=%2214%22%20rx=%227%22%20fill=%22none%22%20stroke=%22%2357633a%22%20stroke-width=%223.5%22/%3E%3Cg%20fill=%22%2357633a%22%3E%3Crect%20x=%2216%22%20y=%22110%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2238%22%20y=%22110%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2260%22%20y=%22110%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2216%22%20y=%22126%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2238%22%20y=%22126%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2260%22%20y=%22126%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2216%22%20y=%22142%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2238%22%20y=%22142%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2260%22%20y=%22142%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2216%22%20y=%22158%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2238%22%20y=%22158%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2260%22%20y=%22158%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3C/g%3E%3Ccircle%20cx=%2246%22%20cy=%2210%22%20r=%223%22%20fill=%22%2357633a%22/%3E%3C/g%3E%3Cg%3E%3Cg%20fill=%22%234a7030%22%3E%3Crect%20x=%22252%22%20y=%2296%22%20width=%2218%22%20height=%2218%22/%3E%3Crect%20x=%22270%22%20y=%2296%22%20width=%2218%22%20height=%2218%22/%3E%3Crect%20x=%22288%22%20y=%2296%22%20width=%2218%22%20height=%2218%22/%3E%3Crect%20x=%22288%22%20y=%2278%22%20width=%2218%22%20height=%2218%22/%3E%3Crect%20x=%22306%22%20y=%2278%22%20width=%2218%22%20height=%2218%22/%3E%3Crect%20x=%22324%22%20y=%2278%22%20width=%2218%22%20height=%2218%22/%3E%3Crect%20x=%22324%22%20y=%2260%22%20width=%2218%22%20height=%2218%22/%3E%3C/g%3E%3Crect%20x=%22342%22%20y=%2260%22%20width=%2220%22%20height=%2220%22%20fill=%22%235d8540%22/%3E%3Ccircle%20cx=%22356%22%20cy=%2266%22%20r=%222.6%22%20fill=%22%2322301a%22/%3E%3Cg%20transform=%22translate(392,48)%22%3E%3Ccircle%20cx=%2210%22%20cy=%2212%22%20r=%229%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2220%22%20cy=%227%22%20r=%228%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2228%22%20cy=%2214%22%20r=%228%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2219%22%20cy=%2218%22%20r=%229%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Cpath%20d=%22M13%2024%20L25%2024%20L22%2032%20L16%2032%20Z%22%20fill=%22%23a8823f%22/%3E%3C/g%3E%3C/g%3E%3Cg%20transform=%22translate(330,300)%20rotate(14)%22%3E%3Crect%20x=%220%22%20y=%220%22%20width=%2274%22%20height=%22156%22%20rx=%2220%22%20fill=%22none%22%20stroke=%22%2357633a%22%20stroke-width=%224.5%22/%3E%3Crect%20x=%2213%22%20y=%2220%22%20width=%2248%22%20height=%2236%22%20rx=%225%22%20fill=%22none%22%20stroke=%22%233f5a26%22%20stroke-width=%223.5%22/%3E%3Crect%20x=%2219%22%20y=%2240%22%20width=%226%22%20height=%226%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2225%22%20y=%2240%22%20width=%226%22%20height=%226%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2231%22%20y=%2240%22%20width=%226%22%20height=%226%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2231%22%20y=%2234%22%20width=%226%22%20height=%226%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2244%22%20y=%2230%22%20width=%225%22%20height=%225%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2224%22%20y=%2266%22%20width=%2226%22%20height=%2211%22%20rx=%225.5%22%20fill=%22none%22%20stroke=%22%2357633a%22%20stroke-width=%223%22/%3E%3Cg%20fill=%22%2357633a%22%3E%3Crect%20x=%2212%22%20y=%2288%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2230%22%20y=%2288%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2248%22%20y=%2288%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2212%22%20y=%22101%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2230%22%20y=%22101%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2248%22%20y=%22101%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2212%22%20y=%22114%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2230%22%20y=%22114%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2248%22%20y=%22114%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2212%22%20y=%22127%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2230%22%20y=%22127%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2248%22%20y=%22127%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3C/g%3E%3C/g%3E%3Cg%3E%3Cg%20fill=%22%234a7030%22%3E%3Crect%20x=%2280%22%20y=%22382%22%20width=%2214%22%20height=%2214%22/%3E%3Crect%20x=%2280%22%20y=%22368%22%20width=%2214%22%20height=%2214%22/%3E%3Crect%20x=%2294%22%20y=%22368%22%20width=%2214%22%20height=%2214%22/%3E%3Crect%20x=%22108%22%20y=%22368%22%20width=%2214%22%20height=%2214%22/%3E%3Crect%20x=%22108%22%20y=%22354%22%20width=%2214%22%20height=%2214%22/%3E%3C/g%3E%3Crect%20x=%22122%22%20y=%22352%22%20width=%2216%22%20height=%2216%22%20fill=%22%235d8540%22/%3E%3Ccircle%20cx=%22133%22%20cy=%22357%22%20r=%222.2%22%20fill=%22%2322301a%22/%3E%3Cg%20transform=%22translate(156,330)%22%3E%3Ccircle%20cx=%228%22%20cy=%2210%22%20r=%227%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2216%22%20cy=%226%22%20r=%226.5%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2223%22%20cy=%2212%22%20r=%226.5%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2215%22%20cy=%2215%22%20r=%227%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Cpath%20d=%22M10%2020%20L20%2020%20L18%2027%20L12%2027%20Z%22%20fill=%22%23a8823f%22/%3E%3C/g%3E%3C/g%3E%3Cg%20transform=%22translate(228,242)%22%3E%3Ccircle%20cx=%229%22%20cy=%2211%22%20r=%228%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2218%22%20cy=%226%22%20r=%227%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2225%22%20cy=%2212%22%20r=%227%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2217%22%20cy=%2216%22%20r=%228%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Cpath%20d=%22M11%2022%20L23%2022%20L20%2030%20L14%2030%20Z%22%20fill=%22%23a8823f%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") 0 0 / 480px 480px repeat,
-      radial-gradient(120% 140% at 50% 20%, #e9f2d2 0%, #d3e2af 55%, #b9cf95 100%);
+      radial-gradient(120% 140% at 50% 20%, #93a375 0%, #75855a 55%, #576743 100%);
   }
   body {
     display: flex;
@@ -226,11 +226,37 @@
      exactly the sizes resizeCanvas() had computed for --board-px. Pinning
      flex-shrink:0 here forces the *intended* fallback (scroll) instead of
      silent clipping in the rare cases the board still can't fully fit. */
-  #boardWrap { flex-shrink: 0; }
+  #boardWrap {
+    flex-shrink: 0;
+    /* 3D "recessed screen" framing. Everything here is box-shadow/radius
+       only - zero layout participation, so it cannot feed back into
+       measureReservePx()/resizeCanvas() (the recurring sizing-budget bug
+       class in this file). The outer ring shadows form the raised bezel
+       frame; the matching inner shadows live on #boardBezel (an absolute,
+       pointer-events:none overlay) because INSET shadows on this element
+       would paint underneath the canvas child. */
+    border-radius: 14px;
+    box-shadow:
+      0 0 0 3px #3a3128,
+      0 0 0 5px #57492f,
+      0 3px 0 5px rgba(0, 0, 0, 0.35),
+      0 14px 30px rgba(0, 0, 0, 0.40);
+  }
+  #boardBezel {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none; /* MUST stay - it covers the canvas, and swipes have to fall through to it */
+    box-shadow:
+      inset 0 5px 12px rgba(20, 26, 8, 0.38),
+      inset 0 -3px 8px rgba(255, 255, 250, 0.30),
+      inset 3px 0 8px rgba(20, 26, 8, 0.18),
+      inset -3px 0 8px rgba(20, 26, 8, 0.18);
+  }
   canvas {
-    background: #1c1815;
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 12px 30px rgba(0,0,0,0.45);
+    background: #ccd9a3;
+    /* no own border-radius: #boardWrap's overflow:hidden + 14px radius does
+       the corner clipping - a smaller radius here would leave notches */
     touch-action: none;
     display: block;
   }
@@ -539,6 +565,7 @@
   </div>
   <div id="boardWrap" style="position:relative; overflow:hidden;">
     <canvas id="game"></canvas>
+    <div id="boardBezel" aria-hidden="true"></div>
     <div id="levelFlash">
       <div id="levelFlashCard">
         <img id="levelFlashImg" alt="">
@@ -1427,11 +1454,13 @@
   function render() {
     var w = boardCssPx, h = boardCssPx;
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = "#1c1815";
+    // light Nokia-LCD board (was near-black #1c1815) - sprites all carry
+    // dark edge strokes / shadows, so they stay readable on the light ground
+    ctx.fillStyle = "#ccd9a3";
     ctx.fillRect(0, 0, w, h);
 
-    // subtle grid
-    ctx.strokeStyle = "rgba(255,255,255,0.035)";
+    // subtle grid - dark lines now (white-alpha lines vanish on light bg)
+    ctx.strokeStyle = "rgba(46, 61, 26, 0.18)";
     ctx.lineWidth = 1;
     for (var g = 1; g < GRID_N; g++) {
       var p = Math.round(g * cellPx) + 0.5;

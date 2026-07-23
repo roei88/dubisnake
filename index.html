@@ -15,7 +15,11 @@
     height: 100%;
     overflow: hidden;
     overscroll-behavior: none;
-    background: #14100e;
+    /* Moody radial backdrop behind the phone-frame #wrap below - purely
+       decorative page background, no box-model participation in #wrap's own
+       sizing (see the #wrap comment), so it can't reopen the sizing-budget
+       bugs this file has already been through more than once. */
+    background: radial-gradient(120% 140% at 50% 20%, #241d18 0%, #14100e 55%, #0b0806 100%);
     -webkit-tap-highlight-color: transparent;
   }
   body {
@@ -38,6 +42,14 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: #f2e9dd;
   }
+  /* Nostalgic "candybar phone" frame around the existing #wrap - deliberately
+     decorating the element already used for the flex-centering/sizing math
+     (not a NEW wrapping element) so the fixed, known border/padding added
+     here is trivial to account for in resizeCanvas()'s margin constant (see
+     that comment), rather than introducing a fresh box whose size could feed
+     back into the layout the way #hud's own avatar sizing once did. Border/
+     padding are small fixed px values, not derived from cellPx or anything
+     else computed - no circular dependency risk. */
   #wrap {
     position: relative;
     display: flex;
@@ -46,9 +58,39 @@
     gap: 8px;
     max-height: 100vh;
     overflow-y: auto;
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    padding-top: 22px;
+    padding-bottom: 12px;
+    padding-left: calc(14px + env(safe-area-inset-left));
+    padding-right: calc(14px + env(safe-area-inset-right));
     box-sizing: border-box;
+    border: 3px solid #2f271f;
+    border-radius: 28px;
+    background: linear-gradient(165deg, #221b16, #14100e 65%);
+    box-shadow:
+      0 24px 55px rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.07),
+      inset 0 -2px 8px rgba(0,0,0,0.55);
+  }
+  /* Small decorative "earpiece speaker" dots, evoking the grille above an
+     old candybar phone's screen - position:absolute inside #wrap (already
+     position:relative) so it adds zero flow height/width and can never be
+     measured by measureReservePx() or affect the board's sizing budget. */
+  #speakerGrille {
+    position: absolute;
+    top: 9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #0a0806;
+    box-shadow:
+      -14px 0 0 #0a0806,
+      -7px 0 0 #0a0806,
+      7px 0 0 #0a0806,
+      14px 0 0 #0a0806;
+    opacity: 0.6;
+    pointer-events: none;
   }
   #hud {
     display: flex;
@@ -70,20 +112,21 @@
     /* --cell-px is written from JS in resizeCanvas() (the single existing
        place --board-px is already set) - the one source of truth every size
        constant, including the avatar below, derives from. --avatar-px is a
-       declarative CSS custom property computed from it (3 cells). The 240px
-       ceiling is a defensive fallback ONLY, not a real-world design cap: it
-       must stay >= 3 * (MAX_BOARD_PX / GRID_N) = 3 * 80 = 240px (the JS-side
-       bound on cellPx - see MAX_BOARD_PX/GRID_N below), otherwise it quietly
-       overrides the "avatar is genuinely >=3 cells, in both dimensions, at
-       every viewport size" requirement. A previous revision capped this at
-       96px on the theory that it "doesn't dominate a compact HUD bar on
-       larger screens" - that reasoning is exactly backwards for this
-       requirement: it measurably broke down to as little as ~1.2-1.5 cells
-       once cellPx exceeded 32px (confirmed live at a real 768x646 viewport:
-       cellPx 63px -> avatar stuck at 96px -> 1.52 cells, not >=3). If
-       MAX_BOARD_PX or GRID_N ever change, this 240px must be revisited
-       together with them - it is not independently derived. */
-    --avatar-px: min(calc(var(--cell-px, 16px) * 3), 240px);
+       declarative CSS custom property computed from it. Originally 3 cells
+       (a hard "at least 3 game squares" requirement) - reduced 25% to 2.25
+       cells per explicit follow-up request, which does supersede that
+       requirement; noting the tension here rather than silently dropping it
+       so it isn't lost. The 180px ceiling is a defensive fallback ONLY, not
+       a real-world design cap: it must stay >= 2.25 * (MAX_BOARD_PX /
+       GRID_N) = 2.25 * 80 = 180px (the JS-side bound on cellPx - see
+       MAX_BOARD_PX/GRID_N below), same reasoning as the ratio's own history
+       (see git blame on this comment): a cap set below the true max cellPx
+       silently breaks the avatar's own size ratio at large viewports rather
+       than just capping absolute size, which is easy to miss since it only
+       shows up once cellPx is large enough to hit the cap. If MAX_BOARD_PX
+       or GRID_N ever change, this 180px must be revisited together with
+       them - it is not independently derived. */
+    --avatar-px: min(calc(var(--cell-px, 16px) * 2.25), 180px);
   }
   #hud span b { color: #00e5ff; }
   /* Always-visible avatar HUD element (menu/playing/paused/dead/won - never
@@ -111,8 +154,8 @@
      avatar in the intended top-left corner, with real gap between every
      item and no overlap. */
   #avatarHud {
-    width: var(--avatar-px, 48px);
-    height: var(--avatar-px, 48px);
+    width: var(--avatar-px, 36px);
+    height: var(--avatar-px, 36px);
     flex-shrink: 0;
     border-radius: 50%;
     /* small dark chip behind the image so it doesn't float directly against
@@ -221,6 +264,21 @@
     color: #e8dcc8;
   }
   #overlay .stat { font-size: min(clamp(15px, 3vmin, 20px), calc(var(--board-px, 300px) * 0.065)); color: #fff; }
+  /* The menu screen's one-line tagline (not the retry-instruction <p> on the
+     dead/won/paused screens, which stay on the plain #overlay p rule above) -
+     bigger and bolder than body copy, in the cyan accent already used for
+     the HUD/avatar ring, for a punchier "cool" read rather than plain
+     instructional text. Same board-px-clamp pattern as its siblings so it
+     still shrinks correctly on small/landscape viewports (see the comment
+     above #overlay h1). */
+  #overlay .tagline {
+    margin: 4px 0;
+    font-size: min(clamp(20px, 4.4vmin, 30px), calc(var(--board-px, 300px) * 0.1));
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: #00e5ff;
+    text-shadow: 0 2px 10px rgba(0,229,255,0.35);
+  }
   #playBtn {
     /* QA fix: same board-px-based shrink pattern as the rest of #overlay's
        children (see comment above #overlay h1 and .splashPic) - these three
@@ -364,14 +422,44 @@
     color: #8a7c6b;
     flex-shrink: 0; /* see #hud comment: never let flex compress this below its text */
   }
+  /* Language toggle: deliberately position:fixed to the physical viewport
+     corner, OUTSIDE #wrap's normal flow entirely - not a flex child of #hud,
+     not measured by measureReservePx(). This file has twice already broken
+     the board's no-scroll/sizing budget by adding something into #wrap's
+     flow that fed back into resizeCanvas()'s size calculations (the avatar
+     HUD chip, then its own sizing loop); a fixed-position element outside
+     #wrap can never do that. "right" is a physical (not logical/dir-aware)
+     CSS property, so this stays in the SAME physical corner whether the
+     current language is he (rtl) or en (ltr) - it doesn't jump to the other
+     side every time you toggle it. */
+  #langToggle {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
+    z-index: 20;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
+    background: rgba(28,22,19,0.78);
+    color: #f2e9dd;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    cursor: pointer;
+    touch-action: none;
+  }
+  #langToggle:active { background: rgba(0,229,255,0.35); }
 </style>
 </head>
 <body>
+<button id="langToggle" type="button">English</button>
 <div id="wrap">
+  <div id="speakerGrille" aria-hidden="true"></div>
   <div id="hud">
-    <span>ניקוד <b id="scoreVal">0</b></span>
-    <span>רמה <b id="levelVal">1</b></span>
-    <span>שיא <b id="hiVal">0</b></span>
+    <span><span class="hud-label" id="scoreLabel">ניקוד</span> <b id="scoreVal">0</b></span>
+    <span><span class="hud-label" id="levelLabel">רמה</span> <b id="levelVal">1</b></span>
+    <span><span class="hud-label" id="hiLabel">שיא</span> <b id="hiVal">0</b></span>
     <div id="avatarHud"><img id="avatarHudImg" alt=""></div>
   </div>
   <div id="boardWrap" style="position:relative; overflow:hidden;">
@@ -385,9 +473,9 @@
     </div>
     <div id="overlay">
       <div class="overlayInner">
-        <h1>dubisnake</h1>
-        <p>נווטו עם הראש ברשת, אכלו את הפופקורן, ואל תפגעו בקירות או בעצמכם. המהירות עולה כל 5 חתיכות.</p>
-        <p class="stat">חצים/WASD, החלקה, או לוח הכיוונים. מקש הרווח משהה.</p>
+        <h1>דוביסנייק</h1>
+        <p class="tagline">אכלו את הפופקורן!</p>
+        <p class="stat">חצים, החלקה, או לוח הכיוונים. לחץ ספייס כדי לעצור.</p>
         <button id="playBtn" type="button" disabled>טוען&hellip;</button>
       </div>
     </div>
@@ -454,6 +542,110 @@
   var levelFlashText = document.getElementById("levelFlashText");
   var levelFlashBlurb = document.getElementById("levelFlashBlurb");
   var dpad = document.getElementById("dpad");
+  var langToggleBtn = document.getElementById("langToggle");
+  var scoreLabelEl = document.getElementById("scoreLabel");
+  var levelLabelEl = document.getElementById("levelLabel");
+  var hiLabelEl = document.getElementById("hiLabel");
+
+  // ---------- i18n: every visible string, keyed by language, switchable at
+  // runtime with no page reload. The "dubisnake" brand name is intentionally
+  // NOT in here - it's a proper noun/brand and stays as-is in both
+  // languages, matching the existing convention for "WASD"-style keycap
+  // labels elsewhere in this file (now moot, see KEY_DIR below - arrow keys
+  // only, WASD removed as a movement input per spec). ----------
+  var STRINGS = {
+    he: {
+      dir: "rtl",
+      metaDescription: "משחק נחש בסגנון נוקיה, עם ראש שהוא תמונת פרופיל ומזון פופקורן.",
+      scoreLabel: "ניקוד",
+      levelLabel: "רמה",
+      hiLabel: "שיא",
+      footerHi: "השיא נשמר מקומית במכשיר",
+      footerHiFail: "השיא לא נשמר הפעם (האחסון אינו זמין)",
+      dpadUp: "למעלה",
+      dpadLeft: "שמאלה",
+      dpadRight: "ימינה",
+      dpadDown: "למטה",
+      // Brand name gets a Hebrew form specifically in Hebrew mode (English
+      // mode keeps the Latin "dubisnake" - see brandTitle below).
+      brandTitle: "דוביסנייק",
+      // Deliberately just the one punchy line now (was a full mechanics
+      // explainer) - rendered bigger/bolder via the .tagline class, not the
+      // plain #overlay p style; the controls line below is unchanged.
+      menuInstructions: "אכלו את הפופקורן!",
+      // WASD removed as a movement input - see KEY_DIR - so it's no longer
+      // mentioned here; corrected space-key phrasing per explicit spec.
+      menuControls: "חצים, החלקה, או לוח הכיוונים. לחץ ספייס כדי לעצור.",
+      loadingBtn: "טוען…",
+      playBtn: "שחק",
+      playAgainBtn: "שחק שוב",
+      deadTitle: "המשחק נגמר",
+      wonTitle: "ניצחת!",
+      scoreStat: function (n) { return "ניקוד: " + n; },
+      hiStat: function (n) { return "שיא: " + n; },
+      wonBoardFull: function (n) { return "הלוח מלא - ניקוד: " + n; },
+      deadRetry: "הקישו שחק, לחצו Enter, או הקישו על הלוח כדי לנסות שוב.",
+      wonRetry: "הקישו שחק, לחצו Enter, או הקישו על הלוח כדי לשחק שוב.",
+      pausedTitle: "מושהה",
+      pausedResume: "רווח / הקישו המשך כדי להמשיך.",
+      resumeBtn: "המשך",
+      levelFlashLabel: function (n) { return "רמה " + n; },
+      blurbs: [
+        "מהירות מתונה, נחש רגוע.",
+        "המהירות עולה, הזנב מודאג.",
+        "עכשיו זה רציני. גם הפופקורן מזיע."
+      ],
+      toggleLabel: "English",
+      toggleAria: "Switch to English"
+    },
+    en: {
+      dir: "ltr",
+      metaDescription: "A Nokia-style snake game where the head is a profile photo and the food is popcorn.",
+      scoreLabel: "Score",
+      levelLabel: "Level",
+      hiLabel: "High",
+      footerHi: "High score saved locally on this device",
+      footerHiFail: "High score not saved this time (storage unavailable)",
+      dpadUp: "Up",
+      dpadLeft: "Left",
+      dpadRight: "Right",
+      dpadDown: "Down",
+      // English keeps the Latin brand name as-is.
+      brandTitle: "dubisnake",
+      // Matches the simplified Hebrew tagline - see the "he" entry above.
+      menuInstructions: "Eat the popcorn!",
+      menuControls: "Arrows, swipe, or the D-pad. Press space to pause.",
+      loadingBtn: "Loading…",
+      playBtn: "Play",
+      playAgainBtn: "Play Again",
+      deadTitle: "Game Over",
+      wonTitle: "You Win!",
+      scoreStat: function (n) { return "Score: " + n; },
+      hiStat: function (n) { return "High score: " + n; },
+      wonBoardFull: function (n) { return "Board full - score: " + n; },
+      deadRetry: "Tap Play, press Enter, or tap the board to try again.",
+      wonRetry: "Tap Play, press Enter, or tap the board to play again.",
+      pausedTitle: "Paused",
+      pausedResume: "Space / tap Resume to continue.",
+      resumeBtn: "Resume",
+      levelFlashLabel: function (n) { return "Level " + n; },
+      blurbs: [
+        "Chill speed. Calm snake.",
+        "Speed's climbing. Tail's nervous.",
+        "Serious now. Even the popcorn is sweating."
+      ],
+      toggleLabel: "עברית",
+      toggleAria: "עבור לעברית"
+    }
+  };
+  var LANG_KEY = "dubisnake_lang";
+  var currentLang = "he";
+  try {
+    var storedLang = localStorage.getItem(LANG_KEY);
+    if (storedLang === "he" || storedLang === "en") currentLang = storedLang;
+  } catch (e) { /* private mode / storage disabled - default stands */ }
+
+  function S() { return STRINGS[currentLang]; }
 
   // ---------- image preload with colored-circle fallback ----------
   // No getImageData is used anywhere so this stays file:// safe.
@@ -554,20 +746,14 @@
     { core: "#ff3d81", edge: "#8f0046" }  // hot magenta
   ];
   // Short, dry, PG snake/popcorn/speed one-liners for the level-details
-  // screen (levelUp()) - one per head/tint in the cycle, in Hebrew per the
-  // in-page localization spec. Index by (level - 1) % 3, same as the heads
+  // screen (levelUp()) - one per head/tint in the cycle, per-language (see
+  // STRINGS.he/en.blurbs above). Index by (level - 1) % 3, same as the heads
   // and tints, so the joke changes every level but repeats every 3 levels
-  // along with the head photo. Kept to ~4-6 words each (all three now
-  // roughly the length of the old third line) so they're genuinely
+  // along with the head photo. Kept to ~4-6 words each so they're genuinely
   // skimmable within the flashTimer window below while gameplay keeps
   // running underneath - a 10-word line needs well over 1.5s of full-
   // opacity reading time at comfortable reading speed (~3.3-4.2 words/sec),
   // which the flash didn't budget.
-  var LEVEL_BLURBS = [
-    "מהירות מתונה, נחש רגוע.",
-    "המהירות עולה, הזנב מודאג.",
-    "עכשיו זה רציני. גם הפופקורן מזיע."
-  ];
 
   // ---------- responsive canvas sizing ----------
   var dpr = 1;
@@ -600,6 +786,19 @@
                                     // unchanged - at GRID_N=9 this yields ~80px
                                     // cells, plenty large on desktop without
                                     // further tuning.
+  // The #wrap "phone frame" (border + padding, see its CSS) adds fixed,
+  // KNOWN px overhead beyond what measureReservePx() measures (that function
+  // only measures hud/footer/dpad - not #wrap's own border/padding). Unlike
+  // the avatar-sizing fixed-point loop above, these are plain constants, not
+  // derived from cellPx or anything else computed here, so there is no
+  // circular-dependency risk - just add them once. Vertical: border-top(3) +
+  // padding-top(22) + padding-bottom(12) + border-bottom(3) = 40. Horizontal:
+  // border-left(3) + padding-left(14) + padding-right(14) + border-right(3)
+  // = 34 (the env(safe-area-inset-*) part of that padding is the OS's own
+  // reserved inset, already outside the viewport dimensions JS reads, so it
+  // needs no separate accounting here).
+  var FRAME_VERTICAL_PX = 40;
+  var FRAME_HORIZONTAL_PX = 34;
 
   // Reads env(safe-area-inset-bottom) via a hidden probe element, since JS
   // can't read CSS env() values directly.
@@ -687,8 +886,8 @@
       // overlaps the canvas/footer.
       available = Math.min(
         available,
-        window.innerHeight - reservePx,
-        window.innerWidth - 16
+        window.innerHeight - reservePx - FRAME_VERTICAL_PX,
+        window.innerWidth - 16 - FRAME_HORIZONTAL_PX
       );
       available = Math.min(available, MAX_BOARD_PX);
       // Only pull the board up to the *ideal* readability floor when the
@@ -835,7 +1034,8 @@
   }
 
   function currentBlurb() {
-    return LEVEL_BLURBS[(level - 1) % LEVEL_BLURBS.length];
+    var blurbs = S().blurbs;
+    return blurbs[(level - 1) % blurbs.length];
   }
 
   // Always-visible avatar HUD (#avatarHud/#avatarHudImg): shows the same
@@ -856,6 +1056,75 @@
     hudHi.textContent = String(hi);
   }
 
+  // ---------- language switch: everything below is re-derived from S(),
+  // never a page reload. Gameplay control DIRECTIONS are untouched by this -
+  // switching `dir` only affects text layout (see the #avatarHud/#dpad CSS
+  // comments for why the physical left/right mapping stays fixed either
+  // way). Safe to call at any time, including mid-game. ----------
+  function applyLanguage(lang) {
+    if (STRINGS[lang]) currentLang = lang;
+    var s = S();
+
+    document.documentElement.lang = currentLang;
+    document.documentElement.dir = s.dir;
+
+    var metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute("content", s.metaDescription);
+
+    if (scoreLabelEl) scoreLabelEl.textContent = s.scoreLabel;
+    if (levelLabelEl) levelLabelEl.textContent = s.levelLabel;
+    if (hiLabelEl) hiLabelEl.textContent = s.hiLabel;
+
+    var footerEl = document.getElementById("footer");
+    if (footerEl) {
+      footerEl.textContent = persistOk ? s.footerHi : s.footerHiFail;
+    }
+
+    var upBtn = document.getElementById("up");
+    var leftBtn = document.getElementById("left");
+    var rightBtn = document.getElementById("right");
+    var downBtn = document.getElementById("down");
+    if (upBtn) upBtn.setAttribute("aria-label", s.dpadUp);
+    if (leftBtn) leftBtn.setAttribute("aria-label", s.dpadLeft);
+    if (rightBtn) rightBtn.setAttribute("aria-label", s.dpadRight);
+    if (downBtn) downBtn.setAttribute("aria-label", s.dpadDown);
+
+    if (langToggleBtn) {
+      langToggleBtn.textContent = s.toggleLabel;
+      langToggleBtn.setAttribute("aria-label", s.toggleAria);
+    }
+
+    // Re-render whichever overlay matches the current state, or - during the
+    // brief pre-asset "loading" state, before any showOverlay* function has
+    // run yet - directly correct the static markup's own elements in place.
+    if (state === "menu") showOverlayMenu();
+    else if (state === "dead") showOverlayDead();
+    else if (state === "won") showOverlayWon();
+    else if (state === "paused") showOverlayPaused();
+    else if (state === "loading") {
+      var loadingH1 = overlay.querySelector("h1");
+      var loadingTagline = overlay.querySelector(".tagline");
+      var loadingControls = overlay.querySelector(".stat");
+      var loadingBtn = document.getElementById("playBtn");
+      if (loadingH1) loadingH1.textContent = s.brandTitle;
+      if (loadingTagline) loadingTagline.textContent = s.menuInstructions;
+      if (loadingControls) loadingControls.textContent = s.menuControls;
+      if (loadingBtn) loadingBtn.textContent = s.loadingBtn;
+    }
+
+    // A level-up card can be on screen (flashTimer > 0) independent of
+    // `state` (see hideLevelFlash()'s comment) - keep its text in sync too
+    // rather than leaving it in the old language until the next level-up.
+    if (flashTimer > 0) {
+      levelFlashText.textContent = s.levelFlashLabel(level);
+      levelFlashBlurb.textContent = currentBlurb();
+    }
+
+    try {
+      localStorage.setItem(LANG_KEY, currentLang);
+    } catch (e) { /* private mode / storage disabled - in-session switch still works */ }
+  }
+
   // hi is a module-level var, so an in-session high score still works even
   // when persistence is unavailable (private mode / quota / disabled
   // storage) - persistOk just tracks whether we can also survive a reload,
@@ -866,7 +1135,7 @@
     if (persistOk) return;
     var footerEl = document.getElementById("footer");
     if (footerEl && footerEl.dataset.persistNoted !== "1") {
-      footerEl.textContent = "השיא לא נשמר הפעם (האחסון אינו זמין)";
+      footerEl.textContent = S().footerHiFail;
       footerEl.dataset.persistNoted = "1";
     }
   }
@@ -975,7 +1244,7 @@
     // currentHeadKey() call site) so it and #levelFlashImg can never drift
     // out of sync with each other.
     updateAvatarHud();
-    levelFlashText.textContent = "רמה " + level;
+    levelFlashText.textContent = S().levelFlashLabel(level);
     levelFlashBlurb.textContent = currentBlurb();
     // Color-pop background accent tinted to the level's tint color, so each
     // level-up reads as visually distinct, not just a text change.
@@ -1003,14 +1272,18 @@
   }
 
   // ---------- overlay screens ----------
+  // Every string below comes from S() (the current-language STRINGS entry),
+  // so re-invoking whichever of these matches the current `state` is exactly
+  // what applyLanguage() needs to do to re-render the visible overlay in the
+  // new language, with no separate template to keep in sync.
   function showOverlayMenu() {
     overlay.classList.remove("hidden");
     overlay.innerHTML =
       '<div class="overlayInner">' +
-      '<h1>dubisnake</h1>' +
-      '<p>נווטו עם הראש ברשת, אכלו את הפופקורן, ואל תפגעו בקירות או בעצמכם. המהירות עולה כל 5 חתיכות.</p>' +
-      '<p class="stat">חצים/WASD, החלקה, או לוח הכיוונים. מקש הרווח משהה.</p>' +
-      '<button id="playBtn" type="button">שחק</button>' +
+      '<h1>' + S().brandTitle + '</h1>' +
+      '<p class="tagline">' + S().menuInstructions + '</p>' +
+      '<p class="stat">' + S().menuControls + '</p>' +
+      '<button id="playBtn" type="button">' + S().playBtn + '</button>' +
       '</div>';
     bindPlayBtn();
   }
@@ -1020,11 +1293,11 @@
     overlay.innerHTML =
       '<div class="overlayInner">' +
       '<img class="splashPic" src="' + assetSrc("splash") + '" alt="">' +
-      '<h1>המשחק נגמר</h1>' +
-      '<p class="stat">ניקוד: ' + score + '</p>' +
-      '<p class="stat">שיא: ' + hi + '</p>' +
-      '<p>הקישו שחק, לחצו Enter, או הקישו על הלוח כדי לנסות שוב.</p>' +
-      '<button id="playBtn" type="button">שחק שוב</button>' +
+      '<h1>' + S().deadTitle + '</h1>' +
+      '<p class="stat">' + S().scoreStat(score) + '</p>' +
+      '<p class="stat">' + S().hiStat(hi) + '</p>' +
+      '<p>' + S().deadRetry + '</p>' +
+      '<button id="playBtn" type="button">' + S().playAgainBtn + '</button>' +
       '</div>';
     bindPlayBtn();
   }
@@ -1034,11 +1307,11 @@
     overlay.innerHTML =
       '<div class="overlayInner">' +
       '<img class="splashPic" src="' + assetSrc("splash") + '" alt="">' +
-      '<h1>ניצחת!</h1>' +
-      '<p class="stat">הלוח מלא - ניקוד: ' + score + '</p>' +
-      '<p class="stat">שיא: ' + hi + '</p>' +
-      '<p>הקישו שחק, לחצו Enter, או הקישו על הלוח כדי לשחק שוב.</p>' +
-      '<button id="playBtn" type="button">שחק שוב</button>' +
+      '<h1>' + S().wonTitle + '</h1>' +
+      '<p class="stat">' + S().wonBoardFull(score) + '</p>' +
+      '<p class="stat">' + S().hiStat(hi) + '</p>' +
+      '<p>' + S().wonRetry + '</p>' +
+      '<button id="playBtn" type="button">' + S().playAgainBtn + '</button>' +
       '</div>';
     bindPlayBtn();
   }
@@ -1047,10 +1320,10 @@
     overlay.classList.remove("hidden");
     overlay.innerHTML =
       '<div class="overlayInner">' +
-      '<h1>מושהה</h1>' +
-      '<p class="stat">ניקוד: ' + score + '</p>' +
-      '<p>רווח / הקישו המשך כדי להמשיך.</p>' +
-      '<button id="playBtn" type="button">המשך</button>' +
+      '<h1>' + S().pausedTitle + '</h1>' +
+      '<p class="stat">' + S().scoreStat(score) + '</p>' +
+      '<p>' + S().pausedResume + '</p>' +
+      '<button id="playBtn" type="button">' + S().resumeBtn + '</button>' +
       '</div>';
     bindPlayBtn();
   }
@@ -1220,10 +1493,10 @@
   }
 
   // ---------- keyboard ----------
+  // WASD intentionally removed per spec - arrow keys only. (Was previously
+  // mapped alongside ArrowUp/Down/Left/Right.)
   var KEY_DIR = {
-    ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right",
-    w: "up", s: "down", a: "left", d: "right",
-    W: "up", S: "down", A: "left", D: "right"
+    ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right"
   };
 
   window.addEventListener("keydown", function (e) {
@@ -1322,9 +1595,31 @@
     startOrResume();
   });
 
+  // ---------- language toggle ----------
+  if (langToggleBtn) {
+    langToggleBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      applyLanguage(currentLang === "he" ? "en" : "he");
+    });
+    // The global keydown handler below (Space -> pause, Enter -> start/
+    // resume) is bound on `window` and fires on ANY keypress regardless of
+    // focus, including a native Space/Enter activation of this button - that
+    // would pause/resume the game as an unwanted side effect of toggling the
+    // language. stopPropagation() here (bubble phase, before the event
+    // reaches window) isolates this button's own keyboard activation from
+    // that global handler, without touching the handler itself.
+    langToggleBtn.addEventListener("keydown", function (e) {
+      if (e.key === " " || e.key === "Enter") e.stopPropagation();
+    });
+  }
+
   // ---------- boot ----------
   loadHi();
   updateHud();
+  applyLanguage(currentLang); // corrects the static pre-boot markup (loading
+                               // label, dpad aria-labels, meta description,
+                               // HUD labels, footer) to match a previously-
+                               // stored language choice before first paint
 
   // Coalesce resize/orientationchange bursts (e.g. iOS Safari's chrome
   // auto-hide/show firing repeated resize events) into one rAF-scheduled

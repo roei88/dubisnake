@@ -19,9 +19,15 @@ remembered on the device you play on.
 
 The `assets/` folder holds the five sprites the game draws from: the three
 cycling profile heads (`head-1.png`, `head-2.png`, `head-3.png`), the popcorn
-food (`food.png`), and the splash graphic used on the level-up flash and
-game-over screen (`splash.png`). If an image fails to load, the game falls
-back to a plain colored circle so it keeps working.
+food (`food.png`), and the splash graphic used on the game-over/win screen
+(`splash.png`). Leveling up shows a short, non-blocking "level details" pop
+of its own (the enlarged head photo for the level being entered, plus a
+one-line blurb) instead of the splash graphic. If an image fails to load, the
+game falls back to a plain colored circle so it keeps working.
+
+All in-game UI text is localized to Hebrew/RTL, and the play grid is 13x13
+cells (down from 19x19) for bigger, more readable cells; gameplay control
+semantics (arrow keys, swipe, D-pad) are unchanged.
 
 Everything runs from a single self-contained `index.html` (vanilla JS +
 canvas), no build step and no external libraries, so it also works by opening

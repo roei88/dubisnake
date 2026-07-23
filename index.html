@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
 <title>dubisnake</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="description" content="Nokia-style snake with a profile-photo head and popcorn food.">
+<meta name="description" content="משחק נחש בסגנון נוקיה, עם ראש שהוא תמונת פרופיל ומזון פופקורן.">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'none';">
 <style>
   :root { color-scheme: dark; }
@@ -60,6 +60,17 @@
     box-sizing: border-box;
   }
   #hud span b { color: #ffd27a; }
+  /* flex-shrink:0 is load-bearing: #boardWrap has overflow:hidden, and per
+     the flex spec an overflow:hidden item's automatic min-height becomes 0
+     (instead of its content size), so without this the flex column in #wrap
+     was free to squeeze #boardWrap (and the canvas/overlay/level-flash-card
+     inside it) shorter than its actual content on cramped viewports, instead
+     of #wrap's own overflow-y:auto kicking in as intended. That clipped the
+     live canvas, the level-up head photo/blurb, and the overlay text at
+     exactly the sizes resizeCanvas() had computed for --board-px. Pinning
+     flex-shrink:0 here forces the *intended* fallback (scroll) instead of
+     silent clipping in the rare cases the board still can't fully fit. */
+  #boardWrap { flex-shrink: 0; }
   canvas {
     background: #1c1815;
     border-radius: 10px;
@@ -82,20 +93,28 @@
     box-sizing: border-box;
   }
   #overlay.hidden { display: none; }
+  /* h1/p/.stat below are each clamped with the same min(vmin-clamp,
+     --board-px-derived) pattern already used by #levelFlashCard's children
+     (see the comment on #levelFlashCard). Without this, text sized purely
+     from vmin ignores how narrow the *actual* #boardWrap container (which
+     clips via overflow:hidden) can get once resizeCanvas() has to shrink the
+     board below what vmin assumed (small/landscape viewports) - confirmed
+     clipping the "dubisnake" <h1> (rendered ~181px wide inside a 104px-wide
+     container) before this fix. */
   #overlay h1 {
     margin: 0;
-    font-size: clamp(28px, 7vmin, 46px);
+    font-size: min(clamp(28px, 7vmin, 46px), calc(var(--board-px, 300px) * 0.16));
     color: #ffd27a;
     text-shadow: 0 2px 6px rgba(0,0,0,0.5);
   }
   #overlay p {
     margin: 2px 0;
-    font-size: clamp(13px, 2.6vmin, 16px);
-    max-width: 32ch;
+    font-size: min(clamp(13px, 2.6vmin, 16px), calc(var(--board-px, 300px) * 0.055));
+    max-width: min(32ch, calc(var(--board-px, 300px) * 0.88));
     line-height: 1.4;
     color: #e8dcc8;
   }
-  #overlay .stat { font-size: clamp(15px, 3vmin, 20px); color: #fff; }
+  #overlay .stat { font-size: min(clamp(15px, 3vmin, 20px), calc(var(--board-px, 300px) * 0.065)); color: #fff; }
   #playBtn {
     margin-top: 8px;
     padding: 12px 34px;
@@ -111,25 +130,53 @@
   }
   #playBtn:active { transform: translateY(1px); }
   #playBtn:disabled { opacity: 0.55; cursor: default; }
+  /* Level-up "level details" screen: a short, colorful, non-blocking pop
+     shown at every level-up (see #levelFlashCard below for the per-level
+     color-pop background, set inline via JS from the level's warm tint).
+     It overlays on top of the canvas (pointer-events:none, no click/tap
+     needed to dismiss) and times out on its own; it never touches `state`,
+     so actual gameplay/snake movement keeps running underneath it. */
   #levelFlash {
     position: absolute;
-    top: 14%;
-    left: 50%;
-    transform: translate(-50%, 0);
+    inset: 0;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
+    border-radius: 10px;
+    overflow: hidden;
   }
   #levelFlash.show { opacity: 1; }
-  #levelFlash img {
-    width: clamp(48px, 12vmin, 84px);
-    height: clamp(48px, 12vmin, 84px);
+  #levelFlashCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* gap/padding/img/text/blurb below are each the smaller of a vmin-based
+       value (the original design intent, and what wins on ordinary
+       viewports where the board comfortably fits the window) and a value
+       derived from --board-px (the actual canvas container's CSS pixel
+       size, set from JS in resizeCanvas()). --board-px only "wins" (via
+       min()) when the container itself has been squeezed below what vmin
+       assumed - e.g. landscape phones with the on-screen d-pad, where
+       resizeCanvas() intentionally floors the board at MIN_BOARD_PX - so
+       the enlarged head photo/text/blurb shrink to fit the *actual*
+       container instead of clipping against its overflow:hidden. */
+    gap: min(8px, calc(var(--board-px, 300px) * 0.025));
+    max-width: min(82%, calc(var(--board-px, 300px) * 0.94));
+    padding: min(18px, calc(var(--board-px, 300px) * 0.04)) min(26px, calc(var(--board-px, 300px) * 0.08));
+    border-radius: 20px;
+    box-shadow: 0 14px 34px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
+    text-align: center;
+    box-sizing: border-box;
+  }
+  #levelFlashCard img {
+    width: min(clamp(84px, 26vmin, 160px), calc(var(--board-px, 300px) * 0.36));
+    height: min(clamp(84px, 26vmin, 160px), calc(var(--board-px, 300px) * 0.36));
     object-fit: contain;
-    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.5), 0 6px 18px rgba(0,0,0,0.55);
   }
   .splashPic {
     width: clamp(56px, 14vmin, 96px);
@@ -137,12 +184,20 @@
     object-fit: contain;
     filter: drop-shadow(0 4px 10px rgba(0,0,0,0.45));
   }
-  #levelFlash span {
-    font-size: clamp(18px, 4vmin, 30px);
+  #levelFlashText {
+    font-size: min(clamp(20px, 4.6vmin, 32px), calc(var(--board-px, 300px) * 0.09));
     font-weight: 800;
-    color: #ffd27a;
+    color: #fff;
     text-shadow: 0 2px 8px rgba(0,0,0,0.6);
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
+  }
+  #levelFlashBlurb {
+    margin: 0;
+    font-size: min(clamp(13px, 2.7vmin, 17px), calc(var(--board-px, 300px) * 0.05));
+    max-width: min(26ch, calc(var(--board-px, 300px) * 0.86));
+    line-height: 1.35;
+    color: #fffaf0;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.45);
   }
   /* #dpad used to be position:fixed at the viewport bottom while
      resizeCanvas() tried to reserve matching space by subtracting a fixed
@@ -196,27 +251,40 @@
 <body>
 <div id="wrap">
   <div id="hud">
-    <span>Score <b id="scoreVal">0</b></span>
-    <span>Level <b id="levelVal">1</b></span>
-    <span>High <b id="hiVal">0</b></span>
+    <span>ניקוד <b id="scoreVal">0</b></span>
+    <span>רמה <b id="levelVal">1</b></span>
+    <span>שיא <b id="hiVal">0</b></span>
   </div>
-  <div style="position:relative; overflow:hidden;">
+  <div id="boardWrap" style="position:relative; overflow:hidden;">
     <canvas id="game"></canvas>
-    <div id="levelFlash"><img id="levelFlashImg" alt=""><span id="levelFlashText">LEVEL 2</span></div>
+    <div id="levelFlash">
+      <div id="levelFlashCard">
+        <img id="levelFlashImg" alt="">
+        <span id="levelFlashText">רמה 2</span>
+        <p id="levelFlashBlurb"></p>
+      </div>
+    </div>
     <div id="overlay">
       <h1>dubisnake</h1>
-      <p>Guide the head through the grid, eat the popcorn, don't hit the walls or yourself. Speed rises every 5 pieces.</p>
-      <p class="stat">Arrows/WASD, swipe, or the D-pad. Space pauses.</p>
-      <button id="playBtn" type="button" disabled>Loading&hellip;</button>
+      <p>נווטו עם הראש ברשת, אכלו את הפופקורן, ואל תפגעו בקירות או בעצמכם. המהירות עולה כל 5 חתיכות.</p>
+      <p class="stat">חצים/WASD, החלקה, או לוח הכיוונים. מקש הרווח משהה.</p>
+      <button id="playBtn" type="button" disabled>טוען&hellip;</button>
     </div>
   </div>
-  <div id="footer">assets/ holds the sprites &middot; high score saved locally</div>
-  <div id="dpad">
-    <button id="up" aria-label="up">&#9650;</button>
-    <button id="left" aria-label="left">&#9664;</button>
+  <div id="footer">התיקייה <bdi>assets/</bdi> מכילה את הגרפיקה &middot; השיא נשמר מקומית במכשיר</div>
+  <!-- dir="ltr" is deliberate and load-bearing: CSS Grid mirrors track order
+       under an inherited dir="rtl" (like flex row does), which would swap the
+       physical left/right button positions here even though only in-page
+       *text* is meant to localize. Pinning this control widget to ltr keeps
+       "left" physically left and "right" physically right, matching the
+       ArrowLeft/swipe-left semantics exactly as before; only the (Hebrew)
+       aria-label strings changed. -->
+  <div id="dpad" dir="ltr">
+    <button id="up" aria-label="למעלה">&#9650;</button>
+    <button id="left" aria-label="שמאלה">&#9664;</button>
     <div id="mid"></div>
-    <button id="right" aria-label="right">&#9654;</button>
-    <button id="down" aria-label="down">&#9660;</button>
+    <button id="right" aria-label="ימינה">&#9654;</button>
+    <button id="down" aria-label="למטה">&#9660;</button>
   </div>
 </div>
 
@@ -225,7 +293,15 @@
   "use strict";
 
   // ---------- constants ----------
-  var GRID_N = 19;                // fixed logical grid, both axes
+  // GRID_N was 19 (720px board => ~38px cells), which made the circular head
+  // photo hard to read at a glance and the game punishingly hard to track.
+  // 13 is chosen over 11/12: it's still a "real" grid-snake cell count (not
+  // toy-sized), it's odd so Math.floor(GRID_N/2) gives a true center cell
+  // for the snake's start position (same as before), and on the same 720px
+  // board it gives ~55px cells - about 45% bigger than at 19 - so the head
+  // image and body segments read clearly at a glance while still being a
+  // real grid to navigate.
+  var GRID_N = 13;                // fixed logical grid, both axes
   var BASE_STEP_MS = 160;         // level 1 step interval
   var MIN_STEP_MS = 70;           // floor
   var STEP_DECAY = 0.92;          // ~8% faster per level
@@ -244,14 +320,17 @@
   var canvas = document.getElementById("game");
   var ctx = canvas.getContext("2d");
   var wrap = document.getElementById("wrap");
+  var boardWrapEl = document.getElementById("boardWrap");
   var hudScore = document.getElementById("scoreVal");
   var hudLevel = document.getElementById("levelVal");
   var hudHi = document.getElementById("hiVal");
   var overlay = document.getElementById("overlay");
   var playBtn = document.getElementById("playBtn");
   var levelFlash = document.getElementById("levelFlash");
+  var levelFlashCard = document.getElementById("levelFlashCard");
   var levelFlashImg = document.getElementById("levelFlashImg");
   var levelFlashText = document.getElementById("levelFlashText");
+  var levelFlashBlurb = document.getElementById("levelFlashBlurb");
   var dpad = document.getElementById("dpad");
 
   // ---------- image preload with colored-circle fallback ----------
@@ -347,26 +426,50 @@
     { core: "#ff8c69", edge: "#7a2f12" },
     { core: "#e85d04", edge: "#5c2506" }
   ];
+  // Short, dry, PG snake/popcorn/speed one-liners for the level-details
+  // screen (levelUp()) - one per head/tint in the cycle, in Hebrew per the
+  // in-page localization spec. Index by (level - 1) % 3, same as the heads
+  // and tints, so the joke changes every level but repeats every 3 levels
+  // along with the head photo. Kept to ~4-6 words each (all three now
+  // roughly the length of the old third line) so they're genuinely
+  // skimmable within the flashTimer window below while gameplay keeps
+  // running underneath - a 10-word line needs well over 1.5s of full-
+  // opacity reading time at comfortable reading speed (~3.3-4.2 words/sec),
+  // which the flash didn't budget.
+  var LEVEL_BLURBS = [
+    "מהירות מתונה, נחש רגוע.",
+    "המהירות עולה, הזנב מודאג.",
+    "עכשיו זה רציני. גם הפופקורן מזיע."
+  ];
 
   // ---------- responsive canvas sizing ----------
   var dpr = 1;
   var boardCssPx = 0;
   var cellPx = 0;
-  var MIN_BOARD_PX = GRID_N * 4;   // sane floor (76px) so the board is never
-                                    // unusably tiny. On a very cramped
-                                    // viewport this floor can still force
-                                    // boardCssPx above the height budget
-                                    // computed below (mainly landscape
-                                    // phones) - #wrap's overflow-y:auto is
-                                    // the deliberate fallback for that case
-                                    // (scroll to see the rest), not overlap:
-                                    // #dpad/#footer are normal flow siblings
-                                    // of the canvas now, not position:fixed,
-                                    // so they get pushed down/scrollable
-                                    // instead of being painted over.
-  var MAX_BOARD_PX = 720;          // cap so 4K/8K desktops don't get a huge board
-  var DPAD_RESERVE_PX = 56 * 3 + 6 * 2 + 14 + 24; // pad height + gaps + a little slack
-  var HUD_FOOTER_RESERVE_PX = 90;
+  // Floor multiplier retuned from *4 to *8 alongside the GRID_N cut (19->13):
+  // at *4 the worst-case cell would only be 4px regardless of grid size,
+  // which defeats the point of moving to fewer/bigger cells for
+  // readability. *8 guarantees at least an 8px cell whenever the viewport can
+  // actually fit it, while 13*8=104px is still a small floor. This is the
+  // *ideal* floor, not an absolute one any more - see SAFETY_MIN_BOARD_PX and
+  // its use in resizeCanvas() below: unconditionally forcing every viewport
+  // up to this floor (the old behavior) is exactly what caused #wrap to have
+  // to scroll on short landscape phones that used to fit at GRID_N=19/*4.
+  var MIN_BOARD_PX = GRID_N * 8;   // preferred floor (104px) for legible cells,
+                                    // honored whenever the viewport fits it
+                                    // without forcing scroll/clipping.
+  // Absolute last-resort floor (same *4 multiplier the pre-13x13 build used)
+  // so the board never collapses to ~0px on a pathological viewport. Unlike
+  // MIN_BOARD_PX above, resizeCanvas() only falls back to this when honoring
+  // MIN_BOARD_PX would itself force #wrap to scroll - i.e. it never
+  // overrides a fit budget that's already between the two floors, it only
+  // stops the board from going to zero when even that fit budget is
+  // negative/near-zero.
+  var SAFETY_MIN_BOARD_PX = GRID_N * 4;
+  var MAX_BOARD_PX = 720;          // cap so 4K/8K desktops don't get a huge board;
+                                    // unchanged - at GRID_N=13 this already yields
+                                    // ~55px cells (vs ~38px at the old GRID_N=19),
+                                    // plenty large on desktop without further tuning.
 
   // Reads env(safe-area-inset-bottom) via a hidden probe element, since JS
   // can't read CSS env() values directly.
@@ -380,11 +483,43 @@
     return v;
   }
 
+  // Measures the *actual* rendered height of everything in #wrap besides the
+  // board (hud + footer + dpad, plus the flex gaps between all of #wrap's
+  // children), instead of the old hardcoded DPAD_RESERVE_PX/
+  // HUD_FOOTER_RESERVE_PX guesses. Those constants were padded well above
+  // the real DOM heights (e.g. reserving 90px for hud+footer when they
+  // actually render closer to 30px), which silently ate into the board's
+  // height budget and was the root cause of the no-scroll regression on
+  // short landscape viewports (568x320 etc.) once MIN_BOARD_PX grew from
+  // GRID_N*4 to GRID_N*8 - the padded estimate left far less real headroom
+  // than the numbers suggested. Measuring the live layout instead keeps this
+  // accurate as the CSS changes, with no constant to drift out of sync.
+  function measureReservePx(coarse) {
+    var hudEl = document.getElementById("hud");
+    var footerEl = document.getElementById("footer");
+    var gap = parseFloat(getComputedStyle(wrap).rowGap);
+    if (!gap && gap !== 0) gap = parseFloat(getComputedStyle(wrap).gap) || 8;
+    var hudH = hudEl ? hudEl.getBoundingClientRect().height : 0;
+    var footerH = footerEl ? footerEl.getBoundingClientRect().height : 0;
+    // #wrap's children are hud, boardWrap, footer, and (when shown) dpad -
+    // that's 3 gaps between 4 items, or 2 gaps between 3 when dpad is hidden.
+    var gapCount = 2;
+    var dpadH = 0;
+    if (coarse) {
+      dpadH = dpad.getBoundingClientRect().height;
+      if (!dpadH) dpadH = 56 * 3 + 6 * 2; // dpad not laid out yet - fall back
+                                          // to its known CSS grid size
+      dpadH += getSafeAreaBottomPx();
+      gapCount = 3;
+    }
+    return hudH + footerH + dpadH + gap * gapCount;
+  }
+
   function resizeCanvas() {
     dpr = window.devicePixelRatio || 1;
     var margin = 24;
     var coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
-    var dpadReserve = coarse ? (DPAD_RESERVE_PX + getSafeAreaBottomPx()) : 0;
+    var reservePx = measureReservePx(coarse);
 
     var available = Math.min(window.innerWidth, window.innerHeight) - margin;
     // Leave room for HUD + footer text, and for the D-pad when it will
@@ -395,13 +530,23 @@
     // canvas/footer.
     available = Math.min(
       available,
-      window.innerHeight - HUD_FOOTER_RESERVE_PX - dpadReserve,
+      window.innerHeight - reservePx,
       window.innerWidth - 16
     );
     available = Math.min(available, MAX_BOARD_PX);
-    // Do not force the board above what the viewport can actually contain -
-    // let it shrink down to MIN_BOARD_PX instead of clipping HUD/footer.
-    available = Math.max(MIN_BOARD_PX, available);
+    // Only pull the board up to the *ideal* readability floor when the
+    // viewport can actually fit that floor without forcing a scroll (i.e.
+    // `available` - the real fit budget computed above - already meets or
+    // exceeds it, so this is a no-op). When the fit budget is smaller than
+    // the ideal floor, honor the fit budget itself (keeps the no-scroll
+    // requirement intact) and only clamp up to the much smaller
+    // SAFETY_MIN_BOARD_PX as an absolute last resort against a near-zero
+    // board on a truly pathological viewport - the old unconditional
+    // `Math.max(MIN_BOARD_PX, available)` is what forced scrolling on short
+    // landscape phones that used to fit at the previous GRID_N/floor tuning.
+    if (available < MIN_BOARD_PX) {
+      available = Math.max(SAFETY_MIN_BOARD_PX, available);
+    }
 
     boardCssPx = Math.floor(available / GRID_N) * GRID_N; // keep divisible by grid for crisp cells
     if (boardCssPx <= 0) boardCssPx = GRID_N * 4;
@@ -409,6 +554,13 @@
 
     canvas.style.width = boardCssPx + "px";
     canvas.style.height = boardCssPx + "px";
+    // Expose the *actual* achieved board size to CSS so the level-flash
+    // card (absolutely positioned inside this same container, see
+    // #levelFlashCard rules above) can size itself relative to the real
+    // container instead of only the viewport - fixes clipping on small/
+    // landscape boards where MIN_BOARD_PX forces the board below what the
+    // old vmin-only sizing assumed.
+    if (boardWrapEl) boardWrapEl.style.setProperty("--board-px", boardCssPx + "px");
     canvas.width = Math.round(boardCssPx * dpr);
     canvas.height = Math.round(boardCssPx * dpr);
     // Scale by the *actual* achieved backing-store ratio, not the raw dpr -
@@ -435,6 +587,19 @@
   var lastTs = 0;
   var flashTimer = 0;
 
+  // The level-up "level details" card is a large, full-bleed, vividly
+  // tinted overlay now (unlike the old small centered "LEVEL n" banner), and
+  // it is deliberately non-blocking, so flashTimer can still be counting
+  // down when the player dies, wins, or pauses mid-flash. The dead/won/paused
+  // overlay's background is only ~82% opaque (see #overlay rgba alpha), so
+  // without clearing the card here its warm gradient visibly bleeds through
+  // behind the "Game Over"/"Paused" text. Call this at every exit from
+  // "playing" (not just newGame()) to prevent that bleed-through.
+  function hideLevelFlash() {
+    flashTimer = 0;
+    levelFlash.classList.remove("show");
+  }
+
   function newGame() {
     var cx = Math.floor(GRID_N / 2);
     var cy = Math.floor(GRID_N / 2);
@@ -450,9 +615,8 @@
     level = 1;
     stepMs = BASE_STEP_MS;
     acc = 0;
-    flashTimer = 0;
-    levelFlash.classList.remove("show"); // clear any banner left "show" from
-                                          // a death that interrupted a flash
+    hideLevelFlash(); // clear any card left "show" from a death/pause that
+                       // interrupted a flash
     placeFood();
     updateHud();
   }
@@ -502,6 +666,10 @@
     return LEVEL_TINTS[(level - 1) % LEVEL_TINTS.length];
   }
 
+  function currentBlurb() {
+    return LEVEL_BLURBS[(level - 1) % LEVEL_BLURBS.length];
+  }
+
   function updateHud() {
     hudScore.textContent = String(score);
     hudLevel.textContent = String(level);
@@ -518,7 +686,10 @@
     if (persistOk) return;
     var footerEl = document.getElementById("footer");
     if (footerEl && footerEl.dataset.persistNoted !== "1") {
-      footerEl.textContent = "assets/ holds the sprites · high score not saved this session (storage unavailable)";
+      // innerHTML (not textContent) here only to wrap the embedded LTR
+      // "assets/" token in <bdi>, matching the static footer markup above -
+      // the string is a fixed literal, not user input, so this is safe.
+      footerEl.innerHTML = "התיקייה <bdi>assets/</bdi> מכילה את הגרפיקה &middot; השיא לא נשמר הפעם (האחסון אינו זמין)";
       footerEl.dataset.persistNoted = "1";
     }
   }
@@ -608,14 +779,34 @@
   function levelUp() {
     level += 1;
     stepMs = Math.max(MIN_STEP_MS, stepMs * STEP_DECAY);
-    flashTimer = 1000; // ms, ~1s banner, does not pause play
-    levelFlashImg.src = assetSrc("splash"); // spec: splash.png graphic for the level-up flash
-    levelFlashText.textContent = "LEVEL " + level;
+    // ~1.6s "level details" screen: readable but still brief, and - crucially -
+    // non-blocking. It only drives flashTimer/CSS opacity, never `state`, so
+    // the fixed-timestep loop in frame() keeps calling step() underneath it
+    // at the same new stepMs; nothing here pauses actual gameplay.
+    // 1900ms total (~1650ms at full opacity after the 250ms fade-in): with
+    // the trimmed ~4-6-word LEVEL_BLURBS above, that's a comfortable read
+    // even at conservative reading speed, while staying within the spec's
+    // ~1.5-2s non-blocking window.
+    flashTimer = 1900; // ms
+    var tint = currentTint();
+    // Enlarged circular head photo for the level being entered (cycles
+    // head-1/2/3.png with the level, same image already used for the
+    // snake's own head this level) - splash.png stays reserved for the
+    // game-over/win screens only, per spec.
+    levelFlashImg.src = assetSrc(currentHeadKey());
+    levelFlashText.textContent = "רמה " + level;
+    levelFlashBlurb.textContent = currentBlurb();
+    // Color-pop background accent tinted to the level's warm color, so each
+    // level-up reads as visually distinct, not just a text change.
+    levelFlashCard.style.background =
+      "linear-gradient(160deg, " + tint.core + "e6, " + tint.edge + "e6)";
     levelFlash.classList.add("show");
   }
 
   function die() {
     state = "dead";
+    hideLevelFlash(); // don't let a mid-flash level card bleed through the
+                       // translucent game-over overlay
     saveHi();
     updateHud();
     showOverlayDead();
@@ -624,6 +815,7 @@
   function win() {
     // Reachable only when the snake fills every cell of the grid.
     state = "won";
+    hideLevelFlash(); // same bleed-through guard as die()
     saveHi();
     updateHud();
     showOverlayWon();
@@ -634,9 +826,9 @@
     overlay.classList.remove("hidden");
     overlay.innerHTML =
       '<h1>dubisnake</h1>' +
-      '<p>Guide the head through the grid, eat the popcorn, don\'t hit the walls or yourself. Speed rises every 5 pieces.</p>' +
-      '<p class="stat">Arrows/WASD, swipe, or the D-pad. Space pauses.</p>' +
-      '<button id="playBtn" type="button">Play</button>';
+      '<p>נווטו עם הראש ברשת, אכלו את הפופקורן, ואל תפגעו בקירות או בעצמכם. המהירות עולה כל 5 חתיכות.</p>' +
+      '<p class="stat">חצים/WASD, החלקה, או לוח הכיוונים. מקש הרווח משהה.</p>' +
+      '<button id="playBtn" type="button">שחק</button>';
     bindPlayBtn();
   }
 
@@ -644,11 +836,11 @@
     overlay.classList.remove("hidden");
     overlay.innerHTML =
       '<img class="splashPic" src="' + assetSrc("splash") + '" alt="">' +
-      '<h1>Game Over</h1>' +
-      '<p class="stat">Score: ' + score + '</p>' +
-      '<p class="stat">High score: ' + hi + '</p>' +
-      '<p>Tap Play, hit Enter, or tap the board to try again.</p>' +
-      '<button id="playBtn" type="button">Play Again</button>';
+      '<h1>המשחק נגמר</h1>' +
+      '<p class="stat">ניקוד: ' + score + '</p>' +
+      '<p class="stat">שיא: ' + hi + '</p>' +
+      '<p>הקישו שחק, לחצו Enter, או הקישו על הלוח כדי לנסות שוב.</p>' +
+      '<button id="playBtn" type="button">שחק שוב</button>';
     bindPlayBtn();
   }
 
@@ -656,21 +848,21 @@
     overlay.classList.remove("hidden");
     overlay.innerHTML =
       '<img class="splashPic" src="' + assetSrc("splash") + '" alt="">' +
-      '<h1>You Win!</h1>' +
-      '<p class="stat">The board is full - score: ' + score + '</p>' +
-      '<p class="stat">High score: ' + hi + '</p>' +
-      '<p>Tap Play, hit Enter, or tap the board to play again.</p>' +
-      '<button id="playBtn" type="button">Play Again</button>';
+      '<h1>ניצחת!</h1>' +
+      '<p class="stat">הלוח מלא - ניקוד: ' + score + '</p>' +
+      '<p class="stat">שיא: ' + hi + '</p>' +
+      '<p>הקישו שחק, לחצו Enter, או הקישו על הלוח כדי לשחק שוב.</p>' +
+      '<button id="playBtn" type="button">שחק שוב</button>';
     bindPlayBtn();
   }
 
   function showOverlayPaused() {
     overlay.classList.remove("hidden");
     overlay.innerHTML =
-      '<h1>Paused</h1>' +
-      '<p class="stat">Score: ' + score + '</p>' +
-      '<p>Space / tap Resume to continue.</p>' +
-      '<button id="playBtn" type="button">Resume</button>';
+      '<h1>מושהה</h1>' +
+      '<p class="stat">ניקוד: ' + score + '</p>' +
+      '<p>רווח / הקישו המשך כדי להמשיך.</p>' +
+      '<button id="playBtn" type="button">המשך</button>';
     bindPlayBtn();
   }
 
@@ -707,6 +899,7 @@
   function togglePause() {
     if (state === "playing") {
       state = "paused";
+      hideLevelFlash(); // same bleed-through guard as die()/win()
       showOverlayPaused();
     } else if (state === "paused") {
       state = "playing";
@@ -961,6 +1154,21 @@
   }
   window.addEventListener("resize", scheduleResize);
   window.addEventListener("orientationchange", scheduleResize);
+
+  // rAF is paused/throttled while a tab is backgrounded, so a resize that
+  // fires while hidden can leave scheduleResize()'s queued rAF callback
+  // sitting unresolved (resizeScheduled stays true, so a synthetic resize
+  // dispatched in the meantime is silently ignored) until the tab is
+  // foregrounded again. Recompute directly - bypassing the rAF gate - the
+  // moment the tab becomes visible, instead of waiting on whatever resize
+  // event happens to arrive next.
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) {
+      resizeScheduled = false;
+      updateDpadVisibility();
+      resizeCanvas();
+    }
+  });
 
   if (window.matchMedia) {
     var coarseMq = window.matchMedia("(pointer: coarse)");

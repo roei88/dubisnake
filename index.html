@@ -36,9 +36,9 @@
        just zooming - if it were set here it would break #wrap's
        overflow-y:auto safety net (small-viewport fallback), making it
        unreachable by touch (only a mouse wheel would still work). Game
-       controls (canvas, #playBtn, #dpad button) additionally get
-       touch-action:none of their own so a swipe/tap there can't be
-       misinterpreted as a scroll gesture. */
+       controls (canvas, #playBtn) additionally get touch-action:none of
+       their own so a swipe/tap there can't be misinterpreted as a scroll
+       gesture. */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: #f2e9dd;
   }
@@ -103,7 +103,7 @@
     padding: 0 2px;
     box-sizing: border-box;
     /* Defense-in-depth alongside #boardWrap's flex-shrink:0 (see comment
-       above it): #hud/#footer/#dpad don't have overflow:hidden so they
+       above it): #hud/#footer don't have overflow:hidden so they
        aren't vulnerable to the zero-automatic-min-size flex behavior that
        motivated that fix, but pinning them too means #wrap's overflow-y:auto
        is the fallback for *any* over-tall stack, not just ones caused by
@@ -373,50 +373,12 @@
     color: #fffaf0;
     text-shadow: 0 1px 4px rgba(0,0,0,0.45);
   }
-  /* #dpad used to be position:fixed at the viewport bottom while
-     resizeCanvas() tried to reserve matching space by subtracting a fixed
-     px budget from window.innerHeight. That broke because body centers
-     #wrap with align-items:center/justify-content:center: the "reserved"
-     gap got split into equal top+bottom margins around #wrap instead of
-     landing entirely below the content, so the fixed pad visually
-     overlapped the canvas/footer on common phone sizes (verified ~30-60px
-     overlap on iPhone SE/Android/landscape/iPad mini). Fix: put #dpad back
-     in normal document flow as a sibling of #hud/canvas/#footer inside
-     #wrap. The flexbox then sizes and centers everything as one block, so
-     the pad can never sit on top of the canvas or footer - worst case on a
-     very small viewport, #wrap's existing overflow-y:auto (see the touch-
-     action comment above) lets the user scroll to it instead of it being
-     clipped or overlapping. */
-  #dpad {
-    display: none;
-    grid-template-columns: repeat(3, 56px);
-    grid-template-rows: repeat(3, 56px);
-    gap: 6px;
-    margin-bottom: env(safe-area-inset-bottom);
-    flex-shrink: 0; /* see #hud comment: never let flex compress the d-pad */
-  }
-  @media (pointer: coarse) {
-    #dpad.enabled { display: grid; }
-  }
-  #dpad button {
-    grid-area: auto;
-    width: 56px;
-    height: 56px;
-    min-width: 44px;
-    min-height: 44px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.18);
-    background: rgba(255,255,255,0.08);
-    color: #f2e9dd;
-    font-size: 20px;
-    touch-action: none;
-  }
-  #dpad button:active { background: rgba(0,229,255,0.35); }
-  #up { grid-column: 2; grid-row: 1; }
-  #left { grid-column: 1; grid-row: 2; }
-  #down { grid-column: 2; grid-row: 3; }
-  #right { grid-column: 3; grid-row: 2; }
-  #mid { grid-column: 2; grid-row: 2; visibility: hidden; }
+  /* On-screen D-pad intentionally removed per spec - touch devices use
+     swipe-on-canvas only now (see the mobileHelp popup below for the
+     swipe-direction hint shown to touch users). Removing it also means
+     #wrap always has exactly 3 flex children (hud/boardWrap/footer), so
+     measureReservePx()/resizeCanvas() no longer need a coarse-pointer
+     branch for a 4th child's reserved height. */
   #footer {
     font-size: clamp(10px, 2vmin, 12px);
     color: #8a7c6b;
@@ -450,6 +412,78 @@
     touch-action: none;
   }
   #langToggle:active { background: rgba(0,229,255,0.35); }
+
+  /* Mobile-only "how to play" hint: fixed/full-viewport, outside #wrap's
+     flow (same reasoning as #langToggle above) so it can never feed back
+     into resizeCanvas()'s size budget. Shown once (first visit, gated by
+     localStorage) only on coarse-pointer devices - see maybeShowMobileHelp()
+     in the script below. Deliberately icon-first/text-minimal per spec:
+     the arrow+hand glyph cross conveys "swipe any direction" faster than
+     a sentence would. */
+  #mobileHelp {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(11,8,6,0.62);
+    padding: 20px;
+    box-sizing: border-box;
+    touch-action: none;
+  }
+  #mobileHelp.show { display: flex; }
+  #mobileHelpCard {
+    width: 100%;
+    max-width: 260px;
+    text-align: center;
+    background: linear-gradient(165deg, #241d18, #14100e 70%);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 20px;
+    padding: 22px 20px 18px;
+    box-shadow: 0 24px 50px rgba(0,0,0,0.55);
+  }
+  #mobileHelpArrows {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 4px;
+    width: 136px;
+    height: 136px;
+    margin: 0 auto 14px;
+  }
+  .mh-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    color: #00e5ff;
+    text-shadow: 0 0 10px rgba(0,229,255,0.5);
+  }
+  .mh-hand { font-size: 34px; color: #f2e9dd; text-shadow: none; }
+  .mh-up { grid-column: 2; grid-row: 1; }
+  .mh-left { grid-column: 1; grid-row: 2; }
+  .mh-right { grid-column: 3; grid-row: 2; }
+  .mh-down { grid-column: 2; grid-row: 3; }
+  #mobileHelpText {
+    margin: 0 0 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #cbb89a;
+  }
+  #mobileHelpClose {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 26px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #ff2e63, #c81854);
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    touch-action: none;
+  }
 </style>
 </head>
 <body>
@@ -481,19 +515,25 @@
     </div>
   </div>
   <div id="footer">השיא נשמר מקומית במכשיר</div>
-  <!-- dir="ltr" is deliberate and load-bearing: CSS Grid mirrors track order
-       under an inherited dir="rtl" (like flex row does), which would swap the
-       physical left/right button positions here even though only in-page
-       *text* is meant to localize. Pinning this control widget to ltr keeps
-       "left" physically left and "right" physically right, matching the
-       ArrowLeft/swipe-left semantics exactly as before; only the (Hebrew)
-       aria-label strings changed. -->
-  <div id="dpad" dir="ltr">
-    <button id="up" aria-label="למעלה">&#9650;</button>
-    <button id="left" aria-label="שמאלה">&#9664;</button>
-    <div id="mid"></div>
-    <button id="right" aria-label="ימינה">&#9654;</button>
-    <button id="down" aria-label="למטה">&#9660;</button>
+</div>
+
+<!-- dir="ltr" is deliberate and load-bearing here for the same reason it
+     was on the old #dpad: CSS Grid mirrors track order under an inherited
+     dir="rtl" (like flex row does), which would swap the physical
+     left/right arrow positions even though only in-page *text* is meant
+     to localize. Fixed/full-viewport and outside #wrap (see the CSS
+     comment) so it's never measured by measureReservePx(). -->
+<div id="mobileHelp" role="dialog" aria-modal="true">
+  <div id="mobileHelpCard">
+    <div id="mobileHelpArrows" dir="ltr">
+      <span class="mh-cell mh-up" aria-hidden="true">&#8593;</span>
+      <span class="mh-cell mh-left" aria-hidden="true">&#8592;</span>
+      <span class="mh-cell mh-hand" aria-hidden="true">&#128070;</span>
+      <span class="mh-cell mh-right" aria-hidden="true">&#8594;</span>
+      <span class="mh-cell mh-down" aria-hidden="true">&#8595;</span>
+    </div>
+    <p id="mobileHelpText">החליקו כדי לזוז</p>
+    <button id="mobileHelpClose" type="button">&#10003;</button>
   </div>
 </div>
 
@@ -511,8 +551,13 @@
   // logic), and on the same 720px board it gives ~80px cells - large, clearly
   // readable head/body circles, at the cost of a smaller grid to navigate.
   var GRID_N = 9;                 // fixed logical grid, both axes
-  var BASE_STEP_MS = 160;         // level 1 step interval
-  var MIN_STEP_MS = 70;           // floor
+  // Both endpoints scaled by 1.3x (160->208, 70->91) to slow the whole
+  // level 1..max progression by ~30% uniformly, per request. STEP_DECAY
+  // (the relative per-level ramp) is untouched - it's a ratio, not an
+  // absolute speed, so scaling the endpoints alone already slows every
+  // level in the curve by the same 30%.
+  var BASE_STEP_MS = 208;         // level 1 step interval
+  var MIN_STEP_MS = 91;           // floor
   var STEP_DECAY = 0.92;          // ~8% faster per level
   var POPCORN_PER_LEVEL = 5;
   var SWIPE_THRESHOLD = 35;       // px
@@ -541,11 +586,14 @@
   var levelFlashImg = document.getElementById("levelFlashImg");
   var levelFlashText = document.getElementById("levelFlashText");
   var levelFlashBlurb = document.getElementById("levelFlashBlurb");
-  var dpad = document.getElementById("dpad");
   var langToggleBtn = document.getElementById("langToggle");
   var scoreLabelEl = document.getElementById("scoreLabel");
   var levelLabelEl = document.getElementById("levelLabel");
   var hiLabelEl = document.getElementById("hiLabel");
+  var mobileHelp = document.getElementById("mobileHelp");
+  var mobileHelpText = document.getElementById("mobileHelpText");
+  var mobileHelpClose = document.getElementById("mobileHelpClose");
+  var MOBILE_HELP_SEEN_KEY = "dubisnake_mobilehelp_seen";
 
   // ---------- i18n: every visible string, keyed by language, switchable at
   // runtime with no page reload. The "dubisnake" brand name is intentionally
@@ -562,10 +610,6 @@
       hiLabel: "שיא",
       footerHi: "השיא נשמר מקומית במכשיר",
       footerHiFail: "השיא לא נשמר הפעם (האחסון אינו זמין)",
-      dpadUp: "למעלה",
-      dpadLeft: "שמאלה",
-      dpadRight: "ימינה",
-      dpadDown: "למטה",
       // Brand name gets a Hebrew form specifically in Hebrew mode (English
       // mode keeps the Latin "dubisnake" - see brandTitle below).
       brandTitle: "דוביסנייק",
@@ -574,8 +618,10 @@
       // plain #overlay p style; the controls line below is unchanged.
       menuInstructions: "אכלו את הפופקורן!",
       // WASD removed as a movement input - see KEY_DIR - so it's no longer
-      // mentioned here; corrected space-key phrasing per explicit spec.
-      menuControls: "חצים, החלקה, או לוח הכיוונים. לחץ ספייס כדי לעצור.",
+      // mentioned here; on-screen D-pad also removed (touch = swipe only),
+      // corrected space-key phrasing per explicit spec.
+      menuControls: "חצים או החלקה. לחץ ספייס כדי לעצור.",
+      mobileHelpText: "החליקו כדי לזוז",
       loadingBtn: "טוען…",
       playBtn: "שחק",
       playAgainBtn: "שחק שוב",
@@ -606,15 +652,12 @@
       hiLabel: "High",
       footerHi: "High score saved locally on this device",
       footerHiFail: "High score not saved this time (storage unavailable)",
-      dpadUp: "Up",
-      dpadLeft: "Left",
-      dpadRight: "Right",
-      dpadDown: "Down",
       // English keeps the Latin brand name as-is.
       brandTitle: "dubisnake",
       // Matches the simplified Hebrew tagline - see the "he" entry above.
       menuInstructions: "Eat the popcorn!",
-      menuControls: "Arrows, swipe, or the D-pad. Press space to pause.",
+      menuControls: "Arrows or swipe. Press space to pause.",
+      mobileHelpText: "Swipe to move",
       loadingBtn: "Loading…",
       playBtn: "Play",
       playAgainBtn: "Play Again",
@@ -788,7 +831,7 @@
                                     // further tuning.
   // The #wrap "phone frame" (border + padding, see its CSS) adds fixed,
   // KNOWN px overhead beyond what measureReservePx() measures (that function
-  // only measures hud/footer/dpad - not #wrap's own border/padding). Unlike
+  // only measures hud/footer - not #wrap's own border/padding). Unlike
   // the avatar-sizing fixed-point loop above, these are plain constants, not
   // derived from cellPx or anything else computed here, so there is no
   // circular-dependency risk - just add them once. Vertical: border-top(3) +
@@ -800,54 +843,32 @@
   var FRAME_VERTICAL_PX = 40;
   var FRAME_HORIZONTAL_PX = 34;
 
-  // Reads env(safe-area-inset-bottom) via a hidden probe element, since JS
-  // can't read CSS env() values directly.
-  function getSafeAreaBottomPx() {
-    var probe = document.createElement("div");
-    probe.style.cssText = "position:fixed;left:0;bottom:0;width:0;height:0;" +
-      "padding-bottom:env(safe-area-inset-bottom);visibility:hidden;pointer-events:none;";
-    document.body.appendChild(probe);
-    var v = parseFloat(getComputedStyle(probe).paddingBottom) || 0;
-    document.body.removeChild(probe);
-    return v;
-  }
-
   // Measures the *actual* rendered height of everything in #wrap besides the
-  // board (hud + footer + dpad, plus the flex gaps between all of #wrap's
-  // children), instead of the old hardcoded DPAD_RESERVE_PX/
-  // HUD_FOOTER_RESERVE_PX guesses. Those constants were padded well above
-  // the real DOM heights (e.g. reserving 90px for hud+footer when they
-  // actually render closer to 30px), which silently ate into the board's
-  // height budget and was the root cause of the no-scroll regression on
-  // short landscape viewports (568x320 etc.) once MIN_BOARD_PX grew from
-  // GRID_N*4 to GRID_N*8 - the padded estimate left far less real headroom
-  // than the numbers suggested. Measuring the live layout instead keeps this
-  // accurate as the CSS changes, with no constant to drift out of sync.
-  function measureReservePx(coarse) {
+  // board (hud + footer, plus the 2 flex gaps between #wrap's 3 children -
+  // hud/boardWrap/footer), instead of a hardcoded guess. A hardcoded guess
+  // was padded well above the real DOM heights (e.g. reserving 90px for
+  // hud+footer when they actually render closer to 30px), which silently ate
+  // into the board's height budget and was the root cause of the no-scroll
+  // regression on short landscape viewports (568x320 etc.) once MIN_BOARD_PX
+  // grew from GRID_N*4 to GRID_N*8 - the padded estimate left far less real
+  // headroom than the numbers suggested. Measuring the live layout instead
+  // keeps this accurate as the CSS changes, with no constant to drift out of
+  // sync. (Used to also account for the on-screen D-pad's height on coarse-
+  // pointer devices; that control was removed - touch is swipe-only now -
+  // so #wrap always has exactly these 3 children/2 gaps.)
+  function measureReservePx() {
     var hudEl = document.getElementById("hud");
     var footerEl = document.getElementById("footer");
     var gap = parseFloat(getComputedStyle(wrap).rowGap);
     if (!gap && gap !== 0) gap = parseFloat(getComputedStyle(wrap).gap) || 8;
     var hudH = hudEl ? hudEl.getBoundingClientRect().height : 0;
     var footerH = footerEl ? footerEl.getBoundingClientRect().height : 0;
-    // #wrap's children are hud, boardWrap, footer, and (when shown) dpad -
-    // that's 3 gaps between 4 items, or 2 gaps between 3 when dpad is hidden.
-    var gapCount = 2;
-    var dpadH = 0;
-    if (coarse) {
-      dpadH = dpad.getBoundingClientRect().height;
-      if (!dpadH) dpadH = 56 * 3 + 6 * 2; // dpad not laid out yet - fall back
-                                          // to its known CSS grid size
-      dpadH += getSafeAreaBottomPx();
-      gapCount = 3;
-    }
-    return hudH + footerH + dpadH + gap * gapCount;
+    return hudH + footerH + gap * 2;
   }
 
   function resizeCanvas() {
     dpr = window.devicePixelRatio || 1;
     var margin = 24;
-    var coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
 
     // QA fix: the HUD's real rendered height depends on --avatar-px, a CSS
     // calc() driven by --cell-px (min(cellPx*3, 240px) - see #hud CSS), but
@@ -875,15 +896,13 @@
     var available = 0;
     var prevBoardCssPx = -1;
     for (var iter = 0; iter < 8; iter++) {
-      var reservePx = measureReservePx(coarse);
+      var reservePx = measureReservePx();
 
       available = Math.min(window.innerWidth, window.innerHeight) - margin;
-      // Leave room for HUD + footer text, and for the D-pad when it will
-      // actually be shown, so the whole stack (hud/canvas/footer/dpad) tends
-      // to fit in one screen without scrolling. #dpad is a normal-flow
-      // sibling (not position:fixed) so an under-estimate here just means
-      // #wrap's own overflow-y:auto kicks in - it can no longer mean the pad
-      // overlaps the canvas/footer.
+      // Leave room for HUD + footer text so the whole stack
+      // (hud/canvas/footer) tends to fit in one screen without scrolling.
+      // An under-estimate here just means #wrap's own overflow-y:auto
+      // kicks in instead of anything overlapping.
       available = Math.min(
         available,
         window.innerHeight - reservePx - FRAME_VERTICAL_PX,
@@ -1058,9 +1077,10 @@
 
   // ---------- language switch: everything below is re-derived from S(),
   // never a page reload. Gameplay control DIRECTIONS are untouched by this -
-  // switching `dir` only affects text layout (see the #avatarHud/#dpad CSS
-  // comments for why the physical left/right mapping stays fixed either
-  // way). Safe to call at any time, including mid-game. ----------
+  // switching `dir` only affects text layout (see the #avatarHud CSS comment
+  // and #mobileHelpArrows's dir="ltr" markup for why the physical left/right
+  // mapping stays fixed either way). Safe to call at any time, including
+  // mid-game. ----------
   function applyLanguage(lang) {
     if (STRINGS[lang]) currentLang = lang;
     var s = S();
@@ -1080,14 +1100,7 @@
       footerEl.textContent = persistOk ? s.footerHi : s.footerHiFail;
     }
 
-    var upBtn = document.getElementById("up");
-    var leftBtn = document.getElementById("left");
-    var rightBtn = document.getElementById("right");
-    var downBtn = document.getElementById("down");
-    if (upBtn) upBtn.setAttribute("aria-label", s.dpadUp);
-    if (leftBtn) leftBtn.setAttribute("aria-label", s.dpadLeft);
-    if (rightBtn) rightBtn.setAttribute("aria-label", s.dpadRight);
-    if (downBtn) downBtn.setAttribute("aria-label", s.dpadDown);
+    if (mobileHelpText) mobileHelpText.textContent = s.mobileHelpText;
 
     if (langToggleBtn) {
       langToggleBtn.textContent = s.toggleLabel;
@@ -1552,37 +1565,48 @@
   // block long-press context menu / selection on canvas
   canvas.addEventListener("contextmenu", function (e) { e.preventDefault(); });
 
-  function bindDpadButton(id, name) {
-    var el = document.getElementById(id);
-    // Some engines still synthesize a click after touchstart/touchend even
-    // when preventDefault was called, which could double-fire requestTurn
-    // for one physical tap. Guard the click handler with a short-lived flag
-    // set by the touch handlers so only one input source wins per press.
-    var touchHandledUntil = 0;
-    el.addEventListener("touchstart", function (e) {
+  // On-screen D-pad removed per spec - touch devices are swipe-on-canvas
+  // only now (see the canvas touchstart/touchmove/touchend handlers above).
+  function isCoarsePointer() {
+    return !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+  }
+
+  // ---------- mobile-only "how to play" popup ----------
+  // Shown once (localStorage-gated) the first time a coarse-pointer (touch)
+  // device reaches the menu, since swipe-to-move isn't otherwise self-
+  // explanatory the way visible D-pad arrows were. Icon-first/text-minimal
+  // per spec. Never shown on mouse/trackpad devices.
+  function maybeShowMobileHelp() {
+    if (!mobileHelp) return;
+    if (!isCoarsePointer()) return;
+    var seen = false;
+    try { seen = localStorage.getItem(MOBILE_HELP_SEEN_KEY) === "1"; } catch (e) { /* storage unavailable - fall through, show it */ }
+    if (seen) return;
+    mobileHelp.classList.add("show");
+  }
+  function dismissMobileHelp() {
+    if (!mobileHelp) return;
+    mobileHelp.classList.remove("show");
+    try { localStorage.setItem(MOBILE_HELP_SEEN_KEY, "1"); } catch (e) { /* best-effort only */ }
+  }
+  if (mobileHelpClose) {
+    mobileHelpClose.addEventListener("click", function (e) {
       e.preventDefault();
-      touchHandledUntil = Date.now() + 500;
-      if (state === "playing") requestTurn(name);
-      else startOrResume();
-    }, { passive: false });
-    // also allow mouse for coarse-pointer devices that report click (defensive)
-    el.addEventListener("click", function (e) {
-      e.preventDefault();
-      if (Date.now() < touchHandledUntil) return; // suppress synthesized click
-      if (state === "playing") requestTurn(name);
-      else startOrResume();
+      e.stopPropagation();
+      dismissMobileHelp();
     });
   }
-  bindDpadButton("up", "up");
-  bindDpadButton("down", "down");
-  bindDpadButton("left", "left");
-  bindDpadButton("right", "right");
-
-  // show D-pad only on coarse pointer (touch) devices
-  function updateDpadVisibility() {
-    var coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
-    if (coarse) dpad.classList.add("enabled");
-    else dpad.classList.remove("enabled");
+  if (mobileHelp) {
+    // Tapping the dimmed backdrop also dismisses it; tapping the card itself
+    // must not (stopPropagation below), so a stray tap while reading it
+    // doesn't close it prematurely.
+    mobileHelp.addEventListener("click", function (e) {
+      if (e.target === mobileHelp) dismissMobileHelp();
+    });
+    var mobileHelpCardEl = document.getElementById("mobileHelpCard");
+    if (mobileHelpCardEl) {
+      mobileHelpCardEl.addEventListener("click", function (e) { e.stopPropagation(); });
+    }
   }
 
   // tap board to restart/resume when overlay hidden but state not playing (defensive)
@@ -1617,22 +1641,19 @@
   loadHi();
   updateHud();
   applyLanguage(currentLang); // corrects the static pre-boot markup (loading
-                               // label, dpad aria-labels, meta description,
+                               // label, mobile-help caption, meta description,
                                // HUD labels, footer) to match a previously-
                                // stored language choice before first paint
 
   // Coalesce resize/orientationchange bursts (e.g. iOS Safari's chrome
   // auto-hide/show firing repeated resize events) into one rAF-scheduled
-  // pass, and keep the D-pad's visibility in sync with layout changes too
-  // (docking/undocking a mouse on 2-in-1s and iPads can change pointer
-  // capability at runtime without a page reload).
+  // pass.
   var resizeScheduled = false;
   function scheduleResize() {
     if (resizeScheduled) return;
     resizeScheduled = true;
     requestAnimationFrame(function () {
       resizeScheduled = false;
-      updateDpadVisibility();
       resizeCanvas();
     });
   }
@@ -1649,16 +1670,9 @@
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden) {
       resizeScheduled = false;
-      updateDpadVisibility();
       resizeCanvas();
     }
   });
-
-  if (window.matchMedia) {
-    var coarseMq = window.matchMedia("(pointer: coarse)");
-    if (coarseMq.addEventListener) coarseMq.addEventListener("change", scheduleResize);
-    else if (coarseMq.addListener) coarseMq.addListener(scheduleResize); // older Safari
-  }
 
   // Re-check devicePixelRatio when it changes (moving a window between
   // displays with different DPR, or OS-level scale changes) - these don't
@@ -1676,7 +1690,6 @@
   }
   watchDprChange();
 
-  updateDpadVisibility();
   resizeCanvas();
 
   preloadAssets(function () {
@@ -1688,6 +1701,7 @@
     if (state === "loading") {
       state = "menu";
       showOverlayMenu();
+      maybeShowMobileHelp();
     }
     updateAvatarHud(); // always-visible avatar HUD: show it as soon as assets
                         // are ready, even before the first game starts

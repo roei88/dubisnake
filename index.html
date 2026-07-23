@@ -598,6 +598,7 @@
       if (popcornCount % POPCORN_PER_LEVEL === 0) {
         levelUp();
       }
+      updateHud();
       placeFood();
     } else {
       snake.pop();

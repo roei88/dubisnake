@@ -392,7 +392,7 @@
       </div>
     </div>
   </div>
-  <div id="footer">התיקייה assets/ מכילה את הגרפיקה &middot; השיא נשמר מקומית במכשיר</div>
+  <div id="footer">השיא נשמר מקומית במכשיר</div>
   <!-- dir="ltr" is deliberate and load-bearing: CSS Grid mirrors track order
        under an inherited dir="rtl" (like flex row does), which would swap the
        physical left/right button positions here even though only in-page
@@ -866,9 +866,7 @@
     if (persistOk) return;
     var footerEl = document.getElementById("footer");
     if (footerEl && footerEl.dataset.persistNoted !== "1") {
-      // innerHTML only for the &middot; entity; the string is a fixed
-      // literal, not user input, so this is safe.
-      footerEl.innerHTML = "התיקייה assets/ מכילה את הגרפיקה &middot; השיא לא נשמר הפעם (האחסון אינו זמין)";
+      footerEl.textContent = "השיא לא נשמר הפעם (האחסון אינו זמין)";
       footerEl.dataset.persistNoted = "1";
     }
   }

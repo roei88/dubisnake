@@ -474,12 +474,13 @@
   }
   #playBtn:active { transform: translateY(1px); }
   #playBtn:disabled { opacity: 0.55; cursor: default; }
-  /* Level-up "level details" screen: a short, colorful, non-blocking pop
-     shown at every level-up (see #levelFlashCard below for the per-level
-     color-pop background, set inline via JS from the level's warm tint).
-     It overlays on top of the canvas (pointer-events:none, no click/tap
-     needed to dismiss) and times out on its own; it never touches `state`,
-     so actual gameplay/snake movement keeps running underneath it. */
+  /* Level banner: a retro arcade "LEVEL n" screen shown at the start of
+     every level (including level 1). Unlike the old auto-timing-out flash
+     card this one is BLOCKING - it sets state to "levelbanner", which the
+     fixed-timestep loop treats as not-playing, so the snake holds still
+     until OK is pressed. The monsters in play at this level are shown at
+     exactly 2x2 board cells each, in a row, and carry the meaning on their
+     own: the only text is the level number. */
   #levelFlash {
     position: absolute;
     inset: 0;
@@ -488,40 +489,71 @@
     justify-content: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.2s ease;
     border-radius: 10px;
     overflow: hidden;
+    background: rgba(7, 10, 5, 0.86);
+    z-index: 6;
   }
-  #levelFlash.show { opacity: 1; }
+  /* pointer-events flips to auto only while shown, so the hidden banner can
+     never swallow a swipe/tap meant for the board underneath. */
+  #levelFlash.show { opacity: 1; pointer-events: auto; }
   #levelFlashCard {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* gap/padding/img/text/blurb below are each the smaller of a vmin-based
-       value (the original design intent, and what wins on ordinary
-       viewports where the board comfortably fits the window) and a value
-       derived from --board-px (the actual canvas container's CSS pixel
-       size, set from JS in resizeCanvas()). --board-px only "wins" (via
-       min()) when the container itself has been squeezed below what vmin
-       assumed - e.g. landscape phones with the on-screen d-pad, where
-       resizeCanvas() intentionally floors the board at MIN_BOARD_PX - so
-       the enlarged head photo/text/blurb shrink to fit the *actual*
-       container instead of clipping against its overflow:hidden. */
-    gap: min(8px, calc(var(--board-px, 300px) * 0.025));
-    max-width: min(82%, calc(var(--board-px, 300px) * 0.94));
-    padding: min(18px, calc(var(--board-px, 300px) * 0.04)) min(26px, calc(var(--board-px, 300px) * 0.08));
-    border-radius: 20px;
-    box-shadow: 0 14px 34px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
+    /* Every size below is the smaller of a vmin-based value and a
+       --board-px-derived one, the same pattern the rest of this file uses,
+       so the card shrinks with the real container instead of clipping
+       against #boardWrap's overflow:hidden on small/landscape boards. */
+    gap: min(14px, calc(var(--board-px, 300px) * 0.038));
+    max-width: min(96%, calc(var(--board-px, 300px) * 0.97));
+    padding: min(18px, calc(var(--board-px, 300px) * 0.05)) min(20px, calc(var(--board-px, 300px) * 0.055));
+    border-radius: 14px;
+    background: linear-gradient(180deg, #18200f 0%, #0a0e06 100%);
+    border: 3px solid #00e5ff; /* recoloured per level from JS (level tint) */
     text-align: center;
     box-sizing: border-box;
   }
-  #levelFlashCard img {
-    width: min(clamp(84px, 26vmin, 160px), calc(var(--board-px, 300px) * 0.36));
-    height: min(clamp(84px, 26vmin, 160px), calc(var(--board-px, 300px) * 0.36));
-    object-fit: contain;
-    border-radius: 50%;
-    box-shadow: 0 0 0 3px rgba(255,255,255,0.5), 0 6px 18px rgba(0,0,0,0.55);
+  #levelFlashTitle {
+    font-size: min(clamp(17px, 4.2vmin, 28px), calc(var(--board-px, 300px) * 0.082));
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #ffd166;
+    text-shadow: 0 0 10px rgba(255,209,102,0.5), 0 2px 0 #6d4f10;
   }
+  #levelMonsters {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: min(10px, calc(var(--board-px, 300px) * 0.026));
+  }
+  /* Exactly 2x2 board cells per monster, as specified. Three of them plus
+     gaps and the card's padding comes to ~0.82 of the board's width (the
+     board is 9 cells across), so the row still fits inside the card's
+     max-width above without wrapping or shrinking. */
+  #levelMonsters img {
+    width: calc(var(--cell-px, 40px) * 2);
+    height: calc(var(--cell-px, 40px) * 2);
+    object-fit: contain;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6));
+  }
+  #levelOkBtn {
+    min-height: 40px;
+    padding: 0 min(26px, calc(var(--board-px, 300px) * 0.07));
+    font-size: min(clamp(14px, 3vmin, 18px), calc(var(--board-px, 300px) * 0.055));
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    font-family: inherit;
+    border: 2px solid #06343a;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #00e5ff, #00a3b8);
+    color: #05242a;
+    cursor: pointer;
+    touch-action: none;
+  }
+  #levelOkBtn:active { filter: brightness(0.88); }
   .splashPic {
     /* QA fix: unlike #overlay's h1/p/.stat (which already min() against
        --board-px, see the comment above #overlay h1), this used to be
@@ -533,21 +565,6 @@
     height: min(clamp(56px, 14vmin, 96px), calc(var(--board-px, 300px) * 0.3));
     object-fit: contain;
     filter: drop-shadow(0 4px 10px rgba(0,0,0,0.45));
-  }
-  #levelFlashText {
-    font-size: min(clamp(20px, 4.6vmin, 32px), calc(var(--board-px, 300px) * 0.09));
-    font-weight: 800;
-    color: #fff;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
-    letter-spacing: 0.04em;
-  }
-  #levelFlashBlurb {
-    margin: 0;
-    font-size: min(clamp(13px, 2.7vmin, 17px), calc(var(--board-px, 300px) * 0.05));
-    max-width: min(26ch, calc(var(--board-px, 300px) * 0.86));
-    line-height: 1.35;
-    color: #fffaf0;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.45);
   }
   /* On-screen D-pad intentionally removed per spec - touch devices use
      swipe-on-canvas only now (see the mobileHelp popup below for the
@@ -677,9 +694,10 @@
     <div id="boardBezel" aria-hidden="true"></div>
     <div id="levelFlash">
       <div id="levelFlashCard">
-        <img id="levelFlashImg" alt="">
-        <span id="levelFlashText">רמה 2</span>
-        <p id="levelFlashBlurb"></p>
+        <div id="levelFlashTitle">רמה 1</div>
+        <!-- filled from JS: one <img> per monster in play at this level -->
+        <div id="levelMonsters"></div>
+        <button id="levelOkBtn" type="button">OK</button>
       </div>
     </div>
     <div id="overlay">
@@ -765,9 +783,9 @@
   var playBtn = document.getElementById("playBtn");
   var levelFlash = document.getElementById("levelFlash");
   var levelFlashCard = document.getElementById("levelFlashCard");
-  var levelFlashImg = document.getElementById("levelFlashImg");
-  var levelFlashText = document.getElementById("levelFlashText");
-  var levelFlashBlurb = document.getElementById("levelFlashBlurb");
+  var levelFlashTitle = document.getElementById("levelFlashTitle");
+  var levelMonsters = document.getElementById("levelMonsters");
+  var levelOkBtn = document.getElementById("levelOkBtn");
   var langToggleBtn = document.getElementById("langToggle");
   var scoreLabelEl = document.getElementById("scoreLabel");
   var levelLabelEl = document.getElementById("levelLabel");
@@ -814,11 +832,6 @@
       pausedResume: "רווח / הקישו המשך כדי להמשיך.",
       resumeBtn: "המשך",
       levelFlashLabel: function (n) { return "רמה " + n; },
-      blurbs: [
-        "מהירות מתונה, רודף אחד בשטח.",
-        "המהירות עולה, שני רודפים.",
-        "שלושה רודפים. גם הפופקורן מזיע."
-      ],
       toggleLabel: "English",
       toggleAria: "Switch to English"
     },
@@ -849,11 +862,6 @@
       pausedResume: "Space / tap Resume to continue.",
       resumeBtn: "Resume",
       levelFlashLabel: function (n) { return "Level " + n; },
-      blurbs: [
-        "Chill speed. One chaser out there.",
-        "Speed's climbing. Two chasers now.",
-        "Three chasers. Even the popcorn is sweating."
-      ],
       toggleLabel: "עברית",
       toggleAria: "עבור לעברית"
     }
@@ -968,16 +976,6 @@
     { core: "#2979ff", edge: "#0d3f9e" }, // electric blue
     { core: "#ff3d81", edge: "#8f0046" }  // hot magenta
   ];
-  // Short, dry, PG snake/popcorn/speed one-liners for the level-details
-  // screen (levelUp()) - one per head/tint in the cycle, per-language (see
-  // STRINGS.he/en.blurbs above). Index by (level - 1) % 3, same as the heads
-  // and tints, so the joke changes every level but repeats every 3 levels
-  // along with the head photo. Kept to ~4-6 words each so they're genuinely
-  // skimmable within the flashTimer window below while gameplay keeps
-  // running underneath - a 10-word line needs well over 1.5s of full-
-  // opacity reading time at comfortable reading speed (~3.3-4.2 words/sec),
-  // which the flash didn't budget.
-
   // ---------- responsive canvas sizing ----------
   var dpr = 1;
   var boardCssPx = 0;
@@ -1145,7 +1143,7 @@
   // Play button must not be able to do anything before that - see the
   // disabled attribute on the static #playBtn and the guard at the top of
   // startOrResume(). Only preloadAssets()'s callback advances "loading" -> "menu".
-  var state = "loading"; // loading | menu | playing | paused | dead | won
+  var state = "loading"; // loading | menu | levelbanner | playing | paused | dead | won
   var snake = null, dir = { x: 1, y: 0 }, queuedDir = null, food = null;
   // Pac-Man-style chasers: one per level, capped at 3. They pursue the
   // snake's head at HALF the snake's speed (they move once per two snake
@@ -1156,19 +1154,48 @@
   var score = 0, popcornCount = 0, level = 1, stepMs = BASE_STEP_MS, hi = 0;
   var acc = 0;
   var lastTs = 0;
-  var flashTimer = 0;
 
-  // The level-up "level details" card is a large, full-bleed, vividly
-  // tinted overlay now (unlike the old small centered "LEVEL n" banner), and
-  // it is deliberately non-blocking, so flashTimer can still be counting
-  // down when the player dies, wins, or pauses mid-flash. The dead/won/paused
-  // overlay's background is only ~82% opaque (see #overlay rgba alpha), so
-  // without clearing the card here its warm gradient visibly bleeds through
-  // behind the "Game Over"/"Paused" text. Call this at every exit from
-  // "playing" (not just newGame()) to prevent that bleed-through.
-  function hideLevelFlash() {
-    flashTimer = 0;
+  // The level banner is BLOCKING (it owns `state`), so unlike the old
+  // auto-timing-out flash card it can't still be on screen when the player
+  // dies or wins. This stays as a defensive clear for the one path that can
+  // still overlap: step() may call levelUp() (banner shown) and then, later
+  // in the same step, detect that the snake moved onto a chaser and call
+  // die() - the dead overlay is only ~86% opaque, so a stale banner would
+  // show through it.
+  function hideLevelBanner() {
     levelFlash.classList.remove("show");
+  }
+
+  // Retro "LEVEL n" screen: the level number is the only text - the monsters
+  // now in play (one per level, capped at three) carry the rest of the
+  // meaning, drawn at exactly 2x2 board cells each by the CSS above. Takes
+  // over `state`, so the snake holds still until OK is pressed.
+  function showLevelBanner() {
+    var count = Math.min(level, 3);
+    var html = "";
+    for (var i = 0; i < count; i++) {
+      // assetSrc() keeps the existing fallback chain (real image, else the
+      // generated colored-circle dataURL, else a blank pixel) so a failed
+      // monster download can never leave a broken-image icon here.
+      html += '<img src="' + assetSrc("ghost" + (i + 1)) + '" alt="">';
+    }
+    levelMonsters.innerHTML = html;
+    levelFlashTitle.textContent = S().levelFlashLabel(level);
+    // Per-level colour pop, same tint the snake body uses this level.
+    var tint = currentTint();
+    levelFlashCard.style.borderColor = tint.core;
+    levelFlashCard.style.boxShadow =
+      "0 0 0 3px #0a0e06, 0 0 26px " + tint.core + "70, inset 0 0 20px " + tint.core + "1f";
+    state = "levelbanner";
+    levelFlash.classList.add("show");
+  }
+
+  function dismissLevelBanner() {
+    if (state !== "levelbanner") return;
+    levelFlash.classList.remove("show");
+    acc = 0; // drop any fraction banked before the banner so dismissing it
+             // can never produce a burst of catch-up steps
+    state = "playing";
   }
 
   function newGame() {
@@ -1186,14 +1213,17 @@
     level = 1;
     stepMs = BASE_STEP_MS;
     acc = 0;
-    hideLevelFlash(); // clear any card left "show" from a death/pause that
-                       // interrupted a flash
+    hideLevelBanner(); // clear any banner left over from a previous run
     chasers = [];
     chaserTick = 0;
     spawnChaser(); // level 1 starts with one chaser
     placeFood();
     updateHud();
     updateAvatarHud(); // level just reset to 1 - keep the avatar in sync
+    // Level 1 gets the same banner as every other level. Guarded because
+    // placeFood() can in principle call win() (board completely full),
+    // which must not be overwritten by the banner's own state change.
+    if (state !== "won") showLevelBanner();
   }
 
   function cellFree(x, y) {
@@ -1322,16 +1352,9 @@
     return LEVEL_TINTS[(level - 1) % LEVEL_TINTS.length];
   }
 
-  function currentBlurb() {
-    // Saturates instead of cycling: the lines state the chaser count,
-    // which caps at 3 - cycling back to "one chaser" at level 4 would lie.
-    var blurbs = S().blurbs;
-    return blurbs[Math.min(level, blurbs.length) - 1];
-  }
-
   // Always-visible avatar HUD (#avatarHud/#avatarHudImg): shows the same
   // head1/head2/head3 image already driving the snake head and
-  // #levelFlashImg. Reuses assetSrc()'s existing fallback chain (real image
+  // the level banner's monsters. Reuses assetSrc()'s existing fallback chain (real image
   // src, or the makeFallbackCanvas() colored-circle dataURL, or
   // BLANK_PIXEL_SRC) - no new naive <img src> that can hang/blank on a failed
   // load. Called at boot (once assets are ready) and from newGame()/levelUp()
@@ -1397,12 +1420,10 @@
       if (loadingBtn) loadingBtn.textContent = s.loadingBtn;
     }
 
-    // A level-up card can be on screen (flashTimer > 0) independent of
-    // `state` (see hideLevelFlash()'s comment) - keep its text in sync too
-    // rather than leaving it in the old language until the next level-up.
-    if (flashTimer > 0) {
-      levelFlashText.textContent = s.levelFlashLabel(level);
-      levelFlashBlurb.textContent = currentBlurb();
+    // The level banner can be the thing currently on screen - re-label it
+    // too rather than leaving the old language up until the next level.
+    if (state === "levelbanner") {
+      levelFlashTitle.textContent = s.levelFlashLabel(level);
     }
 
     try {
@@ -1519,38 +1540,19 @@
     level += 1;
     stepMs = Math.max(MIN_STEP_MS, stepMs * STEP_DECAY);
     if (chasers.length < 3) spawnChaser(); // level 2 -> two chasers, 3+ -> three
-    // ~1.6s "level details" screen: readable but still brief, and - crucially -
-    // non-blocking. It only drives flashTimer/CSS opacity, never `state`, so
-    // the fixed-timestep loop in frame() keeps calling step() underneath it
-    // at the same new stepMs; nothing here pauses actual gameplay.
-    // 1900ms total (~1650ms at full opacity after the 250ms fade-in): with
-    // the trimmed ~4-6-word LEVEL_BLURBS above, that's a comfortable read
-    // even at conservative reading speed, while staying within the spec's
-    // ~1.5-2s non-blocking window.
-    flashTimer = 1900; // ms
-    var tint = currentTint();
-    // Enlarged circular head photo for the level being entered (cycles
-    // head-1/2/3.png with the level, same image already used for the
-    // snake's own head this level) - splash.png stays reserved for the
-    // game-over/win screens only, per spec.
-    levelFlashImg.src = assetSrc(currentHeadKey());
-    // Update the always-visible avatar HUD at this exact same point (same
-    // currentHeadKey() call site) so it and #levelFlashImg can never drift
-    // out of sync with each other.
+    // Keep the always-visible avatar HUD in sync with the new level's head
+    // photo at this exact point, so the two can never drift apart.
     updateAvatarHud();
-    levelFlashText.textContent = S().levelFlashLabel(level);
-    levelFlashBlurb.textContent = currentBlurb();
-    // Color-pop background accent tinted to the level's tint color, so each
-    // level-up reads as visually distinct, not just a text change.
-    levelFlashCard.style.background =
-      "linear-gradient(160deg, " + tint.core + "e6, " + tint.edge + "e6)";
-    levelFlash.classList.add("show");
+    // Blocking retro banner (was a ~1.9s non-blocking flash card): the snake
+    // holds still until the player presses OK, so a level change can no
+    // longer sneak movement past them while they read it.
+    showLevelBanner();
   }
 
   function die() {
     state = "dead";
-    hideLevelFlash(); // don't let a mid-flash level card bleed through the
-                       // translucent game-over overlay
+    hideLevelBanner(); // don't let a stale banner bleed through the
+                        // translucent game-over overlay
     saveHi();
     updateHud();
     showOverlayDead();
@@ -1559,7 +1561,7 @@
   function win() {
     // Reachable only when the snake fills every cell of the grid.
     state = "won";
-    hideLevelFlash(); // same bleed-through guard as die()
+    hideLevelBanner(); // same bleed-through guard as die()
     saveHi();
     updateHud();
     showOverlayWon();
@@ -1638,6 +1640,22 @@
     overlay.classList.add("hidden");
   }
 
+  if (levelOkBtn) {
+    levelOkBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation(); // don't also reach the backdrop handler below
+      dismissLevelBanner();
+    });
+  }
+  if (levelFlash) {
+    // Tapping anywhere on the banner dismisses it too - on a phone, aiming
+    // for the button is needless friction. Guarded to the backdrop itself so
+    // this stays additive to the button rather than racing it.
+    levelFlash.addEventListener("click", function (e) {
+      if (e.target === levelFlash || e.target === levelFlashCard) dismissLevelBanner();
+    });
+  }
+
   function startOrResume() {
     // Assets aren't ready yet: #playBtn is disabled in this state so a real
     // click can't normally reach here, but the board/canvas tap-to-start
@@ -1645,8 +1663,10 @@
     // on the disabled attribute.
     if (state === "loading") return;
     if (state === "menu" || state === "dead" || state === "won") {
+      // newGame() ends by showing the level-1 banner, which sets state to
+      // "levelbanner" - do NOT force "playing" here or the banner would be
+      // skipped straight past on the very first level.
       newGame();
-      state = "playing";
       hideOverlay();
       render(); // paint the fresh snake immediately, don't wait for the next rAF tick
     } else if (state === "paused") {
@@ -1658,7 +1678,7 @@
   function togglePause() {
     if (state === "playing") {
       state = "paused";
-      hideLevelFlash(); // same bleed-through guard as die()/win()
+      hideLevelBanner(); // same bleed-through guard as die()/win()
       showOverlayPaused();
     } else if (state === "paused") {
       state = "playing";
@@ -1785,14 +1805,6 @@
     lastTs = ts;
     if (dt > 250) dt = 250; // clamp huge gaps (tab backgrounded)
 
-    if (flashTimer > 0) {
-      flashTimer -= dt;
-      if (flashTimer <= 0) {
-        flashTimer = 0;
-        levelFlash.classList.remove("show");
-      }
-    }
-
     if (state === "playing") {
       acc += dt;
       // Snapshot stepMs for this frame: step() can call levelUp(), which
@@ -1822,6 +1834,11 @@
     if (KEY_DIR[e.key]) {
       e.preventDefault();
       if (state === "playing") requestTurn(KEY_DIR[e.key]);
+      return;
+    }
+    if (state === "levelbanner" && (e.key === " " || e.key === "Enter")) {
+      e.preventDefault();
+      dismissLevelBanner();
       return;
     }
     if (e.key === " ") {

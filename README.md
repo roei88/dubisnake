@@ -2,21 +2,22 @@
 
 A Nokia-style Snake game where the head is a profile photo instead of a plain
 block, the food is a piece of popcorn, and the head photo swaps to the next
-one every time you level up (looping 1 -> 2 -> 3 -> 1 ...). Pac-Man-style
-ghost chasers (a friend's cartooned face on classic red/pink/cyan ghost
-bodies) pursue the snake's head at half its speed - one chaser on level 1,
-two on level 2, three from level 3 on - and touching one head-on ends the
-run, as do walls and self collisions. Speed ramps up each level, and your
+one every time you level up (looping 1 -> 2 -> 3 -> 1 ...). Cartoon
+monster chasers pursue the snake's head at half its speed - one from level
+1, a second from level 2, a third from level 3 on - and running into one
+ends the run, as do walls and self collisions. Each level opens with a
+retro "LEVEL n" banner showing the monsters now in play, and waits for OK
+before the snake starts moving. Speed ramps up each level, and your
 best score is remembered on the device you play on.
 
 **Play it live:** https://roei88.github.io/dubisnake/
 
 ## Controls
 
-- **Desktop:** Arrow keys or WASD to steer, Space to pause, Enter to
-  start/restart.
-- **Mobile:** swipe on the board, or use the on-screen D-pad (shown
-  automatically on touch devices); tap to start/restart.
+- **Desktop:** Arrow keys to steer, Space to pause or dismiss a level
+  banner, Enter to start/restart.
+- **Mobile:** swipe on the board (recognised mid-drag, no need to lift);
+  tap to start/restart.
 
 ## Assets
 
@@ -32,7 +33,7 @@ game falls back to a plain colored circle so it keeps working.
 
 All in-game UI text is localized to Hebrew/RTL, and the play grid is 9x9 cells
 (down from 19x19, then 13x13) for bigger, more readable cells; gameplay
-control semantics (arrow keys, swipe, D-pad) are unchanged. A small circular
+control semantics (arrow keys, swipe) are unchanged. A small circular
 avatar showing the current head photo sits in the top-left corner of the HUD
 at all times (menu, playing, paused, game over) alongside the score/level/
 high-score readout.

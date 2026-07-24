@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * dubisnake build - zero dependencies (Node's fs only, no npm packages).
+ * CustomSnake template build - zero dependencies (Node's fs only, no packages).
  *
  * Assembles the split source under ./src into the single self-contained
  * ./index.html that GitHub Pages serves and that also runs from file://.
@@ -19,12 +19,13 @@
  * Concatenation order is explicit (not a glob) so cascade order (CSS) and
  * dependency order (JS) are never at the mercy of filename sorting.
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, extname } from 'node:path';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SRC = join(ROOT, 'src');
+const ASSETS = join(ROOT, 'assets');
 
 // CSS files, in cascade order (base -> frame -> components -> chrome).
 const CSS_FILES = [
@@ -94,14 +95,46 @@ function main() {
     .replace(STYLES_MARKER, () => css)
     .replace(SCRIPT_MARKER, () => js);
 
-  // 3. "Generated" banner right after the doctype line.
-  out = out.replace(/^(<!doctype html>\n)/i, (_m, d) => d + GENERATED_BANNER);
+  // 3. Inline the assets/ images as base64 data: URIs so the output is a
+  //    TRULY self-contained single file - custom sprites embedded, nothing
+  //    loaded at runtime. The locked CSP already allows `img-src data:`. Runtime
+  //    references are literal (`./assets/x.png` in ASSET_LIST, `url("assets/x")`
+  //    in CSS); the absolute og:image/twitter:image URLs are left alone (social
+  //    scrapers need a real URL, and those never use the `./assets/` or `url()`
+  //    forms replaced here). Swap a PNG in assets/, re-run this build, ship the
+  //    one index.html.
+  const inlined = inlineAssets(out);
 
-  writeFileSync(join(ROOT, 'index.html'), out);
+  // 4. "Generated" banner right after the doctype line.
+  const final = inlined.replace(/^(<!doctype html>\n)/i, (_m, d) => d + GENERATED_BANNER);
+
+  writeFileSync(join(ROOT, 'index.html'), final);
   console.log(
     'Built index.html  (' + CSS_FILES.length + ' css, ' + JS_FILES.length +
-    ' js files; ' + css.length + ' css bytes, ' + js.length + ' js bytes)'
+    ' js files; ' + css.length + ' css bytes, ' + js.length + ' js bytes; ' +
+    'assets inlined as data: URIs -> single self-contained file)'
   );
+}
+
+// Replace every runtime reference to an assets/ image with a base64 data: URI.
+// MIME by extension; only the `./assets/<file>` (JS) and `url(assets/<file>)`
+// (CSS) forms are touched - never the absolute og:image URLs.
+function inlineAssets(html) {
+  let files;
+  try { files = readdirSync(ASSETS); } catch (e) { return html; }
+  const MIME = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml' };
+  for (const f of files) {
+    const mime = MIME[extname(f).toLowerCase()];
+    if (!mime) continue;
+    const uri = 'data:' + mime + ';base64,' + readFileSync(join(ASSETS, f)).toString('base64');
+    // JS: "./assets/<f>"  (replace the ./-prefixed form first)
+    html = html.split('./assets/' + f).join(uri);
+    // CSS: url("assets/<f>") / url('assets/<f>') / url(assets/<f>)
+    html = html.split('url("assets/' + f + '")').join('url("' + uri + '")');
+    html = html.split("url('assets/" + f + "')").join("url('" + uri + "')");
+    html = html.split('url(assets/' + f + ')').join('url(' + uri + ')');
+  }
+  return html;
 }
 
 function fail(msg) {

@@ -16,6 +16,14 @@
     touch-action: none;
   }
   #langToggle:active { background: rgba(0,229,255,0.35); }
+  /* ===================================================================
+     TEMPLATE DEFAULT: ENGLISH ONLY. The language toggle button is HIDDEN so
+     the game ships single-language (English). The Hebrew strings remain in
+     src/js/strings.js purely as an EXAMPLE translation.
+     To turn the toggle back ON (and expose any languages you add), DELETE the
+     one rule below and rebuild. See the package docs -> "Language & translation".
+     =================================================================== */
+  #langToggle { display: none; }
 
   /* Mobile-only "how to play" hint: fixed/full-viewport, outside #wrap's
      flow (same reasoning as #langToggle above) so it can never feed back

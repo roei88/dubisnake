@@ -13,8 +13,8 @@
       hiLabel: "שיא",
       footerHi: "השיא נשמר מקומית במכשיר",
       footerHiFail: "השיא לא נשמר הפעם (האחסון אינו זמין)",
-      // Brand name gets a Hebrew form specifically in Hebrew mode (English
-      // mode keeps the Latin "customsnake" - see brandTitle below).
+      // The brand wordmark stays the Latin "CustomSnake" in every locale;
+      // rename it here (both language blocks) to your own game's name.
       brandTitle: "CustomSnake",
       // Deliberately just the one punchy line now (was a full mechanics
       // explainer) - rendered bigger/bolder via the .tagline class, not the
@@ -122,7 +122,7 @@
     }
   }
 
-  var i18n = new I18n(STRINGS, "customsnake_lang", "he");
+  var i18n = new I18n(STRINGS, "customsnake_lang", "en");
 
   // Stable accessor used throughout the game for the active string table.
   function S() { return i18n.current(); }

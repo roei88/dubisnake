@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "customsnake-cli"
+version = "1.0.0"
+description = "Bootstrap and customize a new CustomSnake game from the template - scaffolding, image import, placeholder/banner generation, and local preview, wrapped in one Typer CLI."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = [
+  "typer>=0.12",   # the CLI framework (built on Click); powers the `customsnake` command
+  "pillow>=10",    # image processing for `images`, `placeholders`, and `banner`
+]
+
+[project.scripts]
+customsnake = "customsnake.cli:app"
+
+[tool.setuptools]
+packages = ["customsnake"]

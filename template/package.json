@@ -4,11 +4,14 @@
   "description": "A customizable retro snake game template - drop in your own head and monster images, run one build, ship a single self-contained index.html. Zero dependencies, vanilla JS + canvas.",
   "type": "module",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "prepublishOnly": "node build.mjs"
   },
   "files": [
     "src/",
     "assets/",
+    "tools/",
+    "docs/",
     "build.mjs",
     "index.html",
     "README.md"
@@ -24,12 +27,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/roei88/dubisnake.git",
+    "url": "git+https://github.com/roei88/dubisnake.git",
     "directory": "template"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
-  "author": "roei88",
   "license": "MIT"
 }

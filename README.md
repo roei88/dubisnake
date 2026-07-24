@@ -18,24 +18,18 @@
 
 </div>
 
-## 📖 The Legend
+### 📖 The Legend
 
 Long ago, in the flickering green glow of an old brick phone, a hero was
 swallowed whole by the screen. He woke up long, scaly, and very, very hungry.
 
 That hero is **DubiSnake** - named after **Oren Dubinsky**, the real person
-whose face you see on the snake's head. (It is genuinely his photo, and it
-changes with every level, because a legend deserves a wardrobe.)
+whose face you see on the snake's head.
 
 There is only one way out: eat every last piece of **popcorn** on the board and
 survive all three levels.
 
-## 👹 Meet the Monsters
-
-Three creatures would very much like the snake to stop moving - permanently.
-More of them join the hunt at every level. They chase Pac-Man style: they close
-in and cut you off, but they never land on your head. You lose only by walking
-straight into one (or a wall, or your own tail).
+### 👹 Meet the Monsters
 
 <div align="center">
 
@@ -43,8 +37,7 @@ straight into one (or a wall, or your own tail).
 
 ### TheLabbovichi
 
-**Level 1 onward** - the original stalker. Always on the board, always right
-behind you.
+The original stalker. Always on the board, always right behind you.
 
 &nbsp;
 
@@ -52,8 +45,8 @@ behind you.
 
 ### GrosZBaker
 
-**Level 2 onward** - a baker who set out to "bake a cake," fumbled the recipe
-*and* the spelling, and has been cross about it ever since.
+A baker who set out to "bake a cake," fumbled the recipe *and* the spelling, and
+has been cross about it ever since.
 
 &nbsp;
 
@@ -61,56 +54,39 @@ behind you.
 
 ### Enshula
 
-**Level 3 only** - the final terror. You only meet Enshula once you have earned
-it, and you will wish you hadn't.
+The final terror. You only meet Enshula once you have earned it, and you will
+wish you hadn't.
 
 </div>
 
-## 🎮 How to Play
+### 🎮 How to Play
 
 The goal is simple: **eat the popcorn, dodge everything else.** Every 5 pieces
 clears the level. Clear all three and you win the crown 👑.
 
-### 📱 On mobile
+<div align="center">
+
+<img src="docs/screenshots/controls-swipe.png" width="230" alt="Swipe in any direction to steer">
+&nbsp;&nbsp;&nbsp;
+<img src="docs/screenshots/controls-keys.png" width="230" alt="Use the arrow keys to steer">
+
+</div>
+
+#### 📱 On mobile
 
 - **Swipe** in any direction to steer
 - Turn mid-move - keep your finger down and swipe again
 - **Tap the board** to start or restart
 - A one-time hint pops up the first time you play
 
-### 💻 On desktop
+#### 💻 On desktop
 
 - **Arrow keys** to steer
 - **Enter** to start or restart
 - **Space** to pause and resume
 - The board stays centered and crisp at any window size
 
-## ✨ What Makes It Fun
-
-- **Three handmade levels**, then a cartoony **GAME WON** celebration - complete
-  with a crown, confetti, and a choice: reset to level 1, or **Keep Playing** in
-  endless mode (crown in the header, an easier pace, and a snake that just keeps
-  growing).
-- **The hero's face changes every level** - a fresh look for each stage.
-- **Popcorn, not apples.** This is a snack-forward snake.
-- **Two languages:** full English and Hebrew (right-to-left), switchable any time
-  with one button - mid-game included.
-- **Your best score is saved** locally on your device.
-- **Runs anywhere.** No installs, no accounts, no tracking, works offline.
-
-<div align="center">
-
-### [ click the popcorn to play ](https://roei88.github.io/dubisnake/)
-
-### ⬇️ &nbsp;&nbsp; ⬇️ &nbsp;&nbsp; ⬇️
-
-<a href="https://roei88.github.io/dubisnake/"><img src="assets/food.png" width="66%" alt="Click the popcorn to play DubiSnake"></a>
-
-### ⬆️ &nbsp;&nbsp; ⬆️ &nbsp;&nbsp; ⬆️
-
-</div>
-
-## 🛠️ For Developers
+### 🛠️ For Developers
 
 DubiSnake ships as **one self-contained `index.html`** - vanilla JavaScript and
 an HTML5 canvas, **zero dependencies**, no CDNs. A locked Content-Security-Policy
@@ -150,7 +126,7 @@ build.mjs                zero-dependency build (Node, no npm packages)
 assets/                  the sprites the game draws from (heads, popcorn, monsters)
 ```
 
-### Building
+#### Building
 
 ```
 node build.mjs

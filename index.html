@@ -402,7 +402,7 @@
      only the menu carries it. */
   #overlay.menuBanner {
     background-image:
-      linear-gradient(rgba(10, 8, 7, 0.5), rgba(10, 8, 7, 0.5)),
+      linear-gradient(rgba(10, 8, 7, 0.66), rgba(10, 8, 7, 0.66)),
       url("assets/menu-backdrop.png");
     /* TRANSPARENT backdrop art (no dark banner box/frame) so it blends into the
        screen uniformly, like the README hero. `contain` fits the whole 1.9:1
@@ -411,9 +411,10 @@
        stay legible. The "Eat the popcorn!" wording is the DOM .tagline, so this
        art carries only the DubiSnake wordmark + snake/head/popcorn. */
     background-size: contain;
-    /* Sit the art high in the board so its DubiSnake wordmark clears the
-       vertically-centered .tagline / controls below it (no text collision). */
-    background-position: center 22%;
+    /* Art-only backdrop (snake + head + popcorn, no wordmark): sit it LOW so it
+       reads as a faint decorative footer well below the highlighted control
+       demo. Heavy scrim above keeps it subtle/transparent. */
+    background-position: center 74%;
     background-repeat: no-repeat;
   }
   /* Centers vertically via margin:auto instead of justify-content:center on
@@ -603,7 +604,7 @@
      (already published by resizeCanvas()) so it scales with the board
      instead of introducing a new fixed-px block into the overlay stack. */
   .howto {
-    --ht-stage: min(146px, calc(var(--board-px, 300px) * 0.44));
+    --ht-stage: min(178px, calc(var(--board-px, 300px) * 0.54));
     --ht-travel: calc(var(--ht-stage) * 0.30);
     --ht-nudge: calc(var(--ht-stage) * 0.055);
     --ht-keydrop: calc(var(--ht-stage) * 0.028);
@@ -611,6 +612,10 @@
     width: var(--ht-stage);
     height: var(--ht-stage);
     flex: none;
+    /* Highlight the how-to-play demo on the menu: a soft cyan glow disc lifts
+       it off the (now faint) backdrop so the controls are the clear focus. */
+    background: radial-gradient(closest-side, rgba(0, 229, 255, 0.18), rgba(0, 229, 255, 0) 76%);
+    border-radius: 50%;
   }
   /* Base centering for every child; the arrows then override with their own
      offset transforms. Keyframes below re-declare the full transform
@@ -2302,7 +2307,6 @@
     overlay.classList.add("menuBanner");
     overlay.innerHTML =
       '<div class="overlayInner">' +
-      '<p class="tagline">' + S().menuInstructions + '</p>' +
       // Language-independent (icons only), so it needs no S() lookup and
       // survives applyLanguage()'s rebuild unchanged. dir="ltr" pins the
       // flex-row snake against RTL reversal - see the static markup comment.

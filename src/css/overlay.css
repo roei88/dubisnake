@@ -39,7 +39,7 @@
      only the menu carries it. */
   #overlay.menuBanner {
     background-image:
-      linear-gradient(rgba(10, 8, 7, 0.5), rgba(10, 8, 7, 0.5)),
+      linear-gradient(rgba(10, 8, 7, 0.66), rgba(10, 8, 7, 0.66)),
       url("assets/menu-backdrop.png");
     /* TRANSPARENT backdrop art (no dark banner box/frame) so it blends into the
        screen uniformly, like the README hero. `contain` fits the whole 1.9:1
@@ -48,9 +48,10 @@
        stay legible. The "Eat the popcorn!" wording is the DOM .tagline, so this
        art carries only the DubiSnake wordmark + snake/head/popcorn. */
     background-size: contain;
-    /* Sit the art high in the board so its DubiSnake wordmark clears the
-       vertically-centered .tagline / controls below it (no text collision). */
-    background-position: center 22%;
+    /* Art-only backdrop (snake + head + popcorn, no wordmark): sit it LOW so it
+       reads as a faint decorative footer well below the highlighted control
+       demo. Heavy scrim above keeps it subtle/transparent. */
+    background-position: center 74%;
     background-repeat: no-repeat;
   }
   /* Centers vertically via margin:auto instead of justify-content:center on

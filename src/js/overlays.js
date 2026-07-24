@@ -12,7 +12,6 @@
     overlay.classList.add("menuBanner");
     overlay.innerHTML =
       '<div class="overlayInner">' +
-      '<p class="tagline">' + S().menuInstructions + '</p>' +
       // Language-independent (icons only), so it needs no S() lookup and
       // survives applyLanguage()'s rebuild unchanged. dir="ltr" pins the
       // flex-row snake against RTL reversal - see the static markup comment.

@@ -9,7 +9,7 @@
      (already published by resizeCanvas()) so it scales with the board
      instead of introducing a new fixed-px block into the overlay stack. */
   .howto {
-    --ht-stage: min(146px, calc(var(--board-px, 300px) * 0.44));
+    --ht-stage: min(178px, calc(var(--board-px, 300px) * 0.54));
     --ht-travel: calc(var(--ht-stage) * 0.30);
     --ht-nudge: calc(var(--ht-stage) * 0.055);
     --ht-keydrop: calc(var(--ht-stage) * 0.028);
@@ -17,6 +17,10 @@
     width: var(--ht-stage);
     height: var(--ht-stage);
     flex: none;
+    /* Highlight the how-to-play demo on the menu: a soft cyan glow disc lifts
+       it off the (now faint) backdrop so the controls are the clear focus. */
+    background: radial-gradient(closest-side, rgba(0, 229, 255, 0.18), rgba(0, 229, 255, 0) 76%);
+    border-radius: 50%;
   }
   /* Base centering for every child; the arrows then override with their own
      offset transforms. Keyframes below re-declare the full transform

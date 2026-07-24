@@ -296,10 +296,10 @@
   // mapping stays fixed either way). Safe to call at any time, including
   // mid-game. ----------
   function applyLanguage(lang) {
-    if (STRINGS[lang]) currentLang = lang;
+    i18n.set(lang);
     var s = S();
 
-    document.documentElement.lang = currentLang;
+    document.documentElement.lang = i18n.lang;
     document.documentElement.dir = s.dir;
 
     var metaDesc = document.querySelector('meta[name="description"]');
@@ -345,9 +345,7 @@
       levelFlashTitle.textContent = s.levelFlashLabel(level);
     }
 
-    try {
-      localStorage.setItem(LANG_KEY, currentLang);
-    } catch (e) { /* private mode / storage disabled - in-session switch still works */ }
+    i18n.persist();
   }
 
   // hi is a module-level var, so an in-session high score still works even

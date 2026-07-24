@@ -1092,14 +1092,43 @@
       toggleAria: "עבור לעברית"
     }
   };
-  var LANG_KEY = "dubisnake_lang";
-  var currentLang = "he";
-  try {
-    var storedLang = localStorage.getItem(LANG_KEY);
-    if (storedLang === "he" || storedLang === "en") currentLang = storedLang;
-  } catch (e) { /* private mode / storage disabled - default stands */ }
+  // Owns the current language and its persistence. Only the string TABLE
+  // (STRINGS above) stays a plain data literal; the mutable "which language"
+  // state and its localStorage round-trip live here.
+  class I18n {
+    constructor(strings, storageKey, fallbackLang) {
+      this.strings = strings;
+      this.storageKey = storageKey;
+      this.lang = fallbackLang;
+      try {
+        var stored = localStorage.getItem(storageKey);
+        if (this.strings[stored]) this.lang = stored;
+      } catch (e) { /* private mode / storage disabled - fallback stands */ }
+    }
 
-  function S() { return STRINGS[currentLang]; }
+    // The active language's string table.
+    current() { return this.strings[this.lang]; }
+
+    has(lang) { return !!this.strings[lang]; }
+
+    // Switch language if known; returns the language now in effect.
+    set(lang) {
+      if (this.strings[lang]) this.lang = lang;
+      return this.lang;
+    }
+
+    // Best-effort persist of the current choice (survives a reload).
+    persist() {
+      try {
+        localStorage.setItem(this.storageKey, this.lang);
+      } catch (e) { /* private mode / storage disabled - in-session switch still works */ }
+    }
+  }
+
+  var i18n = new I18n(STRINGS, "dubisnake_lang", "he");
+
+  // Stable accessor used throughout the game for the active string table.
+  function S() { return i18n.current(); }
 
   // ---------- image preload with colored-circle fallback ----------
   // No getImageData is used anywhere so this stays file:// safe.
@@ -1748,10 +1777,10 @@
   // mapping stays fixed either way). Safe to call at any time, including
   // mid-game. ----------
   function applyLanguage(lang) {
-    if (STRINGS[lang]) currentLang = lang;
+    i18n.set(lang);
     var s = S();
 
-    document.documentElement.lang = currentLang;
+    document.documentElement.lang = i18n.lang;
     document.documentElement.dir = s.dir;
 
     var metaDesc = document.querySelector('meta[name="description"]');
@@ -1797,9 +1826,7 @@
       levelFlashTitle.textContent = s.levelFlashLabel(level);
     }
 
-    try {
-      localStorage.setItem(LANG_KEY, currentLang);
-    } catch (e) { /* private mode / storage disabled - in-session switch still works */ }
+    i18n.persist();
   }
 
   // hi is a module-level var, so an in-session high score still works even
@@ -2840,7 +2867,7 @@
   if (langToggleBtn) {
     langToggleBtn.addEventListener("click", function (e) {
       e.preventDefault();
-      applyLanguage(currentLang === "he" ? "en" : "he");
+      applyLanguage(i18n.lang === "he" ? "en" : "he");
     });
     // The global keydown handler below (Space -> pause, Enter -> start/
     // resume) is bound on `window` and fires on ANY keypress regardless of
@@ -2857,7 +2884,7 @@
   // ---------- boot ----------
   loadHi();
   updateHud();
-  applyLanguage(currentLang); // corrects the static pre-boot markup (loading
+  applyLanguage(i18n.lang); // corrects the static pre-boot markup (loading
                                // label, mobile-help caption, meta description,
                                // HUD labels, footer) to match a previously-
                                // stored language choice before first paint

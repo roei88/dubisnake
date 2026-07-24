@@ -77,11 +77,40 @@
       toggleAria: "עבור לעברית"
     }
   };
-  var LANG_KEY = "dubisnake_lang";
-  var currentLang = "he";
-  try {
-    var storedLang = localStorage.getItem(LANG_KEY);
-    if (storedLang === "he" || storedLang === "en") currentLang = storedLang;
-  } catch (e) { /* private mode / storage disabled - default stands */ }
+  // Owns the current language and its persistence. Only the string TABLE
+  // (STRINGS above) stays a plain data literal; the mutable "which language"
+  // state and its localStorage round-trip live here.
+  class I18n {
+    constructor(strings, storageKey, fallbackLang) {
+      this.strings = strings;
+      this.storageKey = storageKey;
+      this.lang = fallbackLang;
+      try {
+        var stored = localStorage.getItem(storageKey);
+        if (this.strings[stored]) this.lang = stored;
+      } catch (e) { /* private mode / storage disabled - fallback stands */ }
+    }
 
-  function S() { return STRINGS[currentLang]; }
+    // The active language's string table.
+    current() { return this.strings[this.lang]; }
+
+    has(lang) { return !!this.strings[lang]; }
+
+    // Switch language if known; returns the language now in effect.
+    set(lang) {
+      if (this.strings[lang]) this.lang = lang;
+      return this.lang;
+    }
+
+    // Best-effort persist of the current choice (survives a reload).
+    persist() {
+      try {
+        localStorage.setItem(this.storageKey, this.lang);
+      } catch (e) { /* private mode / storage disabled - in-session switch still works */ }
+    }
+  }
+
+  var i18n = new I18n(STRINGS, "dubisnake_lang", "he");
+
+  // Stable accessor used throughout the game for the active string table.
+  function S() { return i18n.current(); }

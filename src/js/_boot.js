@@ -191,7 +191,7 @@
   if (langToggleBtn) {
     langToggleBtn.addEventListener("click", function (e) {
       e.preventDefault();
-      applyLanguage(currentLang === "he" ? "en" : "he");
+      applyLanguage(i18n.lang === "he" ? "en" : "he");
     });
     // The global keydown handler below (Space -> pause, Enter -> start/
     // resume) is bound on `window` and fires on ANY keypress regardless of
@@ -208,7 +208,7 @@
   // ---------- boot ----------
   loadHi();
   updateHud();
-  applyLanguage(currentLang); // corrects the static pre-boot markup (loading
+  applyLanguage(i18n.lang); // corrects the static pre-boot markup (loading
                                // label, mobile-help caption, meta description,
                                // HUD labels, footer) to match a previously-
                                // stored language choice before first paint

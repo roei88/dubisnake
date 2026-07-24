@@ -55,7 +55,7 @@
       // assetStore.src() keeps the existing fallback chain (real image, else the
       // generated colored-circle dataURL, else a blank pixel) so a failed
       // monster download can never leave a broken-image icon here.
-      html += '<img src="' + assetStore.src("ghost" + (i + 1)) + '" alt="">';
+      html += '<img class="lvl-mon lvl-mon-' + (i + 1) + '" src="' + assetStore.src("ghost" + (i + 1)) + '" alt="">';
     }
     levelMonsters.innerHTML = html;
     levelFlashTitle.textContent = S().levelFlashLabel(level);
@@ -179,6 +179,10 @@
     return HEAD_KEYS[(level - 1) % HEAD_KEYS.length];
   }
 
+  function currentStageColor() {
+    return STAGE_COLORS[(level - 1) % STAGE_COLORS.length];
+  }
+
   function currentTint() {
     return LEVEL_TINTS[(level - 1) % LEVEL_TINTS.length];
   }
@@ -193,6 +197,12 @@
   // level-up flash image.
   function updateAvatarHud() {
     if (avatarHudImg) avatarHudImg.src = assetStore.src(currentHeadKey());
+    // Recolor the avatar ring (and PRESS ANY KEY, via currentStageColor())
+    // to the current stage's accent: dark green (L1) / yellow (L2) / red (L3).
+    if (wrap) {
+      wrap.style.setProperty("--stage-color", currentStageColor());
+      wrap.style.setProperty("--stage-glow", STAGE_GLOW[(level - 1) % STAGE_GLOW.length]);
+    }
   }
 
   function updateHud() {

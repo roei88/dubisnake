@@ -290,8 +290,11 @@
     }
     ctx.save();
     ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-    ctx.fillStyle = "#00e5ff";
-    ctx.shadowColor = "rgba(0,229,255,0.65)";
+    // Stage-coloured (dark green L1 / yellow L2 / red L3) - the opener plays at
+    // level 1, so this reads dark green at first launch.
+    var pakColor = currentStageColor();
+    ctx.fillStyle = pakColor;
+    ctx.shadowColor = pakColor;
     ctx.shadowBlur = cellPx * 0.5;
     var fontPx = Math.round(cellPx * 1.05);
     var fontStack = "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";

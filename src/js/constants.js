@@ -8,6 +8,11 @@
   // logic), and on the same 720px board it gives ~80px cells - large, clearly
   // readable head/body circles, at the cost of a smaller grid to navigate.
   var GRID_N = 9;                 // fixed logical grid, both axes
+  // Per-stage accent, cycling by level (1/2/3): dark green / yellow / red.
+  // Drives the avatar ring and the PRESS ANY KEY text. Glow variants are the
+  // same hues at low alpha for the avatar box-shadow.
+  var STAGE_COLORS = ["#1e7d32", "#b8860b", "#a51e1e"];
+  var STAGE_GLOW = ["rgba(30,125,50,0.4)", "rgba(184,134,11,0.4)", "rgba(165,30,30,0.4)"];
   // Endpoints scaled twice on request: first by 1.3x (160->208, 70->91) for
   // the "30% slower" pass, then doubled (208->416, 91->182) for the "50%
   // slower" pass - halving speed means doubling the per-cell interval.

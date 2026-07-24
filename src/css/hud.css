@@ -159,13 +159,13 @@
     flex-shrink: 0;
     box-sizing: border-box; /* keep the 3px border inside --avatar-px, not added on top */
     border-radius: 50%;
-    border: 3px solid #22d3ee;
+    border: 3px solid var(--stage-color, #22d3ee);
     /* small dark chip behind the image so it doesn't float directly against
        the light HUD text */
     background: #1c1815;
     box-shadow:
-      0 0 12px rgba(34,211,238,0.3),
-      0 0 24px rgba(34,211,238,0.1),
+      0 0 12px var(--stage-glow, rgba(34,211,238,0.3)),
+      0 0 24px var(--stage-glow, rgba(34,211,238,0.1)),
       inset 0 0 0 3px rgba(0,0,0,0.35);
     overflow: hidden;
     pointer-events: none;

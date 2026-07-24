@@ -71,6 +71,45 @@
     object-fit: contain;
     filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6));
   }
+  /* Animate the level-card monsters with the solo-ghost float/glow motion
+     (ported from new-assets/animations/solo-scenes.jsx) - each ghost gets its
+     own 2.5s loop and glow colour: ghost 1 smooth circular (blue), ghost 2
+     lazy sway (red), ghost 3 energetic wobble (green). Motion is a small
+     sub-sprite offset so they never leave the card. The base drop-shadow is
+     repeated in every keyframe so the animated `filter` keeps it while the
+     coloured glow pulses. */
+  .lvl-mon {
+    animation-duration: 2.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+    will-change: transform, filter;
+  }
+  .lvl-mon-1 { animation-name: lvlMon1; }
+  .lvl-mon-2 { animation-name: lvlMon2; }
+  .lvl-mon-3 { animation-name: lvlMon3; }
+  @keyframes lvlMon1 { /* ghost 1 - smooth circular float, blue #4a9eff */
+    0%, 100% { transform: translate(0, -7px) rotate(0deg) scale(1);      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 6px rgba(74,158,255,0.55)); }
+    25%      { transform: translate(7px, 0) rotate(3deg) scale(1.03);    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(74,158,255,0.85)); }
+    50%      { transform: translate(0, 7px) rotate(0deg) scale(1);       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 6px rgba(74,158,255,0.55)); }
+    75%      { transform: translate(-7px, 0) rotate(-3deg) scale(1.03);  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(74,158,255,0.85)); }
+  }
+  @keyframes lvlMon2 { /* ghost 2 - lazy sway + double bob, red #ff4444 */
+    0%, 100% { transform: translate(-6px, 0) rotate(-2deg) scale(1);     filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(255,68,68,0.55)); }
+    25%      { transform: translate(0, 6px) rotate(0deg) scale(1.04);    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(255,68,68,0.85)); }
+    50%      { transform: translate(6px, 0) rotate(2deg) scale(1);       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(255,68,68,0.55)); }
+    75%      { transform: translate(0, 6px) rotate(0deg) scale(1.04);    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(255,68,68,0.85)); }
+  }
+  @keyframes lvlMon3 { /* ghost 3 - energetic wobble, green #00e5a0 */
+    0%, 100% { transform: translate(0, 7px) rotate(0deg) scale(1);       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(0,229,160,0.6)); }
+    25%      { transform: translate(6px, -6px) rotate(5deg) scale(1.05); filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 14px rgba(0,229,160,0.9)); }
+    50%      { transform: translate(0, -7px) rotate(0deg) scale(1);      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(0,229,160,0.6)); }
+    75%      { transform: translate(-6px, -6px) rotate(-5deg) scale(1.05); filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 14px rgba(0,229,160,0.9)); }
+  }
+  /* Motion-sensitive users: hold the monsters still (same convention as the
+     ghost idle / opener / tutorials elsewhere). */
+  @media (prefers-reduced-motion: reduce) {
+    .lvl-mon { animation: none; }
+  }
   #levelOkBtn {
     min-height: 44px;
     padding: 0 min(38px, calc(var(--board-px, 300px) * 0.11));

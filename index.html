@@ -296,13 +296,13 @@
     flex-shrink: 0;
     box-sizing: border-box; /* keep the 3px border inside --avatar-px, not added on top */
     border-radius: 50%;
-    border: 3px solid #22d3ee;
+    border: 3px solid var(--stage-color, #22d3ee);
     /* small dark chip behind the image so it doesn't float directly against
        the light HUD text */
     background: #1c1815;
     box-shadow:
-      0 0 12px rgba(34,211,238,0.3),
-      0 0 24px rgba(34,211,238,0.1),
+      0 0 12px var(--stage-glow, rgba(34,211,238,0.3)),
+      0 0 24px var(--stage-glow, rgba(34,211,238,0.1)),
       inset 0 0 0 3px rgba(0,0,0,0.35);
     overflow: hidden;
     pointer-events: none;
@@ -723,6 +723,45 @@
     object-fit: contain;
     filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6));
   }
+  /* Animate the level-card monsters with the solo-ghost float/glow motion
+     (ported from new-assets/animations/solo-scenes.jsx) - each ghost gets its
+     own 2.5s loop and glow colour: ghost 1 smooth circular (blue), ghost 2
+     lazy sway (red), ghost 3 energetic wobble (green). Motion is a small
+     sub-sprite offset so they never leave the card. The base drop-shadow is
+     repeated in every keyframe so the animated `filter` keeps it while the
+     coloured glow pulses. */
+  .lvl-mon {
+    animation-duration: 2.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+    will-change: transform, filter;
+  }
+  .lvl-mon-1 { animation-name: lvlMon1; }
+  .lvl-mon-2 { animation-name: lvlMon2; }
+  .lvl-mon-3 { animation-name: lvlMon3; }
+  @keyframes lvlMon1 { /* ghost 1 - smooth circular float, blue #4a9eff */
+    0%, 100% { transform: translate(0, -7px) rotate(0deg) scale(1);      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 6px rgba(74,158,255,0.55)); }
+    25%      { transform: translate(7px, 0) rotate(3deg) scale(1.03);    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(74,158,255,0.85)); }
+    50%      { transform: translate(0, 7px) rotate(0deg) scale(1);       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 6px rgba(74,158,255,0.55)); }
+    75%      { transform: translate(-7px, 0) rotate(-3deg) scale(1.03);  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(74,158,255,0.85)); }
+  }
+  @keyframes lvlMon2 { /* ghost 2 - lazy sway + double bob, red #ff4444 */
+    0%, 100% { transform: translate(-6px, 0) rotate(-2deg) scale(1);     filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(255,68,68,0.55)); }
+    25%      { transform: translate(0, 6px) rotate(0deg) scale(1.04);    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(255,68,68,0.85)); }
+    50%      { transform: translate(6px, 0) rotate(2deg) scale(1);       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(255,68,68,0.55)); }
+    75%      { transform: translate(0, 6px) rotate(0deg) scale(1.04);    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(255,68,68,0.85)); }
+  }
+  @keyframes lvlMon3 { /* ghost 3 - energetic wobble, green #00e5a0 */
+    0%, 100% { transform: translate(0, 7px) rotate(0deg) scale(1);       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(0,229,160,0.6)); }
+    25%      { transform: translate(6px, -6px) rotate(5deg) scale(1.05); filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 14px rgba(0,229,160,0.9)); }
+    50%      { transform: translate(0, -7px) rotate(0deg) scale(1);      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(0,229,160,0.6)); }
+    75%      { transform: translate(-6px, -6px) rotate(-5deg) scale(1.05); filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 14px rgba(0,229,160,0.9)); }
+  }
+  /* Motion-sensitive users: hold the monsters still (same convention as the
+     ghost idle / opener / tutorials elsewhere). */
+  @media (prefers-reduced-motion: reduce) {
+    .lvl-mon { animation: none; }
+  }
   #levelOkBtn {
     min-height: 44px;
     padding: 0 min(38px, calc(var(--board-px, 300px) * 0.11));
@@ -957,6 +996,11 @@
   // logic), and on the same 720px board it gives ~80px cells - large, clearly
   // readable head/body circles, at the cost of a smaller grid to navigate.
   var GRID_N = 9;                 // fixed logical grid, both axes
+  // Per-stage accent, cycling by level (1/2/3): dark green / yellow / red.
+  // Drives the avatar ring and the PRESS ANY KEY text. Glow variants are the
+  // same hues at low alpha for the avatar box-shadow.
+  var STAGE_COLORS = ["#1e7d32", "#b8860b", "#a51e1e"];
+  var STAGE_GLOW = ["rgba(30,125,50,0.4)", "rgba(184,134,11,0.4)", "rgba(165,30,30,0.4)"];
   // Endpoints scaled twice on request: first by 1.3x (160->208, 70->91) for
   // the "30% slower" pass, then doubled (208->416, 91->182) for the "50%
   // slower" pass - halving speed means doubling the per-cell interval.
@@ -1640,7 +1684,7 @@
       // assetStore.src() keeps the existing fallback chain (real image, else the
       // generated colored-circle dataURL, else a blank pixel) so a failed
       // monster download can never leave a broken-image icon here.
-      html += '<img src="' + assetStore.src("ghost" + (i + 1)) + '" alt="">';
+      html += '<img class="lvl-mon lvl-mon-' + (i + 1) + '" src="' + assetStore.src("ghost" + (i + 1)) + '" alt="">';
     }
     levelMonsters.innerHTML = html;
     levelFlashTitle.textContent = S().levelFlashLabel(level);
@@ -1764,6 +1808,10 @@
     return HEAD_KEYS[(level - 1) % HEAD_KEYS.length];
   }
 
+  function currentStageColor() {
+    return STAGE_COLORS[(level - 1) % STAGE_COLORS.length];
+  }
+
   function currentTint() {
     return LEVEL_TINTS[(level - 1) % LEVEL_TINTS.length];
   }
@@ -1778,6 +1826,12 @@
   // level-up flash image.
   function updateAvatarHud() {
     if (avatarHudImg) avatarHudImg.src = assetStore.src(currentHeadKey());
+    // Recolor the avatar ring (and PRESS ANY KEY, via currentStageColor())
+    // to the current stage's accent: dark green (L1) / yellow (L2) / red (L3).
+    if (wrap) {
+      wrap.style.setProperty("--stage-color", currentStageColor());
+      wrap.style.setProperty("--stage-glow", STAGE_GLOW[(level - 1) % STAGE_GLOW.length]);
+    }
   }
 
   function updateHud() {
@@ -2426,8 +2480,11 @@
     }
     ctx.save();
     ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-    ctx.fillStyle = "#00e5ff";
-    ctx.shadowColor = "rgba(0,229,255,0.65)";
+    // Stage-coloured (dark green L1 / yellow L2 / red L3) - the opener plays at
+    // level 1, so this reads dark green at first launch.
+    var pakColor = currentStageColor();
+    ctx.fillStyle = pakColor;
+    ctx.shadowColor = pakColor;
     ctx.shadowBlur = cellPx * 0.5;
     var fontPx = Math.round(cellPx * 1.05);
     var fontStack = "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";

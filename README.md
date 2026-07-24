@@ -64,15 +64,11 @@ wish you hadn't.
 The goal is simple: **eat the popcorn, dodge everything else.** Every 5 pieces
 clears the level. Clear all three and you win the crown 👑.
 
-<div align="center">
-
-<img src="docs/screenshots/controls-swipe.png" width="230" alt="Swipe in any direction to steer">
-&nbsp;&nbsp;&nbsp;
-<img src="docs/screenshots/controls-keys.png" width="230" alt="Use the arrow keys to steer">
-
-</div>
-
 #### 📱 On mobile
+
+<div align="center">
+<img src="docs/screenshots/controls-swipe.png" width="180" alt="Swipe in any direction to steer">
+</div>
 
 - **Swipe** in any direction to steer
 - Turn mid-move - keep your finger down and swipe again
@@ -80,6 +76,10 @@ clears the level. Clear all three and you win the crown 👑.
 - A one-time hint pops up the first time you play
 
 #### 💻 On desktop
+
+<div align="center">
+<img src="docs/screenshots/controls-keys.png" width="240" alt="Use the arrow keys to steer">
+</div>
 
 - **Arrow keys** to steer
 - **Enter** to start or restart

@@ -965,6 +965,13 @@
   var MIN_STEP_MS = 182;          // floor
   var STEP_DECAY = 0.92;          // ~8% faster per level
   var POPCORN_PER_LEVEL = 5;
+  // Chasers move at a fraction of the snake's step rate rather than a fixed
+  // "every Nth step" toggle, so the cadence is tunable to non-integer ratios.
+  // 0.5 (the old chaserTick 0/1 toggle) was "every 2 steps"; 0.4 is one
+  // chaser move per 2.5 snake steps - 20% fewer chaser moves - per the
+  // level-flow rework (small board = chasers too close to react to).
+  var CHASER_MOVE_RATE = 0.4;     // chaser moves per snake step
+  var COUNTDOWN_MS = 3000;        // "get ready" freeze before each level's play
   var SWIPE_THRESHOLD = 35;       // px
   var HI_KEY = "dubisnake_hi";
 
@@ -1431,14 +1438,14 @@
   // Play button must not be able to do anything before that - see the
   // disabled attribute on the static #playBtn and the guard at the top of
   // startOrResume(). Only preloadAssets()'s callback advances "loading" -> "menu".
-  var state = "loading"; // loading | opening | menu | levelbanner | playing | paused | dead | won
+  var state = "loading"; // loading | opening | menu | levelbanner | countdown | playing | paused | dead | won
   var snake = null, dir = { x: 1, y: 0 }, queuedDir = null, food = null;
   // Pac-Man-style chasers: one per level, capped at 3. They pursue the
-  // snake's head at HALF the snake's speed (they move once per two snake
-  // steps - see chaserTick in step()), float over the snake's body and the
-  // food, and kill only on exact head-cell contact.
+  // snake's head at a fraction of the snake's speed (CHASER_MOVE_RATE moves
+  // per snake step, accumulated in chaserMoveAccum - see step()), float over
+  // the snake's body and the food, and kill only on exact head-cell contact.
   var chasers = [];
-  var chaserTick = 0;
+  var chaserMoveAccum = 0;
   var score = 0, popcornCount = 0, level = 1, stepMs = BASE_STEP_MS, hi = 0;
   var acc = 0;
   var lastTs = 0;
@@ -1450,6 +1457,13 @@
   // like animTs above, so the scene's timing stays consistent with the rest
   // of the file's animation conventions.
   var openingStartTs = null;
+
+  // "get ready" countdown (Change 2): a blocking state between the level
+  // banner and play, giving the player guaranteed orientation time after the
+  // snake/chasers are re-centred by positionForLevel(). Timed from the same
+  // rAF `ts` frame() already receives, exactly like openingStartTs above -
+  // never Date.now(). Set by startCountdown(), read/cleared in frame().
+  var countdownStartTs = null;
   // Consumes the SAME physical tap/click that just dismissed the opening
   // scene (the browser still fires a trailing click/touchend for it) so it
   // can't also fall through to the existing "tap the board to start"
@@ -1497,12 +1511,28 @@
     levelFlash.classList.remove("show");
     acc = 0; // drop any fraction banked before the banner so dismissing it
              // can never produce a burst of catch-up steps
-    state = "playing";
+    startCountdown();
   }
 
-  function newGame() {
-    var cx = Math.floor(GRID_N / 2);
-    var cy = Math.floor(GRID_N / 2);
+  // 3s blocking "get ready" freeze between the level banner and play (Change
+  // 2). state === "countdown" is handled in frame() (no step(), no catch-up
+  // burst on exit) and render() (big centred number); see both below.
+  // countdownStartTs is captured lazily from frame()'s own `ts` the first
+  // tick this state is active, exactly like openingStartTs, so it stays
+  // correct regardless of how much real time passed since dismissal.
+  function startCountdown() {
+    state = "countdown";
+    countdownStartTs = null;
+  }
+
+  // Re-centres the snake (standard 3-length, heading right) and resets/
+  // respawns the chasers, on EVERY level start (level 1 via newGame() and
+  // every level-up). A grown snake can't be laid out straight from centre
+  // without running off a 9x9 board past a few levels, so this is a full
+  // Pac-Man-style position reset rather than an incremental nudge - score
+  // and high score are untouched, only position/length/heading reset.
+  function positionForLevel() {
+    var cx = Math.floor(GRID_N / 2), cy = Math.floor(GRID_N / 2);
     snake = [
       { x: cx, y: cy },
       { x: cx - 1, y: cy },
@@ -1510,21 +1540,30 @@
     ];
     dir = { x: 1, y: 0 };
     queuedDir = null;
+    acc = 0;
+    chaserMoveAccum = 0; // fresh chaser cadence each level - see step()
+    chasers = [];
+    var n = Math.min(level, 3);
+    for (var i = 0; i < n; i++) spawnChaser(); // spawnChaser already keeps
+                                                // spawns >=5 cells (relaxing
+                                                // to 3, then 1) from the head
+    placeFood(); // re-placed so it's never under the re-centred snake/chasers
+                 // - can call win() if the board is somehow already full
+  }
+
+  function newGame() {
     score = 0;
     popcornCount = 0;
     level = 1;
     stepMs = BASE_STEP_MS;
-    acc = 0;
     hideLevelBanner(); // clear any banner left over from a previous run
-    chasers = [];
-    chaserTick = 0;
-    spawnChaser(); // level 1 starts with one chaser
-    placeFood();
+    positionForLevel();
     updateHud();
     updateAvatarHud(); // level just reset to 1 - keep the avatar in sync
     // Level 1 gets the same banner as every other level. Guarded because
-    // placeFood() can in principle call win() (board completely full),
-    // which must not be overwritten by the banner's own state change.
+    // positionForLevel()'s placeFood() can in principle call win() (board
+    // completely full), which must not be overwritten by the banner's own
+    // state change.
     if (state !== "won") showLevelBanner();
   }
 
@@ -1829,37 +1868,59 @@
     }
 
     snake.unshift({ x: nx, y: ny });
+    // Set when this step triggers a level-up: positionForLevel() (inside
+    // levelUp()) re-centres the snake AND resets/respawns the chasers, so
+    // nx/ny below (this step's pre-reset head) and the pre-reset chasers no
+    // longer describe the current board at all - the chaser checks further
+    // down must be skipped for this tick rather than compare stale
+    // coordinates against a brand-new layout.
+    var leveledUp = false;
     if (willGrow) {
       score += 1;
       popcornCount += 1;
       if (popcornCount % POPCORN_PER_LEVEL === 0) {
         levelUp();
+        leveledUp = true;
+      } else {
+        placeFood();
       }
       updateHud();
-      placeFood();
     } else {
       snake.pop();
     }
 
+    if (leveledUp) return;
+
     // chasers: you die by walking INTO a ghost - and only that. Their own
-    // half-speed pursuit move (once per two snake steps) can close in and
-    // block, but never lands on the head, so it needs no death check of its
-    // own. See moveChasers() for why that rule exists.
+    // slowed pursuit move (CHASER_MOVE_RATE moves per snake step, accumulated
+    // below) can close in and block, but never lands on the head, so it
+    // needs no death check of its own. See moveChasers() for why that rule
+    // exists.
     if (chaserAt(nx, ny)) return die();
-    chaserTick = 1 - chaserTick;
-    if (chaserTick === 0) moveChasers();
+    chaserMoveAccum += CHASER_MOVE_RATE;
+    if (chaserMoveAccum >= 1) {
+      chaserMoveAccum -= 1;
+      moveChasers();
+      if (chaserAt(snake[0].x, snake[0].y)) return die();
+    }
   }
 
   function levelUp() {
     level += 1;
     stepMs = Math.max(MIN_STEP_MS, stepMs * STEP_DECAY);
-    if (chasers.length < 3) spawnChaser(); // level 2 -> two chasers, 3+ -> three
+    // Re-centre the snake and reset/respawn the chasers for the new level
+    // (level 2 -> two chasers, 3+ -> three) INSTEAD OF the old incremental
+    // spawnChaser() - positionForLevel() now owns both, and as a side effect
+    // the new chasers always spawn far from the (re-centred) head, fixing
+    // "monsters too close at level start" without special-casing it.
+    positionForLevel();
     // Keep the always-visible avatar HUD in sync with the new level's head
     // photo at this exact point, so the two can never drift apart.
     updateAvatarHud();
     // Blocking retro banner (was a ~1.9s non-blocking flash card): the snake
     // holds still until the player presses OK, so a level change can no
-    // longer sneak movement past them while they read it.
+    // longer sneak movement past them while they read it. OK now leads into
+    // the countdown (Change 2), not straight back to "playing".
     showLevelBanner();
   }
 
@@ -2078,6 +2139,15 @@
   function openingElapsedMs() {
     if (openingStartTs === null) return 0;
     return Math.max(0, animTs - openingStartTs);
+  }
+
+  // Same lazy-capture pattern as openingElapsedMs() above, for the
+  // "get ready" countdown (Change 2). Returns 0 (renders as "3") for the one
+  // render() pass that can happen before frame() has captured
+  // countdownStartTs on its first "countdown" tick.
+  function countdownElapsedMs() {
+    if (countdownStartTs === null) return 0;
+    return Math.max(0, animTs - countdownStartTs);
   }
 
   // Reveal (0-3s): the head sprite pops in at board center (ease-out-back),
@@ -2465,6 +2535,54 @@
       ctx.drawImage(gImg, -gSize / 2, -gSize / 2, gSize, gSize);
       ctx.restore();
     }
+
+    // "get ready" countdown (Change 2): drawn on top of the fully-frozen
+    // board (snake/food/chasers already drawn above at their positionForLevel()
+    // positions) so the player can see exactly where everything is before
+    // play starts.
+    if (state === "countdown") renderCountdown(countdownElapsedMs());
+  }
+
+  // Big 3 -> 2 -> 1, one second each, reusing the PRESS-ANY-KEY/level-banner
+  // retro text conventions (system font, board-relative size, cyan glow).
+  // GHOST_IDLE_STILL doubles as the countdown's reduced-motion flag - same
+  // boot-time media-query cache as the rest of the file - so under
+  // prefers-reduced-motion the number still shows and the full 3s still
+  // elapses, just without the per-tick scale/fade.
+  //
+  // Deliberately NOT drawn at board-center: positionForLevel() always
+  // re-centres the snake head at grid (floor(GRID_N/2), floor(GRID_N/2)),
+  // which on the odd-sized GRID_N=9 board IS board-center in pixel space, so
+  // a centred number would sit directly on top of the head for the full 3s
+  // freeze - exactly the orientation window the countdown exists to protect.
+  // Rendered in the upper third of the board instead, well clear of the
+  // centred head's row (and its body trailing left of it on the same row),
+  // independent of board size.
+  var COUNTDOWN_NUMBER_Y_FRAC = 0.22; // fraction of boardCssPx down from top
+  function renderCountdown(elapsed) {
+    // elapsed in [0,1000) -> 3, [1000,2000) -> 2, [2000,3000) -> 1; clamp to
+    // 1 so a frame landing exactly on/after 3000 (the tick frame() flips to
+    // "playing" on) never renders a stray 0.
+    var n = Math.max(1, 3 - Math.floor(elapsed / 1000));
+    var tickElapsed = elapsed % 1000; // ms into the current number, for the pulse
+    var scale = 1, alpha = 1;
+    if (!GHOST_IDLE_STILL) {
+      var p = tickElapsed / 1000; // 0..1 within this number's one-second slot
+      scale = 1.15 - 0.15 * p;    // pops in slightly large, settles to 1
+      alpha = Math.min(1, p * 4); // quick fade-in, avoids a hard pop on entry
+    }
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(boardCssPx / 2, boardCssPx * COUNTDOWN_NUMBER_Y_FRAC);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = "#00e5ff";
+    ctx.shadowColor = "rgba(0,229,255,0.65)";
+    ctx.shadowBlur = cellPx * 0.9;
+    ctx.font = "900 " + Math.round(cellPx * 2.6) + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(n), 0, 0);
+    ctx.restore();
   }
 
   // ---------- fixed-timestep rAF loop ----------
@@ -2483,6 +2601,16 @@
       // is never called here, same as every other non-"playing" state.
       if (openingStartTs === null) openingStartTs = ts;
       if (ts - openingStartTs >= OPENING_TOTAL_MS) endOpening();
+    } else if (state === "countdown") {
+      // Blocking "get ready" freeze (Change 2): advances nothing but its own
+      // timer - no step(), no snake/chaser movement - so the board stays
+      // exactly as positionForLevel() left it for the whole 3s. Same lazy
+      // rAF-ts capture as openingStartTs above, never Date.now().
+      if (countdownStartTs === null) countdownStartTs = ts;
+      if (ts - countdownStartTs >= COUNTDOWN_MS) {
+        state = "playing";
+        acc = 0; // no catch-up burst: the freeze must not bank real time
+      }
     } else if (state === "playing") {
       acc += dt;
       // Snapshot stepMs for this frame: step() can call levelUp(), which
@@ -2515,9 +2643,15 @@
     }
     if (KEY_DIR[e.key]) {
       e.preventDefault();
-      if (state === "playing") requestTurn(KEY_DIR[e.key]);
+      // Countdown may still buffer a turn for when play starts (Pac-Man-
+      // style input readiness) - requestTurn() only ever sets queuedDir, it
+      // never touches `state`, so this can't shorten or skip the freeze.
+      if (state === "playing" || state === "countdown") requestTurn(KEY_DIR[e.key]);
       return;
     }
+    // Non-skippable (Change 2): Space/Enter must do nothing during the
+    // countdown, not even fall through to pause/resume/start below.
+    if (state === "countdown") return;
     if (state === "levelbanner" && (e.key === " " || e.key === "Enter")) {
       e.preventDefault();
       dismissLevelBanner();
@@ -2587,7 +2721,10 @@
     // old lift-to-turn behavior added the whole remaining finger-down time
     // as input latency on every single turn, which is the main reason
     // touch controls felt sluggish next to a keyboard's instant keydown.
-    if (state === "playing" && e.touches.length === 1) {
+    // Countdown may also buffer a swipe turn for when play starts, same
+    // reasoning as the keydown handler above - maybeSwipeTurn()/requestTurn()
+    // never touch `state`, so this can't shorten or skip the freeze.
+    if ((state === "playing" || state === "countdown") && e.touches.length === 1) {
       maybeSwipeTurn(e.touches[0].clientX, e.touches[0].clientY);
     }
   }, { passive: false });

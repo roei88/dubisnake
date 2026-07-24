@@ -48,6 +48,7 @@ const JS_FILES = [
   'js/constants.js',   // grid/speed/color constants, DOM element refs
   'js/strings.js',     // i18n STRINGS (he/en) + S()
   'js/assets.js',      // AssetStore class + instance, head cycle / level tint
+  'js/chasers.js',     // ChaserField class + instance (Pac-Man-style monster field)
   'js/layout.js',      // responsive board sizing (measureReservePx/resizeCanvas)
   'js/core.js',        // game state, newGame/positionForLevel/step/levelUp/die/win, language switch, input
   'js/overlays.js',    // overlay screens (menu/dead/won/paused/banner/countdown) + opening intro

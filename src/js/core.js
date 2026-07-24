@@ -6,12 +6,8 @@
   // startOrResume(). Only assetStore.preload()'s callback advances "loading" -> "menu".
   var state = "loading"; // loading | opening | menu | levelbanner | countdown | playing | paused | dead | won
   var snake = null, dir = { x: 1, y: 0 }, queuedDir = null, food = null;
-  // Pac-Man-style chasers: one per level, capped at 3. They pursue the
-  // snake's head at a fraction of the snake's speed (CHASER_MOVE_RATE moves
-  // per snake step, accumulated in chaserMoveAccum - see step()), float over
-  // the snake's body and the food, and kill only on exact head-cell contact.
-  var chasers = [];
-  var chaserMoveAccum = 0;
+  // The Pac-Man-style chaser field (its cells + cadence) lives in the
+  // ChaserField class - see chasers.js and the `chaserField` instance.
   var score = 0, popcornCount = 0, level = 1, stepMs = BASE_STEP_MS, hi = 0;
   var acc = 0;
   var lastTs = 0;
@@ -107,10 +103,9 @@
     dir = { x: 1, y: 0 };
     queuedDir = null;
     acc = 0;
-    chaserMoveAccum = 0; // fresh chaser cadence each level - see step()
-    chasers = [];
+    chaserField.reset(); // fresh cells + cadence each level
     var n = Math.min(level, 3);
-    for (var i = 0; i < n; i++) spawnChaser(); // spawnChaser already keeps
+    for (var i = 0; i < n; i++) chaserField.spawn(snake[0], food, cellFree); // spawn already keeps
                                                 // spawns >=5 cells (relaxing
                                                 // to 3, then 1) from the head
     placeFood(); // re-placed so it's never under the re-centred snake/chasers
@@ -140,77 +135,6 @@
     return true;
   }
 
-  function chaserAt(x, y) {
-    for (var i = 0; i < chasers.length; i++) {
-      if (chasers[i].x === x && chasers[i].y === y) return true;
-    }
-    return false;
-  }
-
-  // Spawn a chaser on a free cell far from the snake's head, relaxing the
-  // distance requirement in passes (5 -> 3 -> 1 Manhattan) so spawning
-  // still works on a crowded late-game board instead of looping forever.
-  // If literally no valid cell exists, skip the spawn silently.
-  function spawnChaser() {
-    var head = snake[0];
-    var candidates = [];
-    var passes = [5, 3, 1];
-    for (var p = 0; p < passes.length && !candidates.length; p++) {
-      for (var gy = 0; gy < GRID_N; gy++) {
-        for (var gx = 0; gx < GRID_N; gx++) {
-          if (Math.abs(gx - head.x) + Math.abs(gy - head.y) < passes[p]) continue;
-          if (!cellFree(gx, gy)) continue;
-          if (food && gx === food.x && gy === food.y) continue;
-          if (chaserAt(gx, gy)) continue;
-          candidates.push({ x: gx, y: gy });
-        }
-      }
-    }
-    if (candidates.length) {
-      chasers.push(candidates[Math.floor(Math.random() * candidates.length)]);
-    }
-  }
-
-  // One greedy grid step toward the snake's head per chaser. Chasers can
-  // never leave the grid (the head is inside it), and they deliberately
-  // pass over the snake's body, the food, and each other - only exact
-  // head contact matters. Per-index axis preference keeps multiple
-  // chasers approaching from different directions instead of merging
-  // into one stacked blob.
-  //
-  // A chaser NEVER steps onto the head's own cell. Before this rule, being
-  // adjacent to a chaser on a move where it also stepped was an unavoidable
-  // death: the player slipped safely PAST the ghost (into a different cell,
-  // no overlap), and the ghost's own move in that same tick then landed on
-  // top of them - so the effective hitbox was radius 1, not 0, and passing
-  // beside a ghost read as a phantom hit. With the rule, death by chaser is
-  // exactly "you moved into it", the same contract as walls and self
-  // collision, and the ghosts act as pursuing blockers that corner you
-  // instead of insta-killing at range 1.
-  function moveChasers() {
-    var head = snake[0];
-    for (var i = 0; i < chasers.length; i++) {
-      var c = chasers[i];
-      var dx = head.x - c.x, dy = head.y - c.y;
-      var sx = dx === 0 ? 0 : (dx > 0 ? 1 : -1);
-      var sy = dy === 0 ? 0 : (dy > 0 ? 1 : -1);
-      var preferX;
-      if (i % 3 === 1) preferX = true;
-      else if (i % 3 === 2) preferX = false;
-      else preferX = Math.abs(dx) >= Math.abs(dy);
-      var stepX = { x: c.x + sx, y: c.y };
-      var stepY = { x: c.x, y: c.y + sy };
-      var opts = preferX ? [stepX, stepY] : [stepY, stepX];
-      for (var k = 0; k < opts.length; k++) {
-        var o = opts[k];
-        if (o.x === c.x && o.y === c.y) continue;       // already aligned on that axis
-        if (o.x === head.x && o.y === head.y) continue; // never step onto the head
-        c.x = o.x; c.y = o.y;
-        break;
-      }
-    }
-  }
-
   function placeFood() {
     var attempts = 0;
     var x, y;
@@ -218,8 +142,8 @@
       x = Math.floor(Math.random() * GRID_N);
       y = Math.floor(Math.random() * GRID_N);
       attempts++;
-    } while ((!cellFree(x, y) || chaserAt(x, y)) && attempts < 500);
-    if (!cellFree(x, y) || chaserAt(x, y)) {
+    } while ((!cellFree(x, y) || chaserField.at(x, y)) && attempts < 500);
+    if (!cellFree(x, y) || chaserField.at(x, y)) {
       // Random search failed (board is nearly full): fall back to a
       // deterministic scan instead of placing food on an occupied cell,
       // which would otherwise force a false self-collision death on the
@@ -227,7 +151,7 @@
       var found = false;
       for (var gy = 0; gy < GRID_N && !found; gy++) {
         for (var gx = 0; gx < GRID_N && !found; gx++) {
-          if (cellFree(gx, gy) && !chaserAt(gx, gy)) { x = gx; y = gy; found = true; }
+          if (cellFree(gx, gy) && !chaserField.at(gx, gy)) { x = gx; y = gy; found = true; }
         }
       }
       if (!found) {
@@ -460,13 +384,12 @@
     // below) can close in and block, but never lands on the head, so it
     // needs no death check of its own. See moveChasers() for why that rule
     // exists.
-    if (chaserAt(nx, ny)) return die();
-    chaserMoveAccum += CHASER_MOVE_RATE;
-    if (chaserMoveAccum >= 1) {
-      chaserMoveAccum -= 1;
-      moveChasers();
-      if (chaserAt(snake[0].x, snake[0].y)) return die();
-    }
+    if (chaserField.at(nx, ny)) return die();
+    // chaserField.advance() runs the shared cadence and returns true if a
+    // chaser lands on the head this tick (it never steps onto the head, so
+    // this only fires via the accumulator's own move - kept as a death check
+    // for symmetry with the walk-into check above).
+    if (chaserField.advance(snake[0], CHASER_MOVE_RATE)) return die();
   }
 
   function levelUp() {

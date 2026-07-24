@@ -109,8 +109,8 @@
     // Idle float/rotate/pulse/glow (Task A) is layered on with a canvas
     // transform around this draw only - ch.x/ch.y (the values chaserAt() and
     // every hit test read) are never touched.
-    for (var ci = 0; ci < chasers.length; ci++) {
-      var ch = chasers[ci];
+    for (var ci = 0; ci < chaserField.cells.length; ci++) {
+      var ch = chaserField.cells[ci];
       var idle = GHOST_IDLE[ci % 3];
       var gImg = assetStore.drawable("ghost" + ((ci % 3) + 1));
       var gSize = cellPx * 1.14;

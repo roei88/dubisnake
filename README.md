@@ -40,6 +40,39 @@ avatar showing the current head photo sits in the top-left corner of the HUD
 at all times (menu, playing, paused, game over) alongside the score/level/
 high-score readout.
 
-Everything runs from a single self-contained `index.html` (vanilla JS +
-canvas), no build step and no external libraries, so it also works by opening
-the file directly from disk.
+## Project structure
+
+The game ships as a single self-contained `index.html` (vanilla JS + canvas,
+no external libraries), so the built file still works by opening it directly
+from disk. That file is **generated** - do not edit it by hand. The source
+lives split by concern under `src/`:
+
+```
+src/
+  index.template.html   page shell, with /*BUILD:STYLES*/ and /*BUILD:SCRIPT*/ markers
+  styles.css            all CSS
+  js/                   the game, split into ordered files (concatenated in the
+                        order listed in build.mjs):
+    00-open.js            IIFE open
+    10-constants-dom.js   grid/speed/colour constants, DOM refs
+    20-strings.js         i18n strings (he/en)
+    30-assets.js          image preload + fallback, head cycle / level tint
+    40-layout.js          responsive board sizing
+    50-core.js            game state, level flow, chasers, input, step()
+    60-overlays.js        menu/dead/won/paused/banner/countdown + opening intro
+    70-render.js          canvas rendering + fixed-timestep loop
+    80-events-boot.js     keyboard/touch/UI handlers, boot, IIFE close
+build.mjs                zero-dependency build (Node, no npm packages)
+```
+
+### Building
+
+```
+node build.mjs
+```
+
+This inlines `src/styles.css` and concatenates the `src/js/*.js` files (in the
+order declared in `build.mjs`) into `index.html`. There are no dependencies to
+install and no CDNs; the output keeps the same locked-down Content-Security-
+Policy and runs offline from `file://`. Edit files under `src/`, run the build,
+then commit both the sources and the regenerated `index.html`.

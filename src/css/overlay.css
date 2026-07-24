@@ -39,15 +39,18 @@
      only the menu carries it. */
   #overlay.menuBanner {
     background-image:
-      linear-gradient(rgba(10, 8, 7, 0.66), rgba(10, 8, 7, 0.66)),
-      url("assets/banner.png");
-    /* `contain` (not cover): fit the whole 1.9:1 banner inside the ~square board
-       so the wordmark is never zoomed past the frame and cropped on tall phone
-       viewports. The flat scrim gradient (no intrinsic size) still fills the
-       whole overlay, so the letterbox area above/below the art stays uniformly
-       dimmed. */
+      linear-gradient(rgba(10, 8, 7, 0.5), rgba(10, 8, 7, 0.5)),
+      url("assets/menu-backdrop.png");
+    /* TRANSPARENT backdrop art (no dark banner box/frame) so it blends into the
+       screen uniformly, like the README hero. `contain` fits the whole 1.9:1
+       art inside the ~square board (never zoomed/cropped on tall phones); the
+       flat scrim gradient dims the whole overlay so the controls + Play button
+       stay legible. The "Eat the popcorn!" wording is the DOM .tagline, so this
+       art carries only the DubiSnake wordmark + snake/head/popcorn. */
     background-size: contain;
-    background-position: center;
+    /* Sit the art high in the board so its DubiSnake wordmark clears the
+       vertically-centered .tagline / controls below it (no text collision). */
+    background-position: center 22%;
     background-repeat: no-repeat;
   }
   /* Centers vertically via margin:auto instead of justify-content:center on
@@ -98,12 +101,20 @@
      still shrinks correctly on small/landscape viewports (see the comment
      above #overlay h1). */
   #overlay .tagline {
-    margin: 4px 0;
-    font-size: min(clamp(20px, 4.4vmin, 30px), calc(var(--board-px, 300px) * 0.1));
-    font-weight: 800;
+    margin: 6px 0 2px;
+    font-size: min(clamp(24px, 5.6vmin, 38px), calc(var(--board-px, 300px) * 0.12));
+    font-weight: 900;
     letter-spacing: 0.02em;
-    color: #00e5ff;
-    text-shadow: 0 2px 10px rgba(0,229,255,0.35);
+    /* Enhanced graphical text: a cyan gradient fill with a dark drop-shadow for
+       definition plus a cyan glow, instead of a flat colour. */
+    background: linear-gradient(180deg, #c9fbff 0%, #38e6ff 48%, #00aecb 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter:
+      drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55))
+      drop-shadow(0 0 14px rgba(0, 229, 255, 0.5));
   }
 
   /* ---------- GAME WON victory screen (clearing all three levels) ----------

@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🐍 dubisnake 🍿
+<img src="assets/banner.png" width="90%" alt="DubiSnake - a cartoon snake with a profile-photo head chasing popcorn">
 
-### *A customized retro snake game*
+### Chase the popcorn. Dodge the monsters.
 
 &nbsp;
 
@@ -20,11 +20,9 @@
 
 &nbsp;
 
-<p align="center">
-  <img src="docs/screenshots/opener.png" width="46%" alt="dubisnake title screen: the hero's face and popcorn scattered across the board, with PRESS ANY KEY glowing at the bottom">
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/level2-midgame.png" width="46%" alt="Level 2 in progress: the snake winding across the board with popcorn to eat and two monsters closing in">
-</p>
+<img src="docs/screenshots/opener.png" width="46%" alt="DubiSnake title screen: the hero's face and popcorn scattered across the board, with PRESS ANY KEY glowing at the bottom">
+&nbsp;&nbsp;
+<img src="docs/screenshots/level2-midgame.png" width="46%" alt="Level 2 in progress: the snake winding across the board with popcorn to eat and two monsters closing in">
 
 </div>
 
@@ -35,55 +33,73 @@
 Long ago, in the flickering green glow of an old brick phone, a hero was
 swallowed whole by the screen. He woke up long, scaly, and very, very hungry.
 
-That hero is **dubisnake** - named after **Oren Dubinsky**, the real person
+That hero is **DubiSnake** - named after **Oren Dubinsky**, the real person
 whose face you see on the snake's head. (It is genuinely his photo, and it
 changes with every level, because a legend deserves a wardrobe.)
 
 There is only one way out: eat every last piece of **popcorn** on the board and
-survive all three levels. Standing in the way are three creatures who would very
-much like the snake to stop moving - permanently.
+survive all three levels.
 
-## 👹 The Cast
+---
 
-| # | Monster | Shows up | Their whole deal |
-|---|---|---|---|
-| 1 | **TheLabbovichi** | Level 1 onward | The original stalker. Always on the board, always right behind you. |
-| 2 | **GrosZBaker** | Level 2 onward | A baker who set out to "bake a cake," fumbled the recipe *and* the spelling, and has been cross about it ever since. |
-| 3 | **Enshula** | Level 3 only | The final terror. You only meet Enshula once you have earned it - and you will wish you hadn't. |
+## 👹 Meet the Monsters
 
-The monsters chase Pac-Man style: they close in, they cut you off, but they
-never quite land on your head - you lose only by walking straight into one (or a
-wall, or your own tail). More of them join the hunt at every level.
+Three creatures would very much like the snake to stop moving - permanently.
+More of them join the hunt at every level. They chase Pac-Man style: they close
+in and cut you off, but they never land on your head. You lose only by walking
+straight into one (or a wall, or your own tail).
+
+<div align="center">
+
+<img src="assets/ghost-1.png" width="130" alt="TheLabbovichi monster">
+
+### TheLabbovichi
+
+**Level 1 onward** - the original stalker. Always on the board, always right
+behind you.
+
+&nbsp;
+
+<img src="assets/ghost-2.png" width="130" alt="GrosZBaker monster">
+
+### GrosZBaker
+
+**Level 2 onward** - a baker who set out to "bake a cake," fumbled the recipe
+*and* the spelling, and has been cross about it ever since.
+
+&nbsp;
+
+<img src="assets/ghost-3.png" width="130" alt="Enshula monster">
+
+### Enshula
+
+**Level 3 only** - the final terror. You only meet Enshula once you have earned
+it, and you will wish you hadn't.
+
+</div>
+
+---
 
 ## 🎮 How to Play
 
 The goal is simple: **eat the popcorn, dodge everything else.** Every 5 pieces
-you clear the level. Clear all three and you win the crown 👑.
+clears the level. Clear all three and you win the crown 👑.
 
-<table>
-<tr>
-<th>📱 On mobile</th>
-<th>💻 On desktop</th>
-</tr>
-<tr>
-<td valign="top">
+### 📱 On mobile
 
 - **Swipe** in any direction to steer
 - Turn mid-move - keep your finger down and swipe again
 - **Tap the board** to start or restart
 - A one-time hint pops up the first time you play
 
-</td>
-<td valign="top">
+### 💻 On desktop
 
 - **Arrow keys** to steer
 - **Enter** to start or restart
 - **Space** to pause and resume
 - The board stays centered and crisp at any window size
 
-</td>
-</tr>
-</table>
+---
 
 ## ✨ What Makes It Fun
 
@@ -98,9 +114,9 @@ you clear the level. Clear all three and you win the crown 👑.
 - **Your best score is saved** locally on your device.
 - **Runs anywhere.** No installs, no accounts, no tracking, works offline.
 
-<div align="center">
+---
 
-&nbsp;
+<div align="center">
 
 ### 👇 &nbsp; Ready? &nbsp; 👇
 
@@ -120,7 +136,7 @@ you clear the level. Clear all three and you win the crown 👑.
 
 ## 🛠️ For Developers
 
-dubisnake ships as **one self-contained `index.html`** - vanilla JavaScript and
+DubiSnake ships as **one self-contained `index.html`** - vanilla JavaScript and
 an HTML5 canvas, **zero dependencies**, no CDNs. A locked Content-Security-Policy
 means the same file runs on GitHub Pages or straight from `file://`, offline.
 
@@ -155,7 +171,7 @@ src/
     render.js             canvas rendering + fixed-timestep loop
     _boot.js              keyboard/touch/UI handlers, boot, IIFE close
 build.mjs                zero-dependency build (Node, no npm packages)
-assets/                  the sprites the game draws from (heads, popcorn, splash)
+assets/                  the sprites the game draws from (heads, popcorn, monsters)
 ```
 
 ### Building

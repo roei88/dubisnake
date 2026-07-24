@@ -1,0 +1,15 @@
+  #footer {
+    font-size: clamp(10px, 2vmin, 12px);
+    color: #8a7c6b;
+    flex-shrink: 0; /* see #hud comment: never let flex compress this below its text */
+  }
+  /* Language toggle: deliberately position:fixed to the physical viewport
+     corner, OUTSIDE #wrap's normal flow entirely - not a flex child of #hud,
+     not measured by measureReservePx(). This file has twice already broken
+     the board's no-scroll/sizing budget by adding something into #wrap's
+     flow that fed back into resizeCanvas()'s size calculations (the avatar
+     HUD chip, then its own sizing loop); a fixed-position element outside
+     #wrap can never do that. "right" is a physical (not logical/dir-aware)
+     CSS property, so this stays in the SAME physical corner whether the
+     current language is he (rtl) or en (ltr) - it doesn't jump to the other
+     side every time you toggle it. */

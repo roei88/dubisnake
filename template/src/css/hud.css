@@ -1,0 +1,182 @@
+  #hud {
+    position: relative; /* anchors the top-edge glow pseudo-element below */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: min(10px, calc(var(--cell-px, 16px) * 0.6));
+    width: 100%;
+    box-sizing: border-box;
+    padding: min(10px, calc(var(--cell-px, 16px) * 0.6)) min(12px, calc(var(--cell-px, 16px) * 0.75));
+    border-radius: 0 0 min(20px, calc(var(--cell-px, 16px) * 1.25)) min(20px, calc(var(--cell-px, 16px) * 1.25));
+    background: linear-gradient(180deg, #1e1c1a 0%, #2a2725 60%, #252220 100%);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    /* Defense-in-depth alongside #boardWrap's flex-shrink:0 (see comment
+       above it): #hud/#footer don't have overflow:hidden so they
+       aren't vulnerable to the zero-automatic-min-size flex behavior that
+       motivated that fix, but pinning them too means #wrap's overflow-y:auto
+       is the fallback for *any* over-tall stack, not just ones caused by
+       the board specifically. */
+    flex-shrink: 0;
+    /* --cell-px is written from JS in resizeCanvas() (the single existing
+       place --board-px is already set) - the one source of truth every size
+       constant, including the avatar below, derives from. --avatar-px is a
+       declarative CSS custom property computed from it. Originally 3 cells
+       (a hard "at least 3 game squares" requirement) - reduced 25% to 2.25
+       cells per explicit follow-up request, which does supersede that
+       requirement; noting the tension here rather than silently dropping it
+       so it isn't lost. The 180px ceiling is a defensive fallback ONLY, not
+       a real-world design cap: it must stay >= 2.25 * (MAX_BOARD_PX /
+       GRID_N) = 2.25 * 80 = 180px (the JS-side bound on cellPx - see
+       MAX_BOARD_PX/GRID_N below), same reasoning as the ratio's own history
+       (see git blame on this comment): a cap set below the true max cellPx
+       silently breaks the avatar's own size ratio at large viewports rather
+       than just capping absolute size, which is easy to miss since it only
+       shows up once cellPx is large enough to hit the cap. If MAX_BOARD_PX
+       or GRID_N ever change, this 180px must be revisited together with
+       them - it is not independently derived. */
+    --avatar-px: min(calc(var(--cell-px, 16px) * 2.25), 180px);
+  }
+  /* Top-edge cyan glow line, 1px tall with a 10%-inset transparent-to-opaque-
+     to-transparent gradient - decorative only, position:absolute so it can't
+     add flow height (measureReservePx() reads #hud's own rect, unaffected). */
+  #hud::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(34,211,238,0.25), transparent);
+    pointer-events: none;
+  }
+  /* Row of the three stat groups (Score | Level | Best) plus their dividers.
+     Kept as ONE flex item of #hud, with #avatarHud as the OTHER (and, per the
+     comment on #avatarHud below, placed AFTER this in DOM) so #hud only ever
+     has to balance two children between its edges regardless of language. */
+  .hud-stats {
+    display: flex;
+    align-items: center;
+    /* flex:1 + space-around comes straight from the supplied header design:
+       without it the group collapses to its content width and leaves a dead
+       gap between the stats and the avatar (measured ~208px of a 576px bar
+       on desktop) instead of the three stats being evenly distributed. */
+    flex: 1;
+    justify-content: space-around;
+    gap: min(14px, calc(var(--cell-px, 16px) * 0.9));
+    min-width: 0;
+  }
+  .hud-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: min(4px, calc(var(--cell-px, 16px) * 0.25));
+  }
+  .hud-hi-row {
+    display: flex;
+    align-items: baseline;
+    gap: min(4px, calc(var(--cell-px, 16px) * 0.2));
+  }
+  /* 11px/700/uppercase(EN)/1.5px-tracking in the source design, all re-based
+     off --cell-px per the no-fixed-px HUD-height rule (see MANDATORY
+     deviations #2 in local/NEWASSETS_SPEC.md) - letter-spacing is kept in em
+     so it scales with the font-size instead of going fixed-px stale at
+     small/large cellPx. */
+  .hud-label {
+    font-size: min(clamp(8px, 1.6vmin, 11px), calc(var(--cell-px, 16px) * 0.6));
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.4);
+    white-space: nowrap;
+  }
+  /* Hebrew is NOT uppercased - only the EN strings ("SCORE"/"LEVEL"/"BEST")
+     get the design's all-caps treatment; document.documentElement.lang is
+     kept in sync with currentLang by applyLanguage(). */
+  html[lang="en"] .hud-label { text-transform: uppercase; }
+  .hud-value {
+    font-size: min(clamp(16px, 3.6vmin, 26px), calc(var(--cell-px, 16px) * 1.5));
+    font-weight: 900;
+    line-height: 1;
+  }
+  #scoreVal { color: #22d3ee; text-shadow: 0 0 10px rgba(34,211,238,0.3); }
+  #levelVal { color: #f59e0b; text-shadow: 0 0 10px rgba(245,158,11,0.25); }
+  #hiVal { color: #a78bfa; text-shadow: 0 0 10px rgba(167,139,250,0.25); }
+  .hud-trophy {
+    font-size: min(clamp(8px, 1.6vmin, 14px), calc(var(--cell-px, 16px) * 0.8));
+    color: rgba(167,139,250,0.5);
+    line-height: 1;
+  }
+  /* Score progress track: 60x3px in the source design. The 3px height is a
+     hairline (like the 1px divider below and the avatar's own box-shadow
+     rings) - not a HUD-height driver, so it stays literal px; the width
+     still follows the --cell-px pattern. Fill width is JS-driven, see
+     updateHud(). */
+  .hud-bar-track {
+    width: min(clamp(40px, 9vmin, 64px), calc(var(--cell-px, 16px) * 3.5));
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+  .hud-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #22d3ee, #06b6d4);
+  }
+  /* Level pips: 3 stacked 4x4px dots, DOM order top-to-bottom is pip3/pip2/
+     pip1 per spec, lit state is JS-driven (level >= n), see updateHud(). */
+  .hud-pips {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hud-pip {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+  }
+  .hud-pip.is-lit { background: #f59e0b; }
+  .hud-divider {
+    width: 1px;
+    height: calc(var(--avatar-px, 64px) * 0.6);
+    flex-shrink: 0;
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent);
+  }
+  /* Always-visible avatar HUD element (menu/playing/paused/dead/won - never
+     gated to "after first play"). A genuine flex item of #hud (NOT
+     position:absolute), placed LAST in DOM source order, after .hud-stats -
+     under dir="rtl" row flex the last DOM child lands at the physical LEFT
+     edge, and under dir="ltr" it lands at the physical RIGHT edge, so the
+     avatar mirrors sides with the language exactly like every other
+     direction-dependent piece of this file (see applyLanguage()) with zero
+     extra JS: pure flex + DOM order. Do not reorder these two children or
+     switch #hud to justify-content:flex-start/flex-end without re-deriving
+     this. */
+  #avatarHud {
+    width: var(--avatar-px, 36px);
+    height: var(--avatar-px, 36px);
+    flex-shrink: 0;
+    box-sizing: border-box; /* keep the 3px border inside --avatar-px, not added on top */
+    border-radius: 50%;
+    border: 3px solid var(--stage-color, #22d3ee);
+    /* small dark chip behind the image so it doesn't float directly against
+       the light HUD text */
+    background: #1c1815;
+    box-shadow:
+      0 0 12px var(--stage-glow, rgba(34,211,238,0.3)),
+      0 0 24px var(--stage-glow, rgba(34,211,238,0.1)),
+      inset 0 0 0 3px rgba(0,0,0,0.35);
+    overflow: hidden;
+    pointer-events: none;
+  }
+  #avatarHud img {
+    width: 100%;
+    height: 100%;
+    /* head-N.png are confirmed 512x512 square with content filling to the
+       image edges (no transparent margin - checked via PIL getbbox() before
+       implementation), so object-fit:cover is safe: it will not crop into
+       transparent padding. */
+    object-fit: cover;
+    display: block;
+  }

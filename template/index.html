@@ -1,0 +1,3308 @@
+<!doctype html>
+<!-- GENERATED FILE - do not edit directly. Edit the sources under ./src
+     and run `node build.mjs` to regenerate. See build.mjs for details. -->
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>CustomSnake</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="description" content="A customizable retro snake game template.">
+<meta name="theme-color" content="#75855a">
+<!-- Link-preview card (WhatsApp/Telegram/iMessage/Slack/X etc.). Absolute
+     URLs are required - scrapers don't resolve relative paths. The banner
+     is generated from the real game assets (assets/banner.png, 1200x630,
+     the standard summary_large_image ratio). English always, matching the
+     fixed English meta description above. -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://YOUR-USERNAME.github.io/customsnake/">
+<meta property="og:title" content="CustomSnake">
+<meta property="og:description" content="A customizable retro snake game template.">
+<meta property="og:image" content="https://YOUR-USERNAME.github.io/customsnake/assets/banner.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="CustomSnake - a cartoon snake with a profile-photo head chasing popcorn">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CustomSnake">
+<meta name="twitter:description" content="A customizable retro snake game template.">
+<meta name="twitter:image" content="https://YOUR-USERNAME.github.io/customsnake/assets/banner.png">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'none';">
+<style>
+  :root { color-scheme: dark; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    /* Bright nostalgic Nokia-LCD pale-green backdrop behind the phone-frame
+       #wrap below - purely
+       decorative page background, no box-model participation in #wrap's own
+       sizing (see the #wrap comment), so it can't reopen the sizing-budget
+       bugs this file has already been through more than once. */
+    background: radial-gradient(120% 140% at 50% 20%, #93a375 0%, #75855a 55%, #576743 100%);
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Nostalgic wallpaper behind the phone frame: a repeating inline-SVG tile
+     of old candybar Nokia phones (each with a tiny snake on its screen),
+     blocky classic-Snake sprites, and popcorn puffs, drawn at low opacity
+     over the same radial gradient. Pure body background-image: zero layout
+     participation, so it cannot interact with measureReservePx()/
+     resizeCanvas() or any sizing budget - the class of bug this file has
+     hit before. The CSP's img-src already allows data: URIs. */
+  body {
+    background:
+      url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22480%22%20height=%22480%22%20viewBox=%220%200%20480%20480%22%3E%3Cg%20opacity=%220.30%22%3E%3Cg%20transform=%22translate(52,74)%20rotate(-12)%22%3E%3Crect%20x=%220%22%20y=%220%22%20width=%2292%22%20height=%22196%22%20rx=%2226%22%20fill=%22none%22%20stroke=%22%2357633a%22%20stroke-width=%225%22/%3E%3Crect%20x=%2216%22%20y=%2226%22%20width=%2260%22%20height=%2246%22%20rx=%226%22%20fill=%22none%22%20stroke=%22%233f5a26%22%20stroke-width=%224%22/%3E%3Crect%20x=%2224%22%20y=%2252%22%20width=%227%22%20height=%227%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2231%22%20y=%2252%22%20width=%227%22%20height=%227%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2238%22%20y=%2252%22%20width=%227%22%20height=%227%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2238%22%20y=%2245%22%20width=%227%22%20height=%227%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2252%22%20y=%2238%22%20width=%226%22%20height=%226%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2230%22%20y=%2284%22%20width=%2232%22%20height=%2214%22%20rx=%227%22%20fill=%22none%22%20stroke=%22%2357633a%22%20stroke-width=%223.5%22/%3E%3Cg%20fill=%22%2357633a%22%3E%3Crect%20x=%2216%22%20y=%22110%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2238%22%20y=%22110%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2260%22%20y=%22110%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2216%22%20y=%22126%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2238%22%20y=%22126%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2260%22%20y=%22126%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2216%22%20y=%22142%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2238%22%20y=%22142%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2260%22%20y=%22142%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2216%22%20y=%22158%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2238%22%20y=%22158%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3Crect%20x=%2260%22%20y=%22158%22%20width=%2218%22%20height=%229%22%20rx=%224%22/%3E%3C/g%3E%3Ccircle%20cx=%2246%22%20cy=%2210%22%20r=%223%22%20fill=%22%2357633a%22/%3E%3C/g%3E%3Cg%3E%3Cg%20fill=%22%234a7030%22%3E%3Crect%20x=%22252%22%20y=%2296%22%20width=%2218%22%20height=%2218%22/%3E%3Crect%20x=%22270%22%20y=%2296%22%20width=%2218%22%20height=%2218%22/%3E%3Crect%20x=%22288%22%20y=%2296%22%20width=%2218%22%20height=%2218%22/%3E%3Crect%20x=%22288%22%20y=%2278%22%20width=%2218%22%20height=%2218%22/%3E%3Crect%20x=%22306%22%20y=%2278%22%20width=%2218%22%20height=%2218%22/%3E%3Crect%20x=%22324%22%20y=%2278%22%20width=%2218%22%20height=%2218%22/%3E%3Crect%20x=%22324%22%20y=%2260%22%20width=%2218%22%20height=%2218%22/%3E%3C/g%3E%3Crect%20x=%22342%22%20y=%2260%22%20width=%2220%22%20height=%2220%22%20fill=%22%235d8540%22/%3E%3Ccircle%20cx=%22356%22%20cy=%2266%22%20r=%222.6%22%20fill=%22%2322301a%22/%3E%3Cg%20transform=%22translate(392,48)%22%3E%3Ccircle%20cx=%2210%22%20cy=%2212%22%20r=%229%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2220%22%20cy=%227%22%20r=%228%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2228%22%20cy=%2214%22%20r=%228%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2219%22%20cy=%2218%22%20r=%229%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Cpath%20d=%22M13%2024%20L25%2024%20L22%2032%20L16%2032%20Z%22%20fill=%22%23a8823f%22/%3E%3C/g%3E%3C/g%3E%3Cg%20transform=%22translate(330,300)%20rotate(14)%22%3E%3Crect%20x=%220%22%20y=%220%22%20width=%2274%22%20height=%22156%22%20rx=%2220%22%20fill=%22none%22%20stroke=%22%2357633a%22%20stroke-width=%224.5%22/%3E%3Crect%20x=%2213%22%20y=%2220%22%20width=%2248%22%20height=%2236%22%20rx=%225%22%20fill=%22none%22%20stroke=%22%233f5a26%22%20stroke-width=%223.5%22/%3E%3Crect%20x=%2219%22%20y=%2240%22%20width=%226%22%20height=%226%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2225%22%20y=%2240%22%20width=%226%22%20height=%226%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2231%22%20y=%2240%22%20width=%226%22%20height=%226%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2231%22%20y=%2234%22%20width=%226%22%20height=%226%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2244%22%20y=%2230%22%20width=%225%22%20height=%225%22%20fill=%22%233f5a26%22/%3E%3Crect%20x=%2224%22%20y=%2266%22%20width=%2226%22%20height=%2211%22%20rx=%225.5%22%20fill=%22none%22%20stroke=%22%2357633a%22%20stroke-width=%223%22/%3E%3Cg%20fill=%22%2357633a%22%3E%3Crect%20x=%2212%22%20y=%2288%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2230%22%20y=%2288%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2248%22%20y=%2288%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2212%22%20y=%22101%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2230%22%20y=%22101%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2248%22%20y=%22101%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2212%22%20y=%22114%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2230%22%20y=%22114%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2248%22%20y=%22114%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2212%22%20y=%22127%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2230%22%20y=%22127%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3Crect%20x=%2248%22%20y=%22127%22%20width=%2215%22%20height=%227%22%20rx=%223.5%22/%3E%3C/g%3E%3C/g%3E%3Cg%3E%3Cg%20fill=%22%234a7030%22%3E%3Crect%20x=%2280%22%20y=%22382%22%20width=%2214%22%20height=%2214%22/%3E%3Crect%20x=%2280%22%20y=%22368%22%20width=%2214%22%20height=%2214%22/%3E%3Crect%20x=%2294%22%20y=%22368%22%20width=%2214%22%20height=%2214%22/%3E%3Crect%20x=%22108%22%20y=%22368%22%20width=%2214%22%20height=%2214%22/%3E%3Crect%20x=%22108%22%20y=%22354%22%20width=%2214%22%20height=%2214%22/%3E%3C/g%3E%3Crect%20x=%22122%22%20y=%22352%22%20width=%2216%22%20height=%2216%22%20fill=%22%235d8540%22/%3E%3Ccircle%20cx=%22133%22%20cy=%22357%22%20r=%222.2%22%20fill=%22%2322301a%22/%3E%3Cg%20transform=%22translate(156,330)%22%3E%3Ccircle%20cx=%228%22%20cy=%2210%22%20r=%227%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2216%22%20cy=%226%22%20r=%226.5%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2223%22%20cy=%2212%22%20r=%226.5%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2215%22%20cy=%2215%22%20r=%227%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Cpath%20d=%22M10%2020%20L20%2020%20L18%2027%20L12%2027%20Z%22%20fill=%22%23a8823f%22/%3E%3C/g%3E%3C/g%3E%3Cg%20transform=%22translate(228,242)%22%3E%3Ccircle%20cx=%229%22%20cy=%2211%22%20r=%228%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2218%22%20cy=%226%22%20r=%227%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2225%22%20cy=%2212%22%20r=%227%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Ccircle%20cx=%2217%22%20cy=%2216%22%20r=%228%22%20fill=%22%23f7ead0%22%20stroke=%22%238a7348%22%20stroke-width=%222%22/%3E%3Cpath%20d=%22M11%2022%20L23%2022%20L20%2030%20L14%2030%20Z%22%20fill=%22%23a8823f%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") 0 0 / 480px 480px repeat,
+      radial-gradient(120% 140% at 50% 20%, #93a375 0%, #75855a 55%, #576743 100%);
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    /* iOS: suppress the long-press callout sheet (copy/share) anywhere on
+       the page - a long-press mid-swipe on the board or a held button must
+       never pop system UI over the game. Purely additive on Android. */
+    -webkit-touch-callout: none;
+    /* touch-action left at its default (auto) here, not "none": pinch-zoom is
+       already fully blocked page-wide by the viewport meta's
+       maximum-scale=1/user-scalable=no (a gesture-level block, distinct from
+       touch-action), so body doesn't need touch-action:none too. That matters
+       because touch-action:none also blocks touch-driven *scrolling*, not
+       just zooming - if it were set here it would break #wrap's
+       overflow-y:auto safety net (small-viewport fallback), making it
+       unreachable by touch (only a mouse wheel would still work). Game
+       controls (canvas, #playBtn) additionally get touch-action:none of
+       their own so a swipe/tap there can't be misinterpreted as a scroll
+       gesture. */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #f2e9dd;
+  }
+  /* Nostalgic "candybar phone" frame around the existing #wrap - deliberately
+     decorating the element already used for the flex-centering/sizing math
+     (not a NEW wrapping element) so the fixed, known border/padding added
+     here is trivial to account for in resizeCanvas()'s margin constant (see
+     that comment), rather than introducing a fresh box whose size could feed
+     back into the layout the way #hud's own avatar sizing once did. Border/
+     padding are small fixed px values, not derived from cellPx or anything
+     else computed - no circular dependency risk. */
+  #wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    max-height: 100vh;
+    /* iOS Safari: 100vh includes the space behind the collapsible toolbar,
+       so the frame could exceed the actually-visible viewport and force a
+       small scroll while the toolbar is expanded. dvh tracks the *dynamic*
+       visible height; browsers without dvh support ignore this line and
+       keep the 100vh above (progressive enhancement, no risk). */
+    max-height: 100dvh;
+    overflow-y: auto;
+    padding-top: 22px;
+    padding-bottom: 12px;
+    padding-left: calc(14px + env(safe-area-inset-left));
+    padding-right: calc(14px + env(safe-area-inset-right));
+    box-sizing: border-box;
+    border: 3px solid #2f271f;
+    border-radius: 28px;
+    background: linear-gradient(165deg, #221b16, #14100e 65%);
+    box-shadow:
+      0 24px 55px rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.07),
+      inset 0 -2px 8px rgba(0,0,0,0.55);
+  }
+  /* Small decorative "earpiece speaker" dots, evoking the grille above an
+     old candybar phone's screen - position:absolute inside #wrap (already
+     position:relative) so it adds zero flow height/width and can never be
+     measured by measureReservePx() or affect the board's sizing budget. */
+  #speakerGrille {
+    position: absolute;
+    top: 9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #0a0806;
+    box-shadow:
+      -14px 0 0 #0a0806,
+      -7px 0 0 #0a0806,
+      7px 0 0 #0a0806,
+      14px 0 0 #0a0806;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  #hud {
+    position: relative; /* anchors the top-edge glow pseudo-element below */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: min(10px, calc(var(--cell-px, 16px) * 0.6));
+    width: 100%;
+    box-sizing: border-box;
+    padding: min(10px, calc(var(--cell-px, 16px) * 0.6)) min(12px, calc(var(--cell-px, 16px) * 0.75));
+    border-radius: 0 0 min(20px, calc(var(--cell-px, 16px) * 1.25)) min(20px, calc(var(--cell-px, 16px) * 1.25));
+    background: linear-gradient(180deg, #1e1c1a 0%, #2a2725 60%, #252220 100%);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    /* Defense-in-depth alongside #boardWrap's flex-shrink:0 (see comment
+       above it): #hud/#footer don't have overflow:hidden so they
+       aren't vulnerable to the zero-automatic-min-size flex behavior that
+       motivated that fix, but pinning them too means #wrap's overflow-y:auto
+       is the fallback for *any* over-tall stack, not just ones caused by
+       the board specifically. */
+    flex-shrink: 0;
+    /* --cell-px is written from JS in resizeCanvas() (the single existing
+       place --board-px is already set) - the one source of truth every size
+       constant, including the avatar below, derives from. --avatar-px is a
+       declarative CSS custom property computed from it. Originally 3 cells
+       (a hard "at least 3 game squares" requirement) - reduced 25% to 2.25
+       cells per explicit follow-up request, which does supersede that
+       requirement; noting the tension here rather than silently dropping it
+       so it isn't lost. The 180px ceiling is a defensive fallback ONLY, not
+       a real-world design cap: it must stay >= 2.25 * (MAX_BOARD_PX /
+       GRID_N) = 2.25 * 80 = 180px (the JS-side bound on cellPx - see
+       MAX_BOARD_PX/GRID_N below), same reasoning as the ratio's own history
+       (see git blame on this comment): a cap set below the true max cellPx
+       silently breaks the avatar's own size ratio at large viewports rather
+       than just capping absolute size, which is easy to miss since it only
+       shows up once cellPx is large enough to hit the cap. If MAX_BOARD_PX
+       or GRID_N ever change, this 180px must be revisited together with
+       them - it is not independently derived. */
+    --avatar-px: min(calc(var(--cell-px, 16px) * 2.25), 180px);
+  }
+  /* Top-edge cyan glow line, 1px tall with a 10%-inset transparent-to-opaque-
+     to-transparent gradient - decorative only, position:absolute so it can't
+     add flow height (measureReservePx() reads #hud's own rect, unaffected). */
+  #hud::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(34,211,238,0.25), transparent);
+    pointer-events: none;
+  }
+  /* Row of the three stat groups (Score | Level | Best) plus their dividers.
+     Kept as ONE flex item of #hud, with #avatarHud as the OTHER (and, per the
+     comment on #avatarHud below, placed AFTER this in DOM) so #hud only ever
+     has to balance two children between its edges regardless of language. */
+  .hud-stats {
+    display: flex;
+    align-items: center;
+    /* flex:1 + space-around comes straight from the supplied header design:
+       without it the group collapses to its content width and leaves a dead
+       gap between the stats and the avatar (measured ~208px of a 576px bar
+       on desktop) instead of the three stats being evenly distributed. */
+    flex: 1;
+    justify-content: space-around;
+    gap: min(14px, calc(var(--cell-px, 16px) * 0.9));
+    min-width: 0;
+  }
+  .hud-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: min(4px, calc(var(--cell-px, 16px) * 0.25));
+  }
+  .hud-hi-row {
+    display: flex;
+    align-items: baseline;
+    gap: min(4px, calc(var(--cell-px, 16px) * 0.2));
+  }
+  /* 11px/700/uppercase(EN)/1.5px-tracking in the source design, all re-based
+     off --cell-px per the no-fixed-px HUD-height rule (see MANDATORY
+     deviations #2 in local/NEWASSETS_SPEC.md) - letter-spacing is kept in em
+     so it scales with the font-size instead of going fixed-px stale at
+     small/large cellPx. */
+  .hud-label {
+    font-size: min(clamp(8px, 1.6vmin, 11px), calc(var(--cell-px, 16px) * 0.6));
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.4);
+    white-space: nowrap;
+  }
+  /* Hebrew is NOT uppercased - only the EN strings ("SCORE"/"LEVEL"/"BEST")
+     get the design's all-caps treatment; document.documentElement.lang is
+     kept in sync with currentLang by applyLanguage(). */
+  html[lang="en"] .hud-label { text-transform: uppercase; }
+  .hud-value {
+    font-size: min(clamp(16px, 3.6vmin, 26px), calc(var(--cell-px, 16px) * 1.5));
+    font-weight: 900;
+    line-height: 1;
+  }
+  #scoreVal { color: #22d3ee; text-shadow: 0 0 10px rgba(34,211,238,0.3); }
+  #levelVal { color: #f59e0b; text-shadow: 0 0 10px rgba(245,158,11,0.25); }
+  #hiVal { color: #a78bfa; text-shadow: 0 0 10px rgba(167,139,250,0.25); }
+  .hud-trophy {
+    font-size: min(clamp(8px, 1.6vmin, 14px), calc(var(--cell-px, 16px) * 0.8));
+    color: rgba(167,139,250,0.5);
+    line-height: 1;
+  }
+  /* Score progress track: 60x3px in the source design. The 3px height is a
+     hairline (like the 1px divider below and the avatar's own box-shadow
+     rings) - not a HUD-height driver, so it stays literal px; the width
+     still follows the --cell-px pattern. Fill width is JS-driven, see
+     updateHud(). */
+  .hud-bar-track {
+    width: min(clamp(40px, 9vmin, 64px), calc(var(--cell-px, 16px) * 3.5));
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+  .hud-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #22d3ee, #06b6d4);
+  }
+  /* Level pips: 3 stacked 4x4px dots, DOM order top-to-bottom is pip3/pip2/
+     pip1 per spec, lit state is JS-driven (level >= n), see updateHud(). */
+  .hud-pips {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hud-pip {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+  }
+  .hud-pip.is-lit { background: #f59e0b; }
+  .hud-divider {
+    width: 1px;
+    height: calc(var(--avatar-px, 64px) * 0.6);
+    flex-shrink: 0;
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent);
+  }
+  /* Always-visible avatar HUD element (menu/playing/paused/dead/won - never
+     gated to "after first play"). A genuine flex item of #hud (NOT
+     position:absolute), placed LAST in DOM source order, after .hud-stats -
+     under dir="rtl" row flex the last DOM child lands at the physical LEFT
+     edge, and under dir="ltr" it lands at the physical RIGHT edge, so the
+     avatar mirrors sides with the language exactly like every other
+     direction-dependent piece of this file (see applyLanguage()) with zero
+     extra JS: pure flex + DOM order. Do not reorder these two children or
+     switch #hud to justify-content:flex-start/flex-end without re-deriving
+     this. */
+  #avatarHud {
+    width: var(--avatar-px, 36px);
+    height: var(--avatar-px, 36px);
+    flex-shrink: 0;
+    box-sizing: border-box; /* keep the 3px border inside --avatar-px, not added on top */
+    border-radius: 50%;
+    border: 3px solid var(--stage-color, #22d3ee);
+    /* small dark chip behind the image so it doesn't float directly against
+       the light HUD text */
+    background: #1c1815;
+    box-shadow:
+      0 0 12px var(--stage-glow, rgba(34,211,238,0.3)),
+      0 0 24px var(--stage-glow, rgba(34,211,238,0.1)),
+      inset 0 0 0 3px rgba(0,0,0,0.35);
+    overflow: hidden;
+    pointer-events: none;
+  }
+  #avatarHud img {
+    width: 100%;
+    height: 100%;
+    /* head-N.png are confirmed 512x512 square with content filling to the
+       image edges (no transparent margin - checked via PIL getbbox() before
+       implementation), so object-fit:cover is safe: it will not crop into
+       transparent padding. */
+    object-fit: cover;
+    display: block;
+  }
+  /* flex-shrink:0 is load-bearing: #boardWrap has overflow:hidden, and per
+     the flex spec an overflow:hidden item's automatic min-height becomes 0
+     (instead of its content size), so without this the flex column in #wrap
+     was free to squeeze #boardWrap (and the canvas/overlay/level-flash-card
+     inside it) shorter than its actual content on cramped viewports, instead
+     of #wrap's own overflow-y:auto kicking in as intended. That clipped the
+     live canvas, the level-up head photo/blurb, and the overlay text at
+     exactly the sizes resizeCanvas() had computed for --board-px. Pinning
+     flex-shrink:0 here forces the *intended* fallback (scroll) instead of
+     silent clipping in the rare cases the board still can't fully fit. */
+  #boardWrap {
+    flex-shrink: 0;
+    /* 3D "recessed screen" framing. Everything here is box-shadow/radius
+       only - zero layout participation, so it cannot feed back into
+       measureReservePx()/resizeCanvas() (the recurring sizing-budget bug
+       class in this file). The outer ring shadows form the raised bezel
+       frame; the matching inner shadows live on #boardBezel (an absolute,
+       pointer-events:none overlay) because INSET shadows on this element
+       would paint underneath the canvas child. */
+    border-radius: 14px;
+    box-shadow:
+      0 0 0 3px #3a3128,
+      0 0 0 5px #57492f,
+      0 3px 0 5px rgba(0, 0, 0, 0.35),
+      0 14px 30px rgba(0, 0, 0, 0.40);
+  }
+  #boardBezel {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none; /* MUST stay - it covers the canvas, and swipes have to fall through to it */
+    box-shadow:
+      inset 0 5px 12px rgba(20, 26, 8, 0.38),
+      inset 0 -3px 8px rgba(255, 255, 250, 0.30),
+      inset 3px 0 8px rgba(20, 26, 8, 0.18),
+      inset -3px 0 8px rgba(20, 26, 8, 0.18);
+  }
+  canvas {
+    background: transparent; /* board tone comes from render()'s translucent fill */
+    /* no own border-radius: #boardWrap's overflow:hidden + 14px radius does
+       the corner clipping - a smaller radius here would leave notches */
+    touch-action: none;
+    display: block;
+  }
+  #overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: rgba(10, 8, 7, 0.82);
+    border-radius: 10px;
+    padding: 20px;
+    box-sizing: border-box;
+    /* QA fix: the dead/won content stack (splash image + h1 + 2 stat lines +
+       instructions + button) can be taller than #boardWrap on cramped/
+       landscape viewports even after every child's own board-px-based clamp
+       below - #boardWrap's own overflow:hidden then clips it, and since
+       #overlay used to be vertically centered via justify-content:center,
+       there was no way to scroll to the clipped part: #wrap's outer
+       overflow-y:auto only moves the whole (already internally-clipped)
+       #boardWrap block, it can't reveal more of #overlay's own clipped
+       content. Verified live at a real 568x326 viewport: #boardWrap
+       bottom~306-308px, #playBtn bottom~324.7-334.3px - ~60% of the "שחק שוב"
+       button (its entire label) invisible and untappable, at scrollTop 0,
+       with nothing to trigger a fix. Making #overlay itself the scrollable
+       box (its own overflow-y:auto, independent of #boardWrap's) means any
+       remaining overflow is always reachable by a normal scroll-down
+       gesture - see .overlayInner below for how vertical centering still
+       works in the common (non-overflowing) case. */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #overlay.hidden { display: none; }
+  /* Start-screen only: the banner art fills the board behind the menu content
+     IN PLACE OF the old brand-title text. background-size:cover keeps the
+     banner's own aspect ratio (its snake/head/text are never squashed to fit
+     the square board - it is cropped, not stretched), and the flat dark scrim
+     layered on top dims it so the control demo and Play button stay clearly
+     legible. Same-origin asset, so it is allowed by the locked img-src CSP.
+     Added/removed per state by the showOverlay and hideOverlay functions so
+     only the menu carries it. */
+  #overlay.menuBanner {
+    background-image:
+      linear-gradient(rgba(10, 8, 7, 0.66), rgba(10, 8, 7, 0.66)),
+      url("assets/banner.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  /* Centers vertically via margin:auto instead of justify-content:center on
+     #overlay. This is the standard fix for "can't scroll to see overflowing
+     centered flex content": auto margins consume any extra space when there
+     is room (identical visual result to justify-content:center in the
+     everyday case), but resolve to 0 - not negative - when there isn't,
+     which is exactly flex-start: content starts flush at the top of #overlay
+     and any overflow lands entirely at the bottom, inside the normal
+     scroll-down direction #overlay's own overflow-y:auto (above) now
+     provides. justify-content:center could not be scrolled past on the
+     "before" side in any browser, which is exactly what made the button
+     unreachable at 568x326 (see #overlay comment). */
+  .overlayInner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: min(10px, calc(var(--board-px, 300px) * 0.03));
+    margin: auto 0;
+  }
+  /* h1/p/.stat below are each clamped with the same min(vmin-clamp,
+     --board-px-derived) pattern already used by #levelFlashCard's children
+     (see the comment on #levelFlashCard). Without this, text sized purely
+     from vmin ignores how narrow the *actual* #boardWrap container (which
+     clips via overflow:hidden) can get once resizeCanvas() has to shrink the
+     board below what vmin assumed (small/landscape viewports) - confirmed
+     clipping the "customsnake" <h1> (rendered ~181px wide inside a 104px-wide
+     container) before this fix. */
+  #overlay h1 {
+    margin: 0;
+    font-size: min(clamp(28px, 7vmin, 46px), calc(var(--board-px, 300px) * 0.16));
+    color: #ffd27a;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  }
+  #overlay p {
+    margin: 2px 0;
+    font-size: min(clamp(13px, 2.6vmin, 16px), calc(var(--board-px, 300px) * 0.055));
+    max-width: min(32ch, calc(var(--board-px, 300px) * 0.88));
+    line-height: 1.4;
+    color: #e8dcc8;
+  }
+  #overlay .stat { font-size: min(clamp(15px, 3vmin, 20px), calc(var(--board-px, 300px) * 0.065)); color: #fff; }
+  /* The menu screen's one-line tagline (not the retry-instruction <p> on the
+     dead/won/paused screens, which stay on the plain #overlay p rule above) -
+     bigger and bolder than body copy, in the cyan accent already used for
+     the HUD/avatar ring, for a punchier "cool" read rather than plain
+     instructional text. Same board-px-clamp pattern as its siblings so it
+     still shrinks correctly on small/landscape viewports (see the comment
+     above #overlay h1). */
+  #overlay .tagline {
+    margin: 4px 0;
+    font-size: min(clamp(20px, 4.4vmin, 30px), calc(var(--board-px, 300px) * 0.1));
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: #00e5ff;
+    text-shadow: 0 2px 10px rgba(0,229,255,0.35);
+  }
+
+  /* ---------- GAME WON victory screen (clearing all three levels) ----------
+     Cartoony/celebratory: a bouncing crown, a shimmering rainbow title, and
+     falling confetti, distinct from the plain dead/won overlays. All motion is
+     decorative and gated behind prefers-reduced-motion at the bottom of this
+     block. Every size follows the same min(vmin-clamp, --board-px-derived)
+     pattern the rest of #overlay uses so it shrinks correctly on small/
+     landscape viewports. */
+  .gwCrown {
+    font-size: min(clamp(46px, 13vmin, 80px), calc(var(--board-px, 300px) * 0.26));
+    line-height: 1;
+    filter: drop-shadow(0 5px 10px rgba(0,0,0,0.55));
+    animation: gwCrownBounce 1.5s ease-in-out infinite;
+    transform-origin: center bottom;
+  }
+  @keyframes gwCrownBounce {
+    0%, 100% { transform: translateY(0) rotate(-5deg); }
+    50%      { transform: translateY(-14%) rotate(5deg); }
+  }
+  .gwTitle {
+    margin: 2px 0;
+    font-size: min(clamp(30px, 8vmin, 52px), calc(var(--board-px, 300px) * 0.18));
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    background: linear-gradient(90deg, #ff5252, #ffb300, #ffee58, #66bb6a, #29b6f6, #ab47bc, #ff5252);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.45));
+    animation: gwShimmer 3s linear infinite;
+  }
+  @keyframes gwShimmer {
+    to { background-position: 200% center; }
+  }
+  .gwSub {
+    margin: 0 0 4px;
+    font-size: min(clamp(13px, 2.8vmin, 17px), calc(var(--board-px, 300px) * 0.06));
+    font-weight: 700;
+    color: #ffe08a;
+  }
+  .gwBtns {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: min(12px, calc(var(--board-px, 300px) * 0.04));
+    margin-top: min(10px, calc(var(--board-px, 300px) * 0.035));
+  }
+  .gwBtn {
+    font-family: inherit;
+    font-weight: 800;
+    font-size: min(clamp(14px, 3vmin, 18px), calc(var(--board-px, 300px) * 0.06));
+    padding: min(12px, calc(var(--board-px, 300px) * 0.04)) min(22px, calc(var(--board-px, 300px) * 0.075));
+    border: none;
+    border-radius: 999px;
+    color: #0a0e06;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    transition: transform 0.08s ease, filter 0.15s ease;
+    touch-action: manipulation;
+  }
+  .gwBtn:hover { filter: brightness(1.08); }
+  .gwBtn:active { transform: translateY(1px) scale(0.98); }
+  .gwBtn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  .gwBtnKeep { background: linear-gradient(180deg, #7bed9f, #2ed573); }
+  .gwBtnReset { background: linear-gradient(180deg, #ffd36b, #ffa801); }
+  /* Confetti layer: absolutely positioned, so it anchors to #overlay (the
+     nearest positioned ancestor - .overlayInner is not positioned) and rains
+     across the whole screen rather than just the text box. pointer-events:none
+     so it never steals a button tap. */
+  .gwConfetti {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .gameWonInner > :not(.gwConfetti) { position: relative; z-index: 1; }
+  .gwc {
+    position: absolute;
+    top: -10%;
+    width: min(10px, calc(var(--board-px, 300px) * 0.028));
+    height: min(15px, calc(var(--board-px, 300px) * 0.042));
+    border-radius: 2px;
+    opacity: 0;
+    animation: gwFall linear infinite;
+  }
+  @keyframes gwFall {
+    0%   { top: -10%; transform: rotate(0deg);   opacity: 0; }
+    10%  { opacity: 0.95; }
+    90%  { opacity: 0.95; }
+    100% { top: 110%;  transform: rotate(540deg); opacity: 0; }
+  }
+  /* 12 confetti pieces, spread across the width with varied colour, fall
+     duration and delay so they don't move in lockstep. */
+  .gwc:nth-child(1)  { left: 6%;  background: #ff5252; animation-duration: 2.6s; animation-delay: 0.0s; }
+  .gwc:nth-child(2)  { left: 15%; background: #ffb300; animation-duration: 3.2s; animation-delay: 0.5s; }
+  .gwc:nth-child(3)  { left: 24%; background: #ffee58; animation-duration: 2.9s; animation-delay: 1.1s; }
+  .gwc:nth-child(4)  { left: 33%; background: #66bb6a; animation-duration: 3.5s; animation-delay: 0.3s; }
+  .gwc:nth-child(5)  { left: 42%; background: #29b6f6; animation-duration: 2.7s; animation-delay: 1.4s; }
+  .gwc:nth-child(6)  { left: 51%; background: #ab47bc; animation-duration: 3.1s; animation-delay: 0.8s; }
+  .gwc:nth-child(7)  { left: 60%; background: #ff5252; animation-duration: 3.4s; animation-delay: 0.2s; }
+  .gwc:nth-child(8)  { left: 69%; background: #ffb300; animation-duration: 2.8s; animation-delay: 1.2s; }
+  .gwc:nth-child(9)  { left: 78%; background: #ffee58; animation-duration: 3.3s; animation-delay: 0.6s; }
+  .gwc:nth-child(10) { left: 87%; background: #66bb6a; animation-duration: 2.9s; animation-delay: 1.0s; }
+  .gwc:nth-child(11) { left: 40%; background: #29b6f6; animation-duration: 3.6s; animation-delay: 1.6s; }
+  .gwc:nth-child(12) { left: 94%; background: #ab47bc; animation-duration: 3.0s; animation-delay: 0.4s; }
+  @media (prefers-reduced-motion: reduce) {
+    .gwCrown, .gwTitle { animation: none; }
+    .gwTitle { background-position: 0 center; }
+    .gwc { display: none; } /* static falling confetti reads as broken - hide it */
+  }
+  /* Menu-only "how to play" demo loop, replacing the old written controls
+     line: a hand glyph swipes out along each of the four directions in
+     turn, the matching cartoon arrow lights up, and a mini snake rotates
+     to face that way - the pattern mobile games use on first launch.
+     Deliberately pure CSS keyframes: no JS, no timers, no rAF, so it can
+     neither interact with the fixed-timestep game loop nor add work to it,
+     and nothing needs teardown when the overlay's innerHTML is rebuilt
+     (language switch / state change). Sizes all derive from --board-px
+     (already published by resizeCanvas()) so it scales with the board
+     instead of introducing a new fixed-px block into the overlay stack. */
+  .howto {
+    --ht-stage: min(146px, calc(var(--board-px, 300px) * 0.44));
+    --ht-travel: calc(var(--ht-stage) * 0.30);
+    --ht-nudge: calc(var(--ht-stage) * 0.055);
+    --ht-keydrop: calc(var(--ht-stage) * 0.028);
+    position: relative;
+    width: var(--ht-stage);
+    height: var(--ht-stage);
+    flex: none;
+  }
+  /* Base centering for every child; the arrows then override with their own
+     offset transforms. Keyframes below re-declare the full transform
+     (including this translate) because animating `transform` replaces it. */
+  .howto > * { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+  .htArrow {
+    font-size: calc(var(--ht-stage) * 0.22);
+    line-height: 1;
+    color: #00e5ff;
+    text-shadow: 0 0 8px rgba(0,229,255,0.45);
+    opacity: 0.16;
+    animation: htArrowPulse 8s linear infinite;
+  }
+  /* 8s loop = four 2s phases. Each arrow runs the SAME keyframe (lit during
+     its first quarter) offset by a negative delay, so exactly one is lit at
+     a time, in the order right -> down -> left -> up. */
+  .htRight { transform: translate(calc(-50% + var(--ht-stage) * 0.38), -50%); animation-delay: 0s; }
+  .htDown  { transform: translate(-50%, calc(-50% + var(--ht-stage) * 0.38)); animation-delay: -6s; }
+  .htLeft  { transform: translate(calc(-50% - var(--ht-stage) * 0.38), -50%); animation-delay: -4s; }
+  .htUp    { transform: translate(-50%, calc(-50% - var(--ht-stage) * 0.38)); animation-delay: -2s; }
+  @keyframes htArrowPulse {
+    0%   { opacity: 0.16; }
+    6%   { opacity: 1; }
+    20%  { opacity: 1; }
+    26%  { opacity: 0.16; }
+    100% { opacity: 0.16; }
+  }
+  .htSnake {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--ht-stage) * 0.02);
+    animation: htSnakeTurn 8s linear infinite;
+  }
+  .htSnake i {
+    display: block;
+    border-radius: 50%;
+    background: #00e676;
+    border: 1px solid #00693e;
+  }
+  .htSnake i:nth-child(1) { width: calc(var(--ht-stage)*0.10); height: calc(var(--ht-stage)*0.10); opacity: 0.55; }
+  .htSnake i:nth-child(2) { width: calc(var(--ht-stage)*0.125); height: calc(var(--ht-stage)*0.125); opacity: 0.8; }
+  .htSnake i:nth-child(3) { width: calc(var(--ht-stage)*0.155); height: calc(var(--ht-stage)*0.155); background: #ffd166; border-color: #7a5a12; }
+  /* Near-instant snaps between phases (the 1% ramps), matching how the real
+     snake turns on a grid rather than sweeping around. */
+  /* The rotate comes BEFORE the nudge, so translateX always moves the snake
+     along the direction it is currently facing - one small "step" per phase,
+     timed to land with the arrow/keycap lighting up. */
+  @keyframes htSnakeTurn {
+    0%,   3%   { transform: translate(-50%, -50%) rotate(0deg)   translateX(0); }
+    9%,  20%   { transform: translate(-50%, -50%) rotate(0deg)   translateX(var(--ht-nudge)); }
+    24%        { transform: translate(-50%, -50%) rotate(0deg)   translateX(0); }
+    25%, 28%   { transform: translate(-50%, -50%) rotate(90deg)  translateX(0); }
+    34%, 45%   { transform: translate(-50%, -50%) rotate(90deg)  translateX(var(--ht-nudge)); }
+    49%        { transform: translate(-50%, -50%) rotate(90deg)  translateX(0); }
+    50%, 53%   { transform: translate(-50%, -50%) rotate(180deg) translateX(0); }
+    59%, 70%   { transform: translate(-50%, -50%) rotate(180deg) translateX(var(--ht-nudge)); }
+    74%        { transform: translate(-50%, -50%) rotate(180deg) translateX(0); }
+    75%, 78%   { transform: translate(-50%, -50%) rotate(270deg) translateX(0); }
+    84%, 95%   { transform: translate(-50%, -50%) rotate(270deg) translateX(var(--ht-nudge)); }
+    99%, 100%  { transform: translate(-50%, -50%) rotate(270deg) translateX(0); }
+  }
+  .htHand {
+    font-size: calc(var(--ht-stage) * 0.30);
+    line-height: 1;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.55));
+    animation: htHandSwipe 8s ease-in-out infinite;
+  }
+  @keyframes htHandSwipe {
+    0%   { transform: translate(-50%, -50%); opacity: 0; }
+    4%   { transform: translate(-50%, -50%); opacity: 1; }
+    20%  { transform: translate(calc(-50% + var(--ht-travel)), -50%); opacity: 1; }
+    24%  { transform: translate(calc(-50% + var(--ht-travel)), -50%); opacity: 0; }
+    25%  { transform: translate(-50%, -50%); opacity: 0; }
+    29%  { transform: translate(-50%, -50%); opacity: 1; }
+    45%  { transform: translate(-50%, calc(-50% + var(--ht-travel))); opacity: 1; }
+    49%  { transform: translate(-50%, calc(-50% + var(--ht-travel))); opacity: 0; }
+    50%  { transform: translate(-50%, -50%); opacity: 0; }
+    54%  { transform: translate(-50%, -50%); opacity: 1; }
+    70%  { transform: translate(calc(-50% - var(--ht-travel)), -50%); opacity: 1; }
+    74%  { transform: translate(calc(-50% - var(--ht-travel)), -50%); opacity: 0; }
+    75%  { transform: translate(-50%, -50%); opacity: 0; }
+    79%  { transform: translate(-50%, -50%); opacity: 1; }
+    95%  { transform: translate(-50%, calc(-50% - var(--ht-travel))); opacity: 1; }
+    99%  { transform: translate(-50%, calc(-50% - var(--ht-travel))); opacity: 0; }
+    100% { transform: translate(-50%, -50%); opacity: 0; }
+  }
+  /* Desktop variant of the same demo: a cartoon arrow-key cluster in the
+     real inverted-T layout, each keycap pressing down and lighting up in
+     the same right/down/left/up order while the mini snake turns to match.
+     Which variant is shown is decided purely by the pointer media query
+     below - CSS, not JS - so it also follows a mouse being docked or
+     undocked at runtime with no page reload. */
+  .howtoKeys .htSnake { top: 24%; }
+  .htKeys {
+    top: 70%;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    grid-template-rows: repeat(2, auto);
+    gap: calc(var(--ht-stage) * 0.03);
+  }
+  .htKey {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(var(--ht-stage) * 0.24);
+    height: calc(var(--ht-stage) * 0.24);
+    font-size: calc(var(--ht-stage) * 0.15);
+    font-weight: 700;
+    line-height: 1;
+    border-radius: calc(var(--ht-stage) * 0.05);
+    border: 2px solid #4a6b3a;
+    background: #22301a;
+    color: #cfe8c0;
+    box-shadow: 0 var(--ht-keydrop) 0 #0d1408, 0 0 0 rgba(0,229,255,0);
+    animation: htKeyPress 8s linear infinite;
+  }
+  /* Inverted-T, i.e. how the keys physically sit on a keyboard. */
+  .htkUp    { grid-column: 2; grid-row: 1; animation-delay: -2s; }
+  .htkLeft  { grid-column: 1; grid-row: 2; animation-delay: -4s; }
+  .htkDown  { grid-column: 2; grid-row: 2; animation-delay: -6s; }
+  .htkRight { grid-column: 3; grid-row: 2; animation-delay: 0s; }
+  /* Solid colours (not gradients) so every animated property interpolates
+     reliably; the keycap "presses" by dropping onto its own shadow. */
+  @keyframes htKeyPress {
+    0%, 4%     { transform: translateY(0) scale(1); background: #22301a; color: #cfe8c0;
+                 border-color: #4a6b3a;
+                 box-shadow: 0 var(--ht-keydrop) 0 #0d1408, 0 0 0 rgba(0,229,255,0); }
+    9%, 20%    { transform: translateY(var(--ht-keydrop)) scale(0.95); background: #00e5ff; color: #05242a;
+                 border-color: #7ff4ff;
+                 box-shadow: 0 0 0 #0d1408, 0 0 calc(var(--ht-stage) * 0.09) rgba(0,229,255,0.75); }
+    26%, 100%  { transform: translateY(0) scale(1); background: #22301a; color: #cfe8c0;
+                 border-color: #4a6b3a;
+                 box-shadow: 0 var(--ht-keydrop) 0 #0d1408, 0 0 0 rgba(0,229,255,0); }
+  }
+  /* Touch devices get the swipe demo, everything else the key cluster. */
+  .howtoTouch { display: none; }
+  @media (pointer: coarse) {
+    .howtoTouch { display: block; }
+    .howtoKeys { display: none; }
+  }
+  /* Motion-sensitive users still get the meaning: all four arrows lit and
+     the hand parked in the middle, just held still. */
+  @media (prefers-reduced-motion: reduce) {
+    .htArrow, .htSnake, .htHand, .htKey { animation: none; }
+    .htArrow { opacity: 0.9; }
+    /* Parked off-centre so the still hand doesn't sit on top of the mini
+       snake (they only overlap for an instant mid-animation). */
+    .htHand {
+      opacity: 1;
+      transform: translate(calc(-50% + var(--ht-travel) * 0.55), calc(-50% + var(--ht-travel) * 0.55));
+    }
+  }
+  /* Very short viewports (landscape phones): drop the demo entirely rather
+     than push the Play button into #overlay's scroll region. */
+  @media (max-height: 460px) {
+    .howto { display: none; }
+  }
+  #playBtn {
+    /* QA fix: same board-px-based shrink pattern as the rest of #overlay's
+       children (see comment above #overlay h1 and .splashPic) - these three
+       were previously fixed px regardless of how small the board got, which
+       contributed to the dead/won overlay overflowing #boardWrap. */
+    margin-top: min(8px, calc(var(--board-px, 300px) * 0.025));
+    padding: min(12px, calc(var(--board-px, 300px) * 0.035)) min(34px, calc(var(--board-px, 300px) * 0.1));
+    font-size: min(clamp(16px, 3.2vmin, 20px), calc(var(--board-px, 300px) * 0.075));
+    font-weight: 700;
+    /* QA fix: unlike its sibling overlay buttons (#levelOkBtn, #mobileHelpClose),
+       this had no floor and was entirely board-px-relative, so it shrank below
+       the 44px touch-target minimum on ordinary small/landscape viewports
+       (e.g. 568x320, 667x375, 896x414, even 320x568 portrait). Give it the
+       same explicit floor the others already have - buttons are border-box
+       by default (UA stylesheet), so this bounds the actual tappable box,
+       not just the content area. */
+    min-height: 44px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #ff3d81, #c9006b);
+    color: #2a0714;
+    box-shadow: 0 6px 16px rgba(201,0,107,0.4);
+    cursor: pointer;
+    touch-action: none;
+  }
+  #playBtn:active { transform: translateY(1px); }
+  #playBtn:disabled { opacity: 0.55; cursor: default; }
+  /* Level banner: a retro arcade "LEVEL n" screen shown at the start of
+     every level (including level 1). Unlike the old auto-timing-out flash
+     card this one is BLOCKING - it sets state to "levelbanner", which the
+     fixed-timestep loop treats as not-playing, so the snake holds still
+     until OK is pressed. The monsters in play at this level are shown at
+     exactly 2x2 board cells each, in a row, and carry the meaning on their
+     own: the only text is the level number. */
+  #levelFlash {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    border-radius: 10px;
+    overflow: hidden;
+    background: rgba(7, 10, 5, 0.86);
+    z-index: 6;
+  }
+  /* pointer-events flips to auto only while shown, so the hidden banner can
+     never swallow a swipe/tap meant for the board underneath. */
+  #levelFlash.show { opacity: 1; pointer-events: auto; }
+  #levelFlashCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Every size below is the smaller of a vmin-based value and a
+       --board-px-derived one, the same pattern the rest of this file uses,
+       so the card shrinks with the real container instead of clipping
+       against #boardWrap's overflow:hidden on small/landscape boards. */
+    /* Stretched to a fixed share of the board rather than hugging its
+       contents, so it reads as a proper level *screen*. Both width and the
+       ceiling are board-relative and box-sizing is border-box (below), so the
+       card scales with whatever device is playing and can never spill past
+       #boardWrap - the row of three monsters at 2x2 cells each comes to
+       ~0.67 of the board, against ~0.80 of usable width inside the padding,
+       so it always has slack. */
+    width: calc(var(--board-px, 300px) * 0.92);
+    max-width: 96%;
+    gap: min(18px, calc(var(--board-px, 300px) * 0.05));
+    padding: min(26px, calc(var(--board-px, 300px) * 0.07)) min(22px, calc(var(--board-px, 300px) * 0.06));
+    border-radius: min(20px, calc(var(--board-px, 300px) * 0.05));
+    background: linear-gradient(180deg, #18200f 0%, #0a0e06 100%);
+    border: 3px solid #00e5ff; /* recoloured per level from JS (level tint) */
+    text-align: center;
+    box-sizing: border-box;
+  }
+  #levelFlashTitle {
+    font-size: min(clamp(19px, 4.8vmin, 34px), calc(var(--board-px, 300px) * 0.1));
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #ffd166;
+    text-shadow: 0 0 10px rgba(255,209,102,0.5), 0 2px 0 #6d4f10;
+  }
+  #levelMonsters {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: min(10px, calc(var(--board-px, 300px) * 0.026));
+  }
+  /* Exactly 2x2 board cells per monster, as specified. Three of them plus
+     gaps and the card's padding comes to ~0.82 of the board's width (the
+     board is 9 cells across), so the row still fits inside the card's
+     max-width above without wrapping or shrinking. */
+  #levelMonsters img {
+    width: calc(var(--cell-px, 40px) * 2);
+    height: calc(var(--cell-px, 40px) * 2);
+    object-fit: contain;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6));
+  }
+  /* Animate the level-card monsters with the solo-ghost float/glow motion
+     (ported from new-assets/animations/solo-scenes.jsx) - each ghost gets its
+     own 2.5s loop and glow colour: ghost 1 smooth circular (blue), ghost 2
+     lazy sway (red), ghost 3 energetic wobble (green). Motion is a small
+     sub-sprite offset so they never leave the card. The base drop-shadow is
+     repeated in every keyframe so the animated `filter` keeps it while the
+     coloured glow pulses. */
+  .lvl-mon {
+    animation-duration: 2.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+    will-change: transform, filter;
+  }
+  .lvl-mon-1 { animation-name: lvlMon1; }
+  .lvl-mon-2 { animation-name: lvlMon2; }
+  .lvl-mon-3 { animation-name: lvlMon3; }
+  @keyframes lvlMon1 { /* ghost 1 - smooth circular float, blue #4a9eff */
+    0%, 100% { transform: translate(0, -7px) rotate(0deg) scale(1);      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 6px rgba(74,158,255,0.55)); }
+    25%      { transform: translate(7px, 0) rotate(3deg) scale(1.03);    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(74,158,255,0.85)); }
+    50%      { transform: translate(0, 7px) rotate(0deg) scale(1);       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 6px rgba(74,158,255,0.55)); }
+    75%      { transform: translate(-7px, 0) rotate(-3deg) scale(1.03);  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(74,158,255,0.85)); }
+  }
+  @keyframes lvlMon2 { /* ghost 2 - lazy sway + double bob, red #ff4444 */
+    0%, 100% { transform: translate(-6px, 0) rotate(-2deg) scale(1);     filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(255,68,68,0.55)); }
+    25%      { transform: translate(0, 6px) rotate(0deg) scale(1.04);    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(255,68,68,0.85)); }
+    50%      { transform: translate(6px, 0) rotate(2deg) scale(1);       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(255,68,68,0.55)); }
+    75%      { transform: translate(0, 6px) rotate(0deg) scale(1.04);    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(255,68,68,0.85)); }
+  }
+  @keyframes lvlMon3 { /* ghost 3 - energetic wobble, green #00e5a0 */
+    0%, 100% { transform: translate(0, 7px) rotate(0deg) scale(1);       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(0,229,160,0.6)); }
+    25%      { transform: translate(6px, -6px) rotate(5deg) scale(1.05); filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 14px rgba(0,229,160,0.9)); }
+    50%      { transform: translate(0, -7px) rotate(0deg) scale(1);      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(0,229,160,0.6)); }
+    75%      { transform: translate(-6px, -6px) rotate(-5deg) scale(1.05); filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 14px rgba(0,229,160,0.9)); }
+  }
+  /* Motion-sensitive users: hold the monsters still (same convention as the
+     ghost idle / opener / tutorials elsewhere). */
+  @media (prefers-reduced-motion: reduce) {
+    .lvl-mon { animation: none; }
+  }
+  #levelOkBtn {
+    min-height: 44px;
+    padding: 0 min(38px, calc(var(--board-px, 300px) * 0.11));
+    font-size: min(clamp(15px, 3.4vmin, 21px), calc(var(--board-px, 300px) * 0.062));
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    font-family: inherit;
+    border: 2px solid #06343a;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #00e5ff, #00a3b8);
+    color: #05242a;
+    cursor: pointer;
+    touch-action: none;
+  }
+  #levelOkBtn:active { filter: brightness(0.88); }
+  .splashPic {
+    /* QA fix: unlike #overlay's h1/p/.stat (which already min() against
+       --board-px, see the comment above #overlay h1), this used to be
+       vmin-only, so on a small/landscape board it did not shrink to match
+       the actual (clipped-down) #boardWrap container - one of the
+       contributors to the dead/won overlay overflowing #boardWrap's box
+       (see #overlay comment). Now capped the same way as its siblings. */
+    width: min(clamp(56px, 14vmin, 96px), calc(var(--board-px, 300px) * 0.3));
+    height: min(clamp(56px, 14vmin, 96px), calc(var(--board-px, 300px) * 0.3));
+    object-fit: contain;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.45));
+  }
+  /* On-screen D-pad intentionally removed per spec - touch devices use
+     swipe-on-canvas only now (see the mobileHelp popup below for the
+     swipe-direction hint shown to touch users). Removing it also means
+     #wrap always has exactly 3 flex children (hud/boardWrap/footer), so
+     measureReservePx()/resizeCanvas() no longer need a coarse-pointer
+     branch for a 4th child's reserved height. */
+  #footer {
+    font-size: clamp(10px, 2vmin, 12px);
+    color: #8a7c6b;
+    flex-shrink: 0; /* see #hud comment: never let flex compress this below its text */
+  }
+  /* Language toggle: deliberately position:fixed to the physical viewport
+     corner, OUTSIDE #wrap's normal flow entirely - not a flex child of #hud,
+     not measured by measureReservePx(). This file has twice already broken
+     the board's no-scroll/sizing budget by adding something into #wrap's
+     flow that fed back into resizeCanvas()'s size calculations (the avatar
+     HUD chip, then its own sizing loop); a fixed-position element outside
+     #wrap can never do that. "right" is a physical (not logical/dir-aware)
+     CSS property, so this stays in the SAME physical corner whether the
+     current language is he (rtl) or en (ltr) - it doesn't jump to the other
+     side every time you toggle it. */
+  #langToggle {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
+    z-index: 20;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
+    background: rgba(28,22,19,0.78);
+    color: #f2e9dd;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    cursor: pointer;
+    touch-action: none;
+  }
+  #langToggle:active { background: rgba(0,229,255,0.35); }
+
+  /* Mobile-only "how to play" hint: fixed/full-viewport, outside #wrap's
+     flow (same reasoning as #langToggle above) so it can never feed back
+     into resizeCanvas()'s size budget. Shown once (first visit, gated by
+     localStorage) only on coarse-pointer devices - see maybeShowMobileHelp()
+     in the script below. Deliberately icon-first/text-minimal per spec:
+     the arrow+hand glyph cross conveys "swipe any direction" faster than
+     a sentence would. */
+  #mobileHelp {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(11,8,6,0.62);
+    padding: 20px;
+    box-sizing: border-box;
+    touch-action: none;
+  }
+  #mobileHelp.show { display: flex; }
+  #mobileHelpCard {
+    width: 100%;
+    max-width: 260px;
+    text-align: center;
+    background: linear-gradient(165deg, #241d18, #14100e 70%);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 20px;
+    padding: 22px 20px 18px;
+    box-shadow: 0 24px 50px rgba(0,0,0,0.55);
+  }
+  #mobileHelpArrows {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 4px;
+    width: 136px;
+    height: 136px;
+    margin: 0 auto 14px;
+  }
+  .mh-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    color: #00e5ff;
+    text-shadow: 0 0 10px rgba(0,229,255,0.5);
+  }
+  .mh-hand { font-size: 34px; color: #f2e9dd; text-shadow: none; }
+  .mh-up { grid-column: 2; grid-row: 1; }
+  .mh-left { grid-column: 1; grid-row: 2; }
+  .mh-right { grid-column: 3; grid-row: 2; }
+  .mh-down { grid-column: 2; grid-row: 3; }
+  #mobileHelpText {
+    margin: 0 0 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #cbb89a;
+  }
+  #mobileHelpClose {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 26px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #ff2e63, #c81854);
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    touch-action: none;
+  }
+</style>
+</head>
+<body>
+<button id="langToggle" type="button">English</button>
+<div id="wrap">
+  <div id="speakerGrille" aria-hidden="true"></div>
+  <div id="hud">
+    <div class="hud-stats">
+      <div class="hud-stat">
+        <span class="hud-label" id="scoreLabel">ניקוד</span>
+        <b class="hud-value" id="scoreVal">0</b>
+        <div class="hud-bar-track"><div class="hud-bar-fill" id="scoreBarFill"></div></div>
+      </div>
+      <div class="hud-divider"></div>
+      <div class="hud-stat">
+        <span class="hud-label" id="levelLabel">רמה</span>
+        <b class="hud-value" id="levelVal">1</b>
+        <div class="hud-pips">
+          <span class="hud-pip" id="levelPip3"></span>
+          <span class="hud-pip" id="levelPip2"></span>
+          <span class="hud-pip" id="levelPip1"></span>
+        </div>
+      </div>
+      <div class="hud-divider"></div>
+      <div class="hud-stat">
+        <span class="hud-label" id="hiLabel">שיא</span>
+        <div class="hud-hi-row">
+          <span class="hud-trophy" aria-hidden="true">🏆</span>
+          <b class="hud-value" id="hiVal">0</b>
+        </div>
+      </div>
+    </div>
+    <div id="avatarHud"><img id="avatarHudImg" alt=""></div>
+  </div>
+  <div id="boardWrap" style="position:relative; overflow:hidden;">
+    <canvas id="game"></canvas>
+    <div id="boardBezel" aria-hidden="true"></div>
+    <div id="levelFlash">
+      <div id="levelFlashCard">
+        <div id="levelFlashTitle">רמה 1</div>
+        <!-- filled from JS: one <img> per monster in play at this level -->
+        <div id="levelMonsters"></div>
+        <button id="levelOkBtn" type="button">OK</button>
+      </div>
+    </div>
+    <div id="overlay">
+      <div class="overlayInner">
+        <h1>דוביסנייק</h1>
+        <p class="tagline">אכלו את הפופקורן!</p>
+        <!-- dir="ltr" is load-bearing: .htSnake is a flex row, and flex rows
+             reverse under an inherited dir="rtl" - that would put the snake's
+             head on the wrong end and contradict the rotation keyframes. Same
+             reasoning as the #mobileHelp arrows. -->
+        <div class="howto howtoTouch" dir="ltr" aria-hidden="true"><span class="htArrow htUp">&#8593;</span><span class="htArrow htRight">&#8594;</span><span class="htArrow htDown">&#8595;</span><span class="htArrow htLeft">&#8592;</span><span class="htSnake"><i></i><i></i><i></i></span><span class="htHand">&#128070;</span></div>
+        <div class="howto howtoKeys" dir="ltr" aria-hidden="true"><span class="htSnake"><i></i><i></i><i></i></span><span class="htKeys"><b class="htKey htkUp">&#8593;</b><b class="htKey htkLeft">&#8592;</b><b class="htKey htkDown">&#8595;</b><b class="htKey htkRight">&#8594;</b></span></div>
+        <button id="playBtn" type="button" disabled>טוען&hellip;</button>
+      </div>
+    </div>
+  </div>
+  <div id="footer">השיא נשמר מקומית במכשיר</div>
+</div>
+
+<!-- dir="ltr" is deliberate and load-bearing here for the same reason it
+     was on the old #dpad: CSS Grid mirrors track order under an inherited
+     dir="rtl" (like flex row does), which would swap the physical
+     left/right arrow positions even though only in-page *text* is meant
+     to localize. Fixed/full-viewport and outside #wrap (see the CSS
+     comment) so it's never measured by measureReservePx(). -->
+<div id="mobileHelp" role="dialog" aria-modal="true">
+  <div id="mobileHelpCard">
+    <div id="mobileHelpArrows" dir="ltr">
+      <span class="mh-cell mh-up" aria-hidden="true">&#8593;</span>
+      <span class="mh-cell mh-left" aria-hidden="true">&#8592;</span>
+      <span class="mh-cell mh-hand" aria-hidden="true">&#128070;</span>
+      <span class="mh-cell mh-right" aria-hidden="true">&#8594;</span>
+      <span class="mh-cell mh-down" aria-hidden="true">&#8595;</span>
+    </div>
+    <p id="mobileHelpText">החליקו כדי לזוז</p>
+    <button id="mobileHelpClose" type="button">&#10003;</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- constants ----------
+  // GRID_N was 19 (720px board => ~38px cells), then cut to 13 (~55px cells)
+  // for readability. Per the Product-approved grid/avatar/palette spec, it is
+  // now cut again to 9: a ~30.8% reduction from 13 (the closest odd integer
+  // to the requested ~35%; 8 would be 38.5% but breaks the odd/center-cell
+  // invariant this comment is about). It's odd so Math.floor(GRID_N/2) still
+  // gives a true center cell for the snake's start position (unchanged spawn
+  // logic), and on the same 720px board it gives ~80px cells - large, clearly
+  // readable head/body circles, at the cost of a smaller grid to navigate.
+  var GRID_N = 9;                 // fixed logical grid, both axes
+  // Per-stage accent, cycling by level (1/2/3): dark green / yellow / red.
+  // Drives the avatar ring and the PRESS ANY KEY text. Glow variants are the
+  // same hues at low alpha for the avatar box-shadow.
+  var STAGE_COLORS = ["#1e7d32", "#b8860b", "#a51e1e"];
+  var STAGE_GLOW = ["rgba(30,125,50,0.4)", "rgba(184,134,11,0.4)", "rgba(165,30,30,0.4)"];
+  // Endpoints scaled twice on request: first by 1.3x (160->208, 70->91) for
+  // the "30% slower" pass, then doubled (208->416, 91->182) for the "50%
+  // slower" pass - halving speed means doubling the per-cell interval.
+  // STEP_DECAY (the relative per-level ramp) stays untouched both times:
+  // it's a ratio, not an absolute speed, so scaling only the endpoints
+  // already slows every level in the curve by the same proportion.
+  var BASE_STEP_MS = 416;         // level 1 step interval
+  var MIN_STEP_MS = 182;          // floor
+  var STEP_DECAY = 0.92;          // ~8% faster per level
+  var POPCORN_PER_LEVEL = 5;
+  // Chasers move at a fraction of the snake's step rate rather than a fixed
+  // "every Nth step" toggle, so the cadence is tunable to non-integer ratios.
+  // 0.5 (the old chaserTick 0/1 toggle) was "every 2 steps"; 0.4 is one
+  // chaser move per 2.5 snake steps - 20% fewer chaser moves - per the
+  // level-flow rework (small board = chasers too close to react to).
+  var CHASER_MOVE_RATE = 0.4;     // chaser moves per snake step
+  var COUNTDOWN_MS = 3000;        // "get ready" freeze before each level's play
+  // Endless "Keep Playing" pace after clearing level 3. Deliberately SLOWER
+  // (larger interval) than any real level - level 3 lands at BASE*0.92^2 ~=
+  // 352ms, so 470ms is an eased, FIXED cadence (no further decay in infinite
+  // mode) because a long snake plus three chasers is already hard; the point
+  // of endless mode is "manageable victory lap", not another speed ramp.
+  var INFINITE_STEP_MS = 470;     // endless-mode step interval (fixed, slower than level 1's 416)
+  var SWIPE_THRESHOLD = 35;       // px
+  var HI_KEY = "customsnake_hi";
+
+  var DIRS = {
+    up: { x: 0, y: -1 },
+    down: { x: 0, y: 1 },
+    left: { x: -1, y: 0 },
+    right: { x: 1, y: 0 }
+  };
+
+  // ---------- DOM ----------
+  var canvas = document.getElementById("game");
+  var ctx = canvas.getContext("2d");
+  var wrap = document.getElementById("wrap");
+  var boardWrapEl = document.getElementById("boardWrap");
+  var hudScore = document.getElementById("scoreVal");
+  var hudLevel = document.getElementById("levelVal");
+  var hudHi = document.getElementById("hiVal");
+  var scoreBarFill = document.getElementById("scoreBarFill");
+  var levelPip1 = document.getElementById("levelPip1");
+  var levelPip2 = document.getElementById("levelPip2");
+  var levelPip3 = document.getElementById("levelPip3");
+  var avatarHudImg = document.getElementById("avatarHudImg");
+  var overlay = document.getElementById("overlay");
+  var playBtn = document.getElementById("playBtn");
+  var levelFlash = document.getElementById("levelFlash");
+  var levelFlashCard = document.getElementById("levelFlashCard");
+  var levelFlashTitle = document.getElementById("levelFlashTitle");
+  var levelMonsters = document.getElementById("levelMonsters");
+  var levelOkBtn = document.getElementById("levelOkBtn");
+  var langToggleBtn = document.getElementById("langToggle");
+  var scoreLabelEl = document.getElementById("scoreLabel");
+  var levelLabelEl = document.getElementById("levelLabel");
+  var hiLabelEl = document.getElementById("hiLabel");
+  var mobileHelp = document.getElementById("mobileHelp");
+  var mobileHelpText = document.getElementById("mobileHelpText");
+  var mobileHelpClose = document.getElementById("mobileHelpClose");
+  var MOBILE_HELP_SEEN_KEY = "customsnake_mobilehelp_seen";
+
+  // ---------- i18n: every visible string, keyed by language, switchable at
+  // runtime with no page reload. The "customsnake" brand name is intentionally
+  // NOT in here - it's a proper noun/brand and stays as-is in both
+  // languages, matching the existing convention for "WASD"-style keycap
+  // labels elsewhere in this file (now moot, see KEY_DIR below - arrow keys
+  // only, WASD removed as a movement input per spec). ----------
+  var STRINGS = {
+    he: {
+      dir: "rtl",
+      metaDescription: "A customizable retro snake game template.",
+      scoreLabel: "ניקוד",
+      levelLabel: "רמה",
+      hiLabel: "שיא",
+      footerHi: "השיא נשמר מקומית במכשיר",
+      footerHiFail: "השיא לא נשמר הפעם (האחסון אינו זמין)",
+      // Brand name gets a Hebrew form specifically in Hebrew mode (English
+      // mode keeps the Latin "customsnake" - see brandTitle below).
+      brandTitle: "CustomSnake",
+      // Deliberately just the one punchy line now (was a full mechanics
+      // explainer) - rendered bigger/bolder via the .tagline class, not the
+      // plain #overlay p style; the controls line below is unchanged.
+      menuInstructions: "אכלו את הפופקורן!",
+      mobileHelpText: "החליקו כדי לזוז",
+      loadingBtn: "טוען…",
+      playBtn: "שחק",
+      playAgainBtn: "שחק שוב",
+      deadTitle: "המשחק נגמר",
+      wonTitle: "ניצחת!",
+      // GAME WON screen (clearing all three levels) - the celebratory
+      // announcement plus its two action buttons (Reset / Keep Playing).
+      gameWonTitle: "ניצחת במשחק!",
+      gameWonSub: "עברת את כל שלושת השלבים!",
+      resetBtn: "התחל מחדש",
+      keepPlayingBtn: "המשך לשחק",
+      scoreStat: function (n) { return "ניקוד: " + n; },
+      hiStat: function (n) { return "שיא: " + n; },
+      wonBoardFull: function (n) { return "הלוח מלא - ניקוד: " + n; },
+      deadRetry: "הקישו שחק, לחצו Enter, או הקישו על הלוח כדי לנסות שוב.",
+      wonRetry: "הקישו שחק, לחצו Enter, או הקישו על הלוח כדי לשחק שוב.",
+      pausedTitle: "מושהה",
+      pausedResume: "רווח / הקישו המשך כדי להמשיך.",
+      resumeBtn: "המשך",
+      levelFlashLabel: function (n) { return "רמה " + n; },
+      // Retro opening-scene overlay text (Task C) - pulsing, drawn on the
+      // board canvas itself (see renderPressAnyKey()), not uppercased (this
+      // isn't a HUD label - see the Hebrew-not-uppercased note on hud-label
+      // above, which doesn't apply here anyway since Hebrew has no case).
+      pressAnyKey: "הקישו על מקש כלשהו",
+      toggleLabel: "English",
+      toggleAria: "Switch to English"
+    },
+    en: {
+      dir: "ltr",
+      metaDescription: "A customizable retro snake game template.",
+      scoreLabel: "Score",
+      levelLabel: "Level",
+      hiLabel: "Best",
+      footerHi: "High score saved locally on this device",
+      footerHiFail: "High score not saved this time (storage unavailable)",
+      // English keeps the Latin brand name as-is.
+      brandTitle: "CustomSnake",
+      // Matches the simplified Hebrew tagline - see the "he" entry above.
+      menuInstructions: "Eat the popcorn!",
+      mobileHelpText: "Swipe to move",
+      loadingBtn: "Loading…",
+      playBtn: "Play",
+      playAgainBtn: "Play Again",
+      deadTitle: "Game Over",
+      wonTitle: "You Win!",
+      // GAME WON screen (clearing all three levels) - the celebratory
+      // announcement plus its two action buttons (Reset / Keep Playing).
+      gameWonTitle: "GAME WON!",
+      gameWonSub: "You cleared all 3 levels!",
+      resetBtn: "Reset",
+      keepPlayingBtn: "Keep Playing",
+      scoreStat: function (n) { return "Score: " + n; },
+      hiStat: function (n) { return "High score: " + n; },
+      wonBoardFull: function (n) { return "Board full - score: " + n; },
+      deadRetry: "Tap Play, press Enter, or tap the board to try again.",
+      wonRetry: "Tap Play, press Enter, or tap the board to play again.",
+      pausedTitle: "Paused",
+      pausedResume: "Space / tap Resume to continue.",
+      resumeBtn: "Resume",
+      levelFlashLabel: function (n) { return "Level " + n; },
+      // Retro opening-scene overlay text (Task C) - pulsing, drawn on the
+      // board canvas itself (see renderPressAnyKey()).
+      pressAnyKey: "PRESS ANY KEY",
+      toggleLabel: "עברית",
+      toggleAria: "עבור לעברית"
+    }
+  };
+  // Owns the current language and its persistence. Only the string TABLE
+  // (STRINGS above) stays a plain data literal; the mutable "which language"
+  // state and its localStorage round-trip live here.
+  class I18n {
+    constructor(strings, storageKey, fallbackLang) {
+      this.strings = strings;
+      this.storageKey = storageKey;
+      this.lang = fallbackLang;
+      try {
+        var stored = localStorage.getItem(storageKey);
+        if (this.strings[stored]) this.lang = stored;
+      } catch (e) { /* private mode / storage disabled - fallback stands */ }
+    }
+
+    // The active language's string table.
+    current() { return this.strings[this.lang]; }
+
+    has(lang) { return !!this.strings[lang]; }
+
+    // Switch language if known; returns the language now in effect.
+    set(lang) {
+      if (this.strings[lang]) this.lang = lang;
+      return this.lang;
+    }
+
+    // Best-effort persist of the current choice (survives a reload).
+    persist() {
+      try {
+        localStorage.setItem(this.storageKey, this.lang);
+      } catch (e) { /* private mode / storage disabled - in-session switch still works */ }
+    }
+  }
+
+  var i18n = new I18n(STRINGS, "customsnake_lang", "he");
+
+  // Stable accessor used throughout the game for the active string table.
+  function S() { return i18n.current(); }
+
+  // ---------- image preload with colored-circle fallback ----------
+  // No getImageData is used anywhere so this stays file:// safe.
+  var ASSET_LIST = [
+    { key: "head1", src: "./assets/head-1.png", fallback: "#e0a458" },
+    { key: "head2", src: "./assets/head-2.png", fallback: "#c97b63" },
+    { key: "head3", src: "./assets/head-3.png", fallback: "#a56a9e" },
+    { key: "food", src: "./assets/food.png", fallback: "#ffd166" },
+    { key: "splash", src: "./assets/splash.png", fallback: "#ffcf6b" },
+    { key: "ghost1", src: "./assets/ghost-1.png", fallback: "#ff4b3a" },
+    { key: "ghost2", src: "./assets/ghost-2.png", fallback: "#ff7bd5" },
+    { key: "ghost3", src: "./assets/ghost-3.png", fallback: "#3ed6e0" }
+  ];
+  // Loads the image set and keeps a colored-circle canvas fallback per key,
+  // so a failed / absent / stalled image can never blank a sprite or hang
+  // the game. Access loaded state only through image()/drawable()/src().
+  class AssetStore {
+    constructor(list) {
+      this.list = list;
+      this.images = {};    // key -> HTMLImageElement (only if it loaded ok)
+      this.fallbacks = {}; // key -> canvas, used when the image failed/absent
+      this._ready = 0;
+      this._total = list.length;
+    }
+
+    _fallbackCanvas(color) {
+      var c = document.createElement("canvas");
+      c.width = 64; c.height = 64;
+      var cx = c.getContext("2d");
+      cx.beginPath();
+      cx.arc(32, 32, 30, 0, Math.PI * 2);
+      cx.fillStyle = color;
+      cx.fill();
+      return c;
+    }
+
+    // A stalled request (neither load nor error ever fires - flaky mobile
+    // networks do this) must not be able to hang the game forever: the rAF
+    // loop only starts after all list entries "settle", so one dead request
+    // would otherwise mean _ready never reaches _total, done() never runs,
+    // and the board never starts moving even after the static Play button is
+    // tapped. Give every image a hard deadline and fall back to the
+    // colored-circle canvas if it hasn't settled by then.
+    preload(done) {
+      var self = this;
+      this.list.forEach(function (a) {
+        var img = new Image();
+        var settled = false;
+        var timeoutId = setTimeout(function () {
+          self.fallbacks[a.key] = self._fallbackCanvas(a.fallback);
+          finish();
+        }, AssetStore.TIMEOUT_MS);
+        function finish() {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeoutId);
+          self._ready++;
+          if (self._ready >= self._total) done();
+        }
+        img.onload = function () {
+          // guard against a 200-response truncated/corrupt/zero-byte image:
+          // onload can fire before naturalWidth is meaningful in some engines,
+          // so only accept it as "loaded" when it actually has pixels.
+          if (img.naturalWidth > 0) {
+            self.images[a.key] = img;
+          } else {
+            self.fallbacks[a.key] = self._fallbackCanvas(a.fallback);
+          }
+          finish();
+        };
+        img.onerror = function () {
+          self.fallbacks[a.key] = self._fallbackCanvas(a.fallback);
+          finish();
+        };
+        img.src = a.src;
+      });
+    }
+
+    // The loaded <img> for a key, or null - use where a REAL image is
+    // required and the fallback circle is drawn some other way.
+    image(key) {
+      return this.images[key] || null;
+    }
+
+    // The image if loaded, else the colored-circle fallback canvas. Both are
+    // valid CanvasRenderingContext2D.drawImage() sources.
+    drawable(key) {
+      return this.images[key] || this.fallbacks[key];
+    }
+
+    // A usable <img>-src string for a key: the real image src, else the
+    // fallback canvas as a data URL, else a 1x1 transparent GIF so an
+    // <img src> is never set to "" (which some browsers/embedders re-request
+    // as the current document). Used for splash/level-banner/avatar <img>s.
+    src(key) {
+      if (this.images[key]) return this.images[key].src;
+      if (this.fallbacks[key]) return this.fallbacks[key].toDataURL();
+      return AssetStore.BLANK_PIXEL_SRC;
+    }
+  }
+  AssetStore.TIMEOUT_MS = 4000;
+  AssetStore.BLANK_PIXEL_SRC = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
+  var assetStore = new AssetStore(ASSET_LIST);
+
+  // ---------- head cycle / per-level body tint (predefined, no getImageData) ----------
+  var HEAD_KEYS = ["head1", "head2", "head3"];
+  // Per-level tint pool, cycles with the heads. Per the grid/avatar/palette
+  // spec, this is no longer a warm amber cluster (~20-25deg hue spread) - it's
+  // three genuinely varied hues (green ~140deg, blue ~220deg, magenta ~330deg)
+  // deliberately kept clear of the HUD accent cyan (~190deg, see #hud span b
+  // and the avatar ring in CSS) so "stable UI chrome" (HUD/avatar) and
+  // "per-level game state" (these tints) never share a color.
+  var LEVEL_TINTS = [
+    { core: "#00e676", edge: "#00693e" }, // vivid green
+    { core: "#2979ff", edge: "#0d3f9e" }, // electric blue
+    { core: "#ff3d81", edge: "#8f0046" }  // hot magenta
+  ];
+
+  // ===== animation: ghost idle float/rotate/pulse/glow =====
+  // Ghost idle animation (Task A - port of new-assets/animations/solo-scenes.jsx):
+  // each chaser floats/rotates/pulses/glows on its own phase, as a purely
+  // visual sub-cell offset applied only at draw time in render(). Nothing
+  // here ever touches ch.x/ch.y - chaserAt() and every hit test keep reading
+  // the plain integer grid cell.
+  // Raw dx/dy amplitudes below are ported verbatim from the reference, which
+  // was tuned against a GS=130px sprite box on a 2.5s loop; they're rescaled
+  // by (in-game ghost size / GS) at draw time so they read as sub-cell drift,
+  // never raw pixels.
+  var GHOST_IDLE_GS = 130;
+  var GHOST_IDLE_PERIOD_MS = 2500;
+  var GHOST_IDLE_TAU = Math.PI * 2;
+  var GHOST_IDLE = [
+    { // 1 Curly - blue
+      color: "#4a9eff",
+      glowBase: 0.30,
+      // QA fix: writes onto the caller-supplied scratch object instead of
+      // returning a new object literal, so render()'s per-frame ghost loop
+      // (up to 3 ghosts * ~60fps) does no per-frame allocation - see
+      // GHOST_IDLE_SCRATCH below.
+      motion: function (a, b, out) {
+        out.dx = Math.sin(a) * 30;
+        out.dy = -Math.cos(a) * 20;
+        out.rot = Math.sin(a) * 6;
+        out.scaleOsc = Math.sin(b) * 0.05;
+        out.glow = 0.30 + Math.sin(a) * 0.25;
+        return out;
+      }
+    },
+    { // 2 Smokey - red
+      color: "#ff4444",
+      glowBase: 0.30,
+      motion: function (a, b, out) {
+        out.dx = Math.sin(a) * 25;
+        out.dy = Math.sin(b) * 22;
+        out.rot = Math.sin(a) * 4;
+        out.scaleOsc = Math.sin(a) * 0.06;
+        out.glow = 0.30 + Math.cos(a) * 0.25;
+        return out;
+      }
+    },
+    { // 3 Screamer - green
+      color: "#00e5a0",
+      glowBase: 0.35,
+      motion: function (a, b, out) {
+        out.dx = Math.sin(b) * 20;
+        out.dy = -Math.cos(a) * 25;
+        out.rot = Math.sin(b) * 8;
+        out.scaleOsc = Math.sin(b) * 0.07;
+        out.glow = 0.35 + Math.sin(b) * 0.30;
+        return out;
+      }
+    }
+  ];
+  // Pre-allocated scratch objects for GHOST_IDLE[*].motion() output, one per
+  // ghost slot (index = chaser index % 3). renderOpeningReady() and the main
+  // chasers-render loop in render() never run in the same frame (opening vs
+  // playing are mutually exclusive states), so sharing one pool across both
+  // call sites is safe and avoids a second allocation site.
+  var GHOST_IDLE_SCRATCH = [
+    { dx: 0, dy: 0, rot: 0, scaleOsc: 0, glow: 0 },
+    { dx: 0, dy: 0, rot: 0, scaleOsc: 0, glow: 0 },
+    { dx: 0, dy: 0, rot: 0, scaleOsc: 0, glow: 0 }
+  ];
+  // Cached once at load, same convention as the CSS prefers-reduced-motion
+  // rule elsewhere in this file: motion-sensitive users get idle ghosts held
+  // still, glow parked at its non-pulsing baseline.
+  var GHOST_IDLE_STILL = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  // ---------- chasers: the Pac-Man-style monster field ----------
+  // Owns the live set of chaser cells and their shared movement cadence.
+  // Everything grid/collision-related (the snake head, the food, a
+  // cell-free predicate) is passed in per call, so this class holds ONLY
+  // chaser state - never a reference to the wider game.
+  class ChaserField {
+    constructor(gridN) {
+      this.gridN = gridN;
+      this.cells = [];   // [{x, y}] - one entry per active chaser
+      this.accum = 0;    // fractional move accumulator (see advance())
+    }
+
+    // Clear all chasers and reset the movement cadence (called at level start).
+    reset() {
+      this.cells = [];
+      this.accum = 0;
+    }
+
+    count() { return this.cells.length; }
+
+    // Is a chaser on cell (x, y)?
+    at(x, y) {
+      for (var i = 0; i < this.cells.length; i++) {
+        if (this.cells[i].x === x && this.cells[i].y === y) return true;
+      }
+      return false;
+    }
+
+    // Spawn one chaser on a free cell far from `head`, relaxing the distance
+    // requirement in passes (5 -> 3 -> 1 Manhattan) so spawning still works on
+    // a crowded late-game board instead of looping forever. `isFree(x, y)` is
+    // the snake-body-free predicate; `food` (or null) is avoided too. If no
+    // valid cell exists, the spawn is skipped silently.
+    spawn(head, food, isFree) {
+      var candidates = [];
+      var passes = [5, 3, 1];
+      for (var p = 0; p < passes.length && !candidates.length; p++) {
+        for (var gy = 0; gy < this.gridN; gy++) {
+          for (var gx = 0; gx < this.gridN; gx++) {
+            if (Math.abs(gx - head.x) + Math.abs(gy - head.y) < passes[p]) continue;
+            if (!isFree(gx, gy)) continue;
+            if (food && gx === food.x && gy === food.y) continue;
+            if (this.at(gx, gy)) continue;
+            candidates.push({ x: gx, y: gy });
+          }
+        }
+      }
+      if (candidates.length) {
+        this.cells.push(candidates[Math.floor(Math.random() * candidates.length)]);
+      }
+    }
+
+    // One greedy grid step per chaser toward `head`. Chasers pass over the
+    // snake body, the food, and each other - only exact head contact matters -
+    // but a chaser NEVER steps onto the head cell itself. Per-index axis
+    // preference keeps multiple chasers flanking from different directions
+    // instead of stacking into one blob.
+    //
+    // Why "never step onto the head": before this rule, being adjacent to a
+    // chaser on a tick where it also stepped was an unavoidable death - the
+    // player slipped safely PAST the ghost (a different cell, no overlap) and
+    // the ghost's own move that same tick landed on top of them, so the
+    // effective hitbox was radius 1, not 0. With the rule, death by chaser is
+    // exactly "you moved into it", the same contract as walls and self
+    // collision.
+    _stepToward(head) {
+      for (var i = 0; i < this.cells.length; i++) {
+        var c = this.cells[i];
+        var dx = head.x - c.x, dy = head.y - c.y;
+        var sx = dx === 0 ? 0 : (dx > 0 ? 1 : -1);
+        var sy = dy === 0 ? 0 : (dy > 0 ? 1 : -1);
+        var preferX;
+        if (i % 3 === 1) preferX = true;
+        else if (i % 3 === 2) preferX = false;
+        else preferX = Math.abs(dx) >= Math.abs(dy);
+        var stepX = { x: c.x + sx, y: c.y };
+        var stepY = { x: c.x, y: c.y + sy };
+        var opts = preferX ? [stepX, stepY] : [stepY, stepX];
+        for (var k = 0; k < opts.length; k++) {
+          var o = opts[k];
+          if (o.x === c.x && o.y === c.y) continue;       // already aligned on that axis
+          if (o.x === head.x && o.y === head.y) continue; // never step onto the head
+          c.x = o.x; c.y = o.y;
+          break;
+        }
+      }
+    }
+
+    // Advance the shared cadence by `rate` moves-per-call; when a whole move
+    // has accumulated, step every chaser toward `head`. Returns true if a
+    // chaser now occupies the head cell (i.e. it caught the player).
+    advance(head, rate) {
+      this.accum += rate;
+      if (this.accum >= 1) {
+        this.accum -= 1;
+        this._stepToward(head);
+        return this.at(head.x, head.y);
+      }
+      return false;
+    }
+  }
+
+  var chaserField = new ChaserField(GRID_N);
+
+  // ---------- responsive canvas sizing ----------
+  var dpr = 1;
+  var boardCssPx = 0;
+  var cellPx = 0;
+  // Floor multiplier retuned from *4 to *8 alongside the GRID_N cut (19->13):
+  // at *4 the worst-case cell would only be 4px regardless of grid size,
+  // which defeats the point of moving to fewer/bigger cells for
+  // readability. *8 guarantees at least an 8px cell whenever the viewport can
+  // actually fit it. This is the *ideal* floor, not an absolute one any more -
+  // see SAFETY_MIN_BOARD_PX and its use in resizeCanvas() below:
+  // unconditionally forcing every viewport up to this floor (the old
+  // behavior) is exactly what caused #wrap to have to scroll on short
+  // landscape phones that used to fit at GRID_N=19/*4. GRID_N was cut again
+  // to 9 per the grid/avatar/palette spec - MIN_BOARD_PX derives from GRID_N
+  // so it now floors at 9*8=72px (was 104px at GRID_N=13); no parallel
+  // constant to keep in sync.
+  var MIN_BOARD_PX = GRID_N * 8;   // preferred floor (72px) for legible cells,
+                                    // honored whenever the viewport fits it
+                                    // without forcing scroll/clipping.
+  // Absolute last-resort floor (same *4 multiplier the pre-13x13 build used)
+  // so the board never collapses to ~0px on a pathological viewport. Unlike
+  // MIN_BOARD_PX above, resizeCanvas() only falls back to this when honoring
+  // MIN_BOARD_PX would itself force #wrap to scroll - i.e. it never
+  // overrides a fit budget that's already between the two floors, it only
+  // stops the board from going to zero when even that fit budget is
+  // negative/near-zero. Derives from GRID_N (9*4=36px, was 52px at GRID_N=13).
+  var SAFETY_MIN_BOARD_PX = GRID_N * 4;
+  var MAX_BOARD_PX = 720;          // cap so 4K/8K desktops don't get a huge board;
+                                    // unchanged - at GRID_N=9 this yields ~80px
+                                    // cells, plenty large on desktop without
+                                    // further tuning.
+  // The #wrap "phone frame" (border + padding, see its CSS) adds fixed,
+  // KNOWN px overhead beyond what measureReservePx() measures (that function
+  // only measures hud/footer - not #wrap's own border/padding). Unlike
+  // the avatar-sizing fixed-point loop above, these are plain constants, not
+  // derived from cellPx or anything else computed here, so there is no
+  // circular-dependency risk - just add them once. Vertical: border-top(3) +
+  // padding-top(22) + padding-bottom(12) + border-bottom(3) = 40. Horizontal:
+  // border-left(3) + padding-left(14) + padding-right(14) + border-right(3)
+  // = 34 (the env(safe-area-inset-*) part of that padding is the OS's own
+  // reserved inset, already outside the viewport dimensions JS reads, so it
+  // needs no separate accounting here).
+  var FRAME_VERTICAL_PX = 40;
+  var FRAME_HORIZONTAL_PX = 34;
+
+  // Measures the *actual* rendered height of everything in #wrap besides the
+  // board (hud + footer, plus the 2 flex gaps between #wrap's 3 children -
+  // hud/boardWrap/footer), instead of a hardcoded guess. A hardcoded guess
+  // was padded well above the real DOM heights (e.g. reserving 90px for
+  // hud+footer when they actually render closer to 30px), which silently ate
+  // into the board's height budget and was the root cause of the no-scroll
+  // regression on short landscape viewports (568x320 etc.) once MIN_BOARD_PX
+  // grew from GRID_N*4 to GRID_N*8 - the padded estimate left far less real
+  // headroom than the numbers suggested. Measuring the live layout instead
+  // keeps this accurate as the CSS changes, with no constant to drift out of
+  // sync. (Used to also account for the on-screen D-pad's height on coarse-
+  // pointer devices; that control was removed - touch is swipe-only now -
+  // so #wrap always has exactly these 3 children/2 gaps.)
+  function measureReservePx() {
+    var hudEl = document.getElementById("hud");
+    var footerEl = document.getElementById("footer");
+    var gap = parseFloat(getComputedStyle(wrap).rowGap);
+    if (!gap && gap !== 0) gap = parseFloat(getComputedStyle(wrap).gap) || 8;
+    var hudH = hudEl ? hudEl.getBoundingClientRect().height : 0;
+    var footerH = footerEl ? footerEl.getBoundingClientRect().height : 0;
+    return hudH + footerH + gap * 2;
+  }
+
+  function resizeCanvas() {
+    dpr = window.devicePixelRatio || 1;
+    var margin = 24;
+
+    // QA fix: the HUD's real rendered height depends on --avatar-px, a CSS
+    // calc() driven by --cell-px (min(cellPx*3, 240px) - see #hud CSS), but
+    // --cell-px is only known once *this function* has already picked a
+    // board size - and measureReservePx() below reads the HUD's height
+    // BEFORE that happens, so the board used to get sized against a stale
+    // (pre-avatar-growth) HUD height, with no second pass to compensate once
+    // the avatar actually grew. Verified concretely at 593x646: cellPx
+    // settled at 63px -> avatar/HUD height 189px -> #wrap needed ~787px in a
+    // 646px container, a persistent 141px forced scroll on first paint - and
+    // nothing guarantees a real static session (no resize/orientationchange/
+    // visibilitychange/DPR-change) ever gets a corrective second pass.
+    // Fix: solve it as a small fixed-point iteration right here instead of
+    // depending on some future external event. Each pass writes the
+    // tentative --cell-px so the *next* measureReservePx() call reflects the
+    // HUD height that cellPx would actually produce. The feedback loop is a
+    // contraction (bigger cellPx -> bigger avatar -> bigger reserve ->
+    // smaller available -> smaller cellPx), so it stabilizes to (at, or very
+    // close to) a fixed point within a handful of iterations - the GRID_N
+    // quantization of boardCssPx can make the very last step or two hunt by
+    // one grid unit rather than land exactly, so the loop always uses
+    // whichever value it lands on at the cap rather than assuming exact
+    // equality is reached; the hard iteration cap is a defensive bound only,
+    // in case a future CSS change ever broke the contraction outright.
+    var available = 0;
+    var prevBoardCssPx = -1;
+    for (var iter = 0; iter < 8; iter++) {
+      var reservePx = measureReservePx();
+
+      available = Math.min(window.innerWidth, window.innerHeight) - margin;
+      // Leave room for HUD + footer text so the whole stack
+      // (hud/canvas/footer) tends to fit in one screen without scrolling.
+      // An under-estimate here just means #wrap's own overflow-y:auto
+      // kicks in instead of anything overlapping.
+      available = Math.min(
+        available,
+        window.innerHeight - reservePx - FRAME_VERTICAL_PX,
+        window.innerWidth - 16 - FRAME_HORIZONTAL_PX
+      );
+      available = Math.min(available, MAX_BOARD_PX);
+      // Only pull the board up to the *ideal* readability floor when the
+      // viewport can actually fit that floor without forcing a scroll (i.e.
+      // `available` - the real fit budget computed above - already meets or
+      // exceeds it, so this is a no-op). When the fit budget is smaller than
+      // the ideal floor, honor the fit budget itself (keeps the no-scroll
+      // requirement intact) and only clamp up to the much smaller
+      // SAFETY_MIN_BOARD_PX as an absolute last resort against a near-zero
+      // board on a truly pathological viewport - the old unconditional
+      // `Math.max(MIN_BOARD_PX, available)` is what forced scrolling on
+      // short landscape phones that used to fit at the previous
+      // GRID_N/floor tuning.
+      if (available < MIN_BOARD_PX) {
+        available = Math.max(SAFETY_MIN_BOARD_PX, available);
+      }
+
+      boardCssPx = Math.floor(available / GRID_N) * GRID_N; // keep divisible by grid for crisp cells
+      if (boardCssPx <= 0) boardCssPx = GRID_N * 4;
+      cellPx = boardCssPx / GRID_N;
+      // --cell-px is set on #wrap (the shared ancestor of #hud and
+      // #boardWrap) so it cascades to #hud's --avatar-px calc() (see #hud
+      // CSS) - written every iteration (not just once at the end) so the
+      // *next* iteration's measureReservePx() sees the HUD height this
+      // cellPx would actually produce, which is the whole point of the loop.
+      if (wrap) wrap.style.setProperty("--cell-px", cellPx + "px");
+      if (boardCssPx === prevBoardCssPx) break; // converged, stop early
+      prevBoardCssPx = boardCssPx;
+    }
+
+    canvas.style.width = boardCssPx + "px";
+    canvas.style.height = boardCssPx + "px";
+    // Expose the *actual* achieved board size to CSS so the level-flash
+    // card (absolutely positioned inside this same container, see
+    // #levelFlashCard rules above) can size itself relative to the real
+    // container instead of only the viewport - fixes clipping on small/
+    // landscape boards where MIN_BOARD_PX forces the board below what the
+    // old vmin-only sizing assumed.
+    if (boardWrapEl) boardWrapEl.style.setProperty("--board-px", boardCssPx + "px");
+    canvas.width = Math.round(boardCssPx * dpr);
+    canvas.height = Math.round(boardCssPx * dpr);
+    // Scale by the *actual* achieved backing-store ratio, not the raw dpr -
+    // fractional DPRs (1.5, 1.75, 2.625...) don't survive Math.round() cleanly,
+    // so this keeps drawing coordinates aligned to true device pixels.
+    var sx = canvas.width / boardCssPx;
+    var sy = canvas.height / boardCssPx;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(sx, sy);
+
+    render(); // repaint immediately at new size, even if paused/menu
+  }
+
+  // ---------- game state ----------
+  // "loading" is the real boot state (not "menu"): the rAF loop and the
+  // first real render() only start once assetStore.preload() finishes, so the
+  // Play button must not be able to do anything before that - see the
+  // disabled attribute on the static #playBtn and the guard at the top of
+  // startOrResume(). Only assetStore.preload()'s callback advances "loading" -> "menu".
+  var state = "loading"; // loading | opening | menu | levelbanner | countdown | playing | paused | dead | won | gamewon
+  var snake = null, dir = { x: 1, y: 0 }, queuedDir = null, food = null;
+  // The Pac-Man-style chaser field (its cells + cadence) lives in the
+  // ChaserField class - see chasers.js and the `chaserField` instance.
+  var score = 0, popcornCount = 0, level = 1, stepMs = BASE_STEP_MS, hi = 0;
+  // Endless "Keep Playing" mode, entered from the GAME WON screen after
+  // clearing level 3 (see gameWon()/startInfinite()). While true: no more
+  // level-ups (the snake just keeps growing from wherever level 3 ended),
+  // stepMs is pinned to the eased INFINITE_STEP_MS, and the HUD shows a crown
+  // in place of the level number. Reset by newGame() so a fresh run always
+  // starts as a normal levelled game.
+  var infinite = false;
+  var acc = 0;
+  var lastTs = 0;
+  var animTs = 0; // rAF timestamp mirror, used only for the ghosts' idle-animation phase - never read by game logic
+
+  // Opening intro scene (Task C) state - see the "opening intro scene"
+  // section below, right before render(). openingStartTs is captured from
+  // the rAF timestamp frame() already receives (never Date.now()), exactly
+  // like animTs above, so the scene's timing stays consistent with the rest
+  // of the file's animation conventions.
+  var openingStartTs = null;
+
+  // "get ready" countdown (Change 2): a blocking state between the level
+  // banner and play, giving the player guaranteed orientation time after the
+  // snake/chasers are re-centred by positionForLevel(). Timed from the same
+  // rAF `ts` frame() already receives, exactly like openingStartTs above -
+  // never Date.now(). Set by startCountdown(), read/cleared in frame().
+  var countdownStartTs = null;
+  // Consumes the SAME physical tap/click that just dismissed the opening
+  // scene (the browser still fires a trailing click/touchend for it) so it
+  // can't also fall through to the existing "tap the board to start"
+  // convenience and skip straight into a new game, bypassing the menu screen
+  // the dismissal is supposed to land on - see requestOpeningDismiss().
+  var suppressTapStartOnce = false;
+
+  // The level banner is BLOCKING (it owns `state`), so unlike the old
+  // auto-timing-out flash card it can't still be on screen when the player
+  // dies or wins. This stays as a defensive clear for the one path that can
+  // still overlap: step() may call levelUp() (banner shown) and then, later
+  // in the same step, detect that the snake moved onto a chaser and call
+  // die() - the dead overlay is only ~86% opaque, so a stale banner would
+  // show through it.
+  function hideLevelBanner() {
+    levelFlash.classList.remove("show");
+  }
+
+  // Retro "LEVEL n" screen: the level number is the only text - the monsters
+  // now in play (one per level, capped at three) carry the rest of the
+  // meaning, drawn at exactly 2x2 board cells each by the CSS above. Takes
+  // over `state`, so the snake holds still until OK is pressed.
+  function showLevelBanner() {
+    var count = Math.min(level, 3);
+    var html = "";
+    for (var i = 0; i < count; i++) {
+      // assetStore.src() keeps the existing fallback chain (real image, else the
+      // generated colored-circle dataURL, else a blank pixel) so a failed
+      // monster download can never leave a broken-image icon here.
+      html += '<img class="lvl-mon lvl-mon-' + (i + 1) + '" src="' + assetStore.src("ghost" + (i + 1)) + '" alt="">';
+    }
+    levelMonsters.innerHTML = html;
+    levelFlashTitle.textContent = S().levelFlashLabel(level);
+    // Per-level colour pop, same tint the snake body uses this level.
+    var tint = currentTint();
+    levelFlashCard.style.borderColor = tint.core;
+    levelFlashCard.style.boxShadow =
+      "0 0 0 3px #0a0e06, 0 0 26px " + tint.core + "70, inset 0 0 20px " + tint.core + "1f";
+    state = "levelbanner";
+    levelFlash.classList.add("show");
+  }
+
+  function dismissLevelBanner() {
+    if (state !== "levelbanner") return;
+    levelFlash.classList.remove("show");
+    acc = 0; // drop any fraction banked before the banner so dismissing it
+             // can never produce a burst of catch-up steps
+    startCountdown();
+  }
+
+  // 3s blocking "get ready" freeze between the level banner and play (Change
+  // 2). state === "countdown" is handled in frame() (no step(), no catch-up
+  // burst on exit) and render() (big centred number); see both below.
+  // countdownStartTs is captured lazily from frame()'s own `ts` the first
+  // tick this state is active, exactly like openingStartTs, so it stays
+  // correct regardless of how much real time passed since dismissal.
+  function startCountdown() {
+    state = "countdown";
+    countdownStartTs = null;
+  }
+
+  // Re-centres the snake (standard 3-length, heading right) and resets/
+  // respawns the chasers, on EVERY level start (level 1 via newGame() and
+  // every level-up). A grown snake can't be laid out straight from centre
+  // without running off a 9x9 board past a few levels, so this is a full
+  // Pac-Man-style position reset rather than an incremental nudge - score
+  // and high score are untouched, only position/length/heading reset.
+  function positionForLevel() {
+    var cx = Math.floor(GRID_N / 2), cy = Math.floor(GRID_N / 2);
+    snake = [
+      { x: cx, y: cy },
+      { x: cx - 1, y: cy },
+      { x: cx - 2, y: cy }
+    ];
+    dir = { x: 1, y: 0 };
+    queuedDir = null;
+    acc = 0;
+    chaserField.reset(); // fresh cells + cadence each level
+    var n = Math.min(level, 3);
+    for (var i = 0; i < n; i++) chaserField.spawn(snake[0], food, cellFree); // spawn already keeps
+                                                // spawns >=5 cells (relaxing
+                                                // to 3, then 1) from the head
+    placeFood(); // re-placed so it's never under the re-centred snake/chasers
+                 // - can call win() if the board is somehow already full
+  }
+
+  function newGame() {
+    score = 0;
+    popcornCount = 0;
+    level = 1;
+    infinite = false; // a fresh run is always a normal levelled game, even
+                      // when reached via Reset from the endless GAME WON screen
+    stepMs = BASE_STEP_MS;
+    hideLevelBanner(); // clear any banner left over from a previous run
+    positionForLevel();
+    updateHud();
+    updateAvatarHud(); // level just reset to 1 - keep the avatar in sync
+    // Level 1 gets the same banner as every other level. Guarded because
+    // positionForLevel()'s placeFood() can in principle call win() (board
+    // completely full), which must not be overwritten by the banner's own
+    // state change.
+    if (state !== "won") showLevelBanner();
+  }
+
+  function cellFree(x, y) {
+    for (var i = 0; i < snake.length; i++) {
+      if (snake[i].x === x && snake[i].y === y) return false;
+    }
+    return true;
+  }
+
+  function placeFood() {
+    var attempts = 0;
+    var x, y;
+    do {
+      x = Math.floor(Math.random() * GRID_N);
+      y = Math.floor(Math.random() * GRID_N);
+      attempts++;
+    } while ((!cellFree(x, y) || chaserField.at(x, y)) && attempts < 500);
+    if (!cellFree(x, y) || chaserField.at(x, y)) {
+      // Random search failed (board is nearly full): fall back to a
+      // deterministic scan instead of placing food on an occupied cell,
+      // which would otherwise force a false self-collision death on the
+      // next valid grow move.
+      var found = false;
+      for (var gy = 0; gy < GRID_N && !found; gy++) {
+        for (var gx = 0; gx < GRID_N && !found; gx++) {
+          if (cellFree(gx, gy) && !chaserField.at(gx, gy)) { x = gx; y = gy; found = true; }
+        }
+      }
+      if (!found) {
+        // Every snake-free cell is currently covered by a chaser - chasers
+        // move constantly, so this is transient, not "board full". Relax
+        // the chaser exclusion rather than mis-reporting a win.
+        for (gy = 0; gy < GRID_N && !found; gy++) {
+          for (gx = 0; gx < GRID_N && !found; gx++) {
+            if (cellFree(gx, gy)) { x = gx; y = gy; found = true; }
+          }
+        }
+      }
+      if (!found) {
+        // The board is completely full - there is nowhere left to place
+        // food, so treat this as a win rather than a forced death.
+        food = null;
+        win();
+        return;
+      }
+    }
+    food = { x: x, y: y };
+  }
+
+  function currentHeadKey() {
+    return HEAD_KEYS[(level - 1) % HEAD_KEYS.length];
+  }
+
+  function currentStageColor() {
+    return STAGE_COLORS[(level - 1) % STAGE_COLORS.length];
+  }
+
+  function currentTint() {
+    return LEVEL_TINTS[(level - 1) % LEVEL_TINTS.length];
+  }
+
+  // Always-visible avatar HUD (#avatarHud/#avatarHudImg): shows the same
+  // head1/head2/head3 image already driving the snake head and
+  // the level banner's monsters. Reuses assetStore.src()'s existing fallback chain (real image
+  // src, or the makeFallbackCanvas() colored-circle dataURL, or
+  // BLANK_PIXEL_SRC) - no new naive <img src> that can hang/blank on a failed
+  // load. Called at boot (once assets are ready) and from newGame()/levelUp()
+  // so it can never drift out of sync with either the snake head or the
+  // level-up flash image.
+  function updateAvatarHud() {
+    if (avatarHudImg) avatarHudImg.src = assetStore.src(currentHeadKey());
+    // Recolor the avatar ring (and PRESS ANY KEY, via currentStageColor())
+    // to the current stage's accent: dark green (L1) / yellow (L2) / red (L3).
+    if (wrap) {
+      wrap.style.setProperty("--stage-color", currentStageColor());
+      wrap.style.setProperty("--stage-glow", STAGE_GLOW[(level - 1) % STAGE_GLOW.length]);
+    }
+  }
+
+  function updateHud() {
+    hudScore.textContent = String(score);
+    // Endless mode has no level number - show a crown here instead (per
+    // spec). Set as textContent so it survives an applyLanguage() overlay
+    // rebuild untouched (that only re-renders #overlay, never #levelVal).
+    hudLevel.textContent = infinite ? "👑" : String(level); // crown
+    hudHi.textContent = String(hi);
+    // Score bar fill % - min(100, round(score / max(highScore,1) * 100)),
+    // per spec; max(hi,1) avoids a div-by-zero flash to 100% before any
+    // high score exists.
+    if (scoreBarFill) {
+      var pct = Math.min(100, Math.round((score / Math.max(hi, 1)) * 100));
+      scoreBarFill.style.width = pct + "%";
+    }
+    // Level pips light up cumulatively (level >= n); DOM order is pip3/pip2/
+    // pip1 top-to-bottom but the lit test is the same for all three.
+    if (levelPip1) levelPip1.classList.toggle("is-lit", level >= 1);
+    if (levelPip2) levelPip2.classList.toggle("is-lit", level >= 2);
+    if (levelPip3) levelPip3.classList.toggle("is-lit", level >= 3);
+  }
+
+  // ---------- language switch: everything below is re-derived from S(),
+  // never a page reload. Gameplay control DIRECTIONS are untouched by this -
+  // switching `dir` only affects text layout (see the #avatarHud CSS comment
+  // and #mobileHelpArrows's dir="ltr" markup for why the physical left/right
+  // mapping stays fixed either way). Safe to call at any time, including
+  // mid-game. ----------
+  function applyLanguage(lang) {
+    i18n.set(lang);
+    var s = S();
+
+    document.documentElement.lang = i18n.lang;
+    document.documentElement.dir = s.dir;
+
+    var metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute("content", s.metaDescription);
+
+    if (scoreLabelEl) scoreLabelEl.textContent = s.scoreLabel;
+    if (levelLabelEl) levelLabelEl.textContent = s.levelLabel;
+    if (hiLabelEl) hiLabelEl.textContent = s.hiLabel;
+
+    var footerEl = document.getElementById("footer");
+    if (footerEl) {
+      footerEl.textContent = persistOk ? s.footerHi : s.footerHiFail;
+    }
+
+    if (mobileHelpText) mobileHelpText.textContent = s.mobileHelpText;
+
+    if (langToggleBtn) {
+      langToggleBtn.textContent = s.toggleLabel;
+      langToggleBtn.setAttribute("aria-label", s.toggleAria);
+    }
+
+    // Re-render whichever overlay matches the current state, or - during the
+    // brief pre-asset "loading" state, before any showOverlay* function has
+    // run yet - directly correct the static markup's own elements in place.
+    if (state === "menu") showOverlayMenu();
+    else if (state === "dead") showOverlayDead();
+    else if (state === "won") showOverlayWon();
+    else if (state === "gamewon") showOverlayGameWon();
+    else if (state === "paused") showOverlayPaused();
+    else if (state === "loading") {
+      var loadingH1 = overlay.querySelector("h1");
+      var loadingTagline = overlay.querySelector(".tagline");
+      var loadingBtn = document.getElementById("playBtn");
+      if (loadingH1) loadingH1.textContent = s.brandTitle;
+      if (loadingTagline) loadingTagline.textContent = s.menuInstructions;
+      // (no controls line any more - the .howto demo is icon-only, so there
+      // is nothing here to re-translate)
+      if (loadingBtn) loadingBtn.textContent = s.loadingBtn;
+    }
+
+    // The level banner can be the thing currently on screen - re-label it
+    // too rather than leaving the old language up until the next level.
+    if (state === "levelbanner") {
+      levelFlashTitle.textContent = s.levelFlashLabel(level);
+    }
+
+    i18n.persist();
+  }
+
+  // hi is a module-level var, so an in-session high score still works even
+  // when persistence is unavailable (private mode / quota / disabled
+  // storage) - persistOk just tracks whether we can also survive a reload,
+  // and surfaces a one-time notice in the footer when we can't.
+  var persistOk = true;
+
+  function notePersistFailure() {
+    if (persistOk) return;
+    var footerEl = document.getElementById("footer");
+    if (footerEl && footerEl.dataset.persistNoted !== "1") {
+      footerEl.textContent = S().footerHiFail;
+      footerEl.dataset.persistNoted = "1";
+    }
+  }
+
+  function loadHi() {
+    try {
+      var v = parseInt(localStorage.getItem(HI_KEY), 10);
+      hi = isNaN(v) ? 0 : v;
+    } catch (e) {
+      hi = 0;
+      persistOk = false;
+      notePersistFailure();
+    }
+  }
+
+  function saveHi() {
+    if (score > hi) {
+      hi = score;
+      try {
+        localStorage.setItem(HI_KEY, String(hi));
+      } catch (e) {
+        persistOk = false;
+        notePersistFailure();
+      }
+    }
+  }
+
+  // ---------- input: queue at most one turn per step, forbid 180 into neck ----------
+  function requestTurn(name) {
+    var d = DIRS[name];
+    if (!d) return;
+    // Compare against the direction that will actually be committed next:
+    // if a turn is already queued this tick, check against *that*, not the
+    // stale committed dir - otherwise two opposite key presses within the
+    // same step interval can both individually pass the anti-reversal check
+    // and the second overwrites queuedDir, reversing the snake into its neck.
+    var ref = queuedDir || dir;
+    if (d.x === -ref.x && d.y === -ref.y) return;
+    queuedDir = d;
+  }
+
+  function applyQueuedTurn() {
+    if (queuedDir) {
+      // guard again in case dir changed since queuing (shouldn't, but safe)
+      if (!(queuedDir.x === -dir.x && queuedDir.y === -dir.y)) {
+        dir = queuedDir;
+      }
+      queuedDir = null;
+    }
+  }
+
+  // ---------- step / update ----------
+  function step() {
+    applyQueuedTurn();
+
+    var head = snake[0];
+    var nx = head.x + dir.x;
+    var ny = head.y + dir.y;
+
+    if (nx < 0 || nx >= GRID_N || ny < 0 || ny >= GRID_N) {
+      return die();
+    }
+    // self collision: check against body (excluding tail cell, which will move away
+    // unless we just ate - handled by only excluding when not growing)
+    var willGrow = (nx === food.x && ny === food.y);
+    var bodyToCheck = willGrow ? snake : snake.slice(0, snake.length - 1);
+    for (var i = 0; i < bodyToCheck.length; i++) {
+      if (bodyToCheck[i].x === nx && bodyToCheck[i].y === ny) {
+        return die();
+      }
+    }
+
+    snake.unshift({ x: nx, y: ny });
+    // Set when this step triggers a level-up: positionForLevel() (inside
+    // levelUp()) re-centres the snake AND resets/respawns the chasers, so
+    // nx/ny below (this step's pre-reset head) and the pre-reset chasers no
+    // longer describe the current board at all - the chaser checks further
+    // down must be skipped for this tick rather than compare stale
+    // coordinates against a brand-new layout.
+    var leveledUp = false;
+    if (willGrow) {
+      score += 1;
+      popcornCount += 1;
+      // A level boundary (every POPCORN_PER_LEVEL eaten) normally advances a
+      // level. Two exceptions: in endless mode there are no more levels (just
+      // keep placing food), and completing level 3 is the LAST level - it wins
+      // the game (cartoony GAME WON screen) rather than advancing to a level 4
+      // that shouldn't exist.
+      if (popcornCount % POPCORN_PER_LEVEL === 0 && !infinite) {
+        if (level >= 3) gameWon(); else levelUp();
+        leveledUp = true; // freeze the board this tick, skip the chaser checks
+                          // below (same guard levelUp() already relied on)
+      } else {
+        placeFood();
+      }
+      updateHud();
+    } else {
+      snake.pop();
+    }
+
+    if (leveledUp) return;
+
+    // chasers: you die by walking INTO a ghost - and only that. Their own
+    // slowed pursuit move (CHASER_MOVE_RATE moves per snake step, accumulated
+    // below) can close in and block, but never lands on the head, so it
+    // needs no death check of its own. See moveChasers() for why that rule
+    // exists.
+    if (chaserField.at(nx, ny)) return die();
+    // chaserField.advance() runs the shared cadence and returns true if a
+    // chaser lands on the head this tick (it never steps onto the head, so
+    // this only fires via the accumulator's own move - kept as a death check
+    // for symmetry with the walk-into check above).
+    if (chaserField.advance(snake[0], CHASER_MOVE_RATE)) return die();
+  }
+
+  function levelUp() {
+    level += 1;
+    stepMs = Math.max(MIN_STEP_MS, stepMs * STEP_DECAY);
+    // Re-centre the snake and reset/respawn the chasers for the new level
+    // (level 2 -> two chasers, 3+ -> three) INSTEAD OF the old incremental
+    // spawnChaser() - positionForLevel() now owns both, and as a side effect
+    // the new chasers always spawn far from the (re-centred) head, fixing
+    // "monsters too close at level start" without special-casing it.
+    positionForLevel();
+    // Keep the always-visible avatar HUD in sync with the new level's head
+    // photo at this exact point, so the two can never drift apart.
+    updateAvatarHud();
+    // Blocking retro banner (was a ~1.9s non-blocking flash card): the snake
+    // holds still until the player presses OK, so a level change can no
+    // longer sneak movement past them while they read it. OK now leads into
+    // the countdown (Change 2), not straight back to "playing".
+    showLevelBanner();
+  }
+
+  function die() {
+    state = "dead";
+    hideLevelBanner(); // don't let a stale banner bleed through the
+                        // translucent game-over overlay
+    saveHi();
+    updateHud();
+    showOverlayDead();
+  }
+
+  function win() {
+    // Reachable only when the snake fills every cell of the grid.
+    state = "won";
+    hideLevelBanner(); // same bleed-through guard as die()
+    saveHi();
+    updateHud();
+    showOverlayWon();
+  }
+
+  // Clearing level 3 (the last level). A blocking, celebratory "GAME WON"
+  // screen - the snake freezes exactly as level 3 left it (this fires from
+  // step() right after the final grow, before any chaser move) so "Keep
+  // Playing" can resume from that same board. Distinct from win() above, which
+  // is the rare board-completely-full terminal.
+  function gameWon() {
+    state = "gamewon";
+    hideLevelBanner(); // same bleed-through guard as die()/win()
+    saveHi();
+    updateHud();
+    showOverlayGameWon();
+  }
+
+  // GAME WON -> Reset: a full restart to level 1 (its banner + countdown),
+  // identical to pressing Play from the menu. newGame() clears the infinite
+  // flag, so the crown reverts to a level number automatically.
+  function resetToLevelOne() {
+    newGame();
+    hideOverlay();
+    render(); // paint the fresh level-1 board immediately, don't wait a tick
+  }
+
+  // GAME WON -> Keep Playing: enter endless mode from EXACTLY where level 3
+  // ended - same snake (size + position) and same three chasers, no
+  // positionForLevel()/re-centre/length reset. Only the food is re-placed
+  // (the just-eaten cell is now under the head) and the pace is eased to the
+  // fixed INFINITE_STEP_MS. Still runs the standard 3s "get ready" countdown
+  // before control resumes, and swaps the HUD level number for a crown.
+  function startInfinite() {
+    infinite = true;
+    stepMs = INFINITE_STEP_MS;
+    placeFood(); // head sits on the old food cell - give a fresh target
+    updateHud(); // repaint the crown + score now
+    hideOverlay();
+    startCountdown(); // freeze on the current board for 3s, then play resumes
+    render();
+  }
+
+  // ---------- overlay screens ----------
+  // Every string below comes from S() (the current-language STRINGS entry),
+  // so re-invoking whichever of these matches the current `state` is exactly
+  // what applyLanguage() needs to do to re-render the visible overlay in the
+  // new language, with no separate template to keep in sync.
+  function showOverlayMenu() {
+    overlay.classList.remove("hidden");
+    // Menu-only: the banner art becomes a dimmed, aspect-preserved backdrop
+    // (see #overlay.menuBanner in overlay.css) IN PLACE OF the brand-title
+    // text, which the banner already carries. Every other overlay removes the
+    // class so the backdrop is the start screen's alone.
+    overlay.classList.add("menuBanner");
+    overlay.innerHTML =
+      '<div class="overlayInner">' +
+      '<p class="tagline">' + S().menuInstructions + '</p>' +
+      // Language-independent (icons only), so it needs no S() lookup and
+      // survives applyLanguage()'s rebuild unchanged. dir="ltr" pins the
+      // flex-row snake against RTL reversal - see the static markup comment.
+      '<div class="howto howtoTouch" dir="ltr" aria-hidden="true"><span class="htArrow htUp">&#8593;</span><span class="htArrow htRight">&#8594;</span><span class="htArrow htDown">&#8595;</span><span class="htArrow htLeft">&#8592;</span><span class="htSnake"><i></i><i></i><i></i></span><span class="htHand">&#128070;</span></div>' +
+      '<div class="howto howtoKeys" dir="ltr" aria-hidden="true"><span class="htSnake"><i></i><i></i><i></i></span><span class="htKeys"><b class="htKey htkUp">&#8593;</b><b class="htKey htkLeft">&#8592;</b><b class="htKey htkDown">&#8595;</b><b class="htKey htkRight">&#8594;</b></span></div>' +
+      '<button id="playBtn" type="button">' + S().playBtn + '</button>' +
+      '</div>';
+    bindPlayBtn();
+  }
+
+  function showOverlayDead() {
+    overlay.classList.remove("hidden");
+    overlay.classList.remove("menuBanner");
+    overlay.innerHTML =
+      '<div class="overlayInner">' +
+      '<img class="splashPic" src="' + assetStore.src("splash") + '" alt="">' +
+      '<h1>' + S().deadTitle + '</h1>' +
+      '<p class="stat">' + S().scoreStat(score) + '</p>' +
+      '<p class="stat">' + S().hiStat(hi) + '</p>' +
+      '<p>' + S().deadRetry + '</p>' +
+      '<button id="playBtn" type="button">' + S().playAgainBtn + '</button>' +
+      '</div>';
+    bindPlayBtn();
+  }
+
+  function showOverlayWon() {
+    overlay.classList.remove("hidden");
+    overlay.classList.remove("menuBanner");
+    overlay.innerHTML =
+      '<div class="overlayInner">' +
+      '<img class="splashPic" src="' + assetStore.src("splash") + '" alt="">' +
+      '<h1>' + S().wonTitle + '</h1>' +
+      '<p class="stat">' + S().wonBoardFull(score) + '</p>' +
+      '<p class="stat">' + S().hiStat(hi) + '</p>' +
+      '<p>' + S().wonRetry + '</p>' +
+      '<button id="playBtn" type="button">' + S().playAgainBtn + '</button>' +
+      '</div>';
+    bindPlayBtn();
+  }
+
+  function showOverlayPaused() {
+    overlay.classList.remove("hidden");
+    overlay.classList.remove("menuBanner");
+    overlay.innerHTML =
+      '<div class="overlayInner">' +
+      '<h1>' + S().pausedTitle + '</h1>' +
+      '<p class="stat">' + S().scoreStat(score) + '</p>' +
+      '<p>' + S().pausedResume + '</p>' +
+      '<button id="playBtn" type="button">' + S().resumeBtn + '</button>' +
+      '</div>';
+    bindPlayBtn();
+  }
+
+  // Cartoony, colourful victory screen shown after clearing level 3 (state
+  // "gamewon"). Unlike the other overlays it has TWO actions - Reset (restart
+  // at level 1) and Keep Playing (endless mode) - so it wires its own buttons
+  // via bindGameWonBtns() instead of the single-#playBtn bindPlayBtn(). The
+  // confetti/crown are decorative (aria-hidden) and CSS-animated, gated behind
+  // prefers-reduced-motion in the stylesheet.
+  function showOverlayGameWon() {
+    overlay.classList.remove("hidden");
+    overlay.classList.remove("menuBanner");
+    var confetti = "";
+    for (var c = 0; c < 12; c++) confetti += '<span class="gwc"></span>';
+    overlay.innerHTML =
+      '<div class="overlayInner gameWonInner">' +
+      '<div class="gwConfetti" aria-hidden="true">' + confetti + '</div>' +
+      '<div class="gwCrown" aria-hidden="true">👑</div>' +
+      '<h1 class="gwTitle">' + S().gameWonTitle + '</h1>' +
+      '<p class="gwSub">' + S().gameWonSub + '</p>' +
+      '<p class="stat">' + S().scoreStat(score) + '</p>' +
+      '<p class="stat">' + S().hiStat(hi) + '</p>' +
+      '<div class="gwBtns">' +
+      '<button id="gwResetBtn" type="button" class="gwBtn gwBtnReset">' + S().resetBtn + '</button>' +
+      '<button id="gwKeepBtn" type="button" class="gwBtn gwBtnKeep">' + S().keepPlayingBtn + '</button>' +
+      '</div>' +
+      '</div>';
+    bindGameWonBtns();
+  }
+
+  function bindGameWonBtns() {
+    var resetBtn = document.getElementById("gwResetBtn");
+    var keepBtn = document.getElementById("gwKeepBtn");
+    if (resetBtn) resetBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      resetToLevelOne();
+    });
+    if (keepBtn) keepBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      startInfinite();
+    });
+  }
+
+  function bindPlayBtn() {
+    var btn = document.getElementById("playBtn");
+    if (!btn) return;
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      startOrResume();
+    });
+  }
+
+  function hideOverlay() {
+    overlay.classList.add("hidden");
+    overlay.classList.remove("menuBanner");
+  }
+
+  if (levelOkBtn) {
+    levelOkBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation(); // don't also reach the backdrop handler below
+      dismissLevelBanner();
+    });
+  }
+  if (levelFlash) {
+    // Tapping anywhere on the banner dismisses it too - on a phone, aiming
+    // for the button is needless friction. Guarded to the backdrop itself so
+    // this stays additive to the button rather than racing it.
+    levelFlash.addEventListener("click", function (e) {
+      if (e.target === levelFlash || e.target === levelFlashCard) dismissLevelBanner();
+    });
+  }
+
+  function startOrResume() {
+    // Assets aren't ready yet: #playBtn is disabled in this state so a real
+    // click can't normally reach here, but the board/canvas tap-to-start
+    // handlers call this too, so guard explicitly rather than relying only
+    // on the disabled attribute.
+    if (state === "loading") return;
+    if (state === "menu" || state === "dead" || state === "won") {
+      // newGame() ends by showing the level-1 banner, which sets state to
+      // "levelbanner" - do NOT force "playing" here or the banner would be
+      // skipped straight past on the very first level.
+      newGame();
+      hideOverlay();
+      render(); // paint the fresh snake immediately, don't wait for the next rAF tick
+    } else if (state === "paused") {
+      state = "playing";
+      hideOverlay();
+    }
+  }
+
+  function togglePause() {
+    if (state === "playing") {
+      state = "paused";
+      hideLevelBanner(); // same bleed-through guard as die()/win()
+      showOverlayPaused();
+    } else if (state === "paused") {
+      state = "playing";
+      hideOverlay();
+    }
+  }
+
+  // ===== animation: opening intro scene + PRESS ANY KEY =====
+  // Same boot-time prefers-reduced-motion check, reused by the opening intro
+  // scene (Task C) below - one flag, one convention, file-wide.
+  var OPENING_STILL = GHOST_IDLE_STILL;
+
+  // ---------- opening intro scene (Task C - adapted port of
+  // new-assets/animations/opener-scenes.jsx) ----------
+  // Plays once, automatically, right after assetStore.preload() finishes and
+  // before the normal "menu" state - see startOpening() (called from the
+  // assetStore.preload() callback near the bottom of this file) and endOpening().
+  // Entirely canvas-driven from the SAME fixed-timestep frame()/render()
+  // pair the rest of the game already uses: no second rAF loop, no
+  // setInterval, no Date.now()-based timing (openingStartTs/animTs are both
+  // captured from the rAF timestamp frame() already receives). Reuses the
+  // already-loaded ghost1/2/3, head1/2/3 and food sprites - no new assets.
+  // The reference stage (720x1080 portrait, separate banner+board) doesn't
+  // map 1:1 onto this game's square board, so every coordinate below is
+  // expressed in board-relative fractions/cellPx, not copied from the
+  // reference pixel values (see local/NEWASSETS_SPEC.md, Task C: "adapt,
+  // don't copy coordinates").
+  var OPENING_REVEAL_MS = 3000;
+  var OPENING_CHASE_MS = 3500;
+  var OPENING_READY_MS = 2500;
+  var OPENING_TOTAL_MS = OPENING_REVEAL_MS + OPENING_CHASE_MS + OPENING_READY_MS; // ~9s, per spec
+
+  // Cheap ease-out-back / ease-out-cubic helpers for the scene's motion -
+  // plain math, no library.
+  function openingEaseOutBack(t) {
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    var c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+  function openingEaseOutCubic(t) {
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  // Starts the intro: called once, from the assetStore.preload() callback,
+  // instead of jumping straight "loading" -> "menu". frame() only ever calls
+  // step() while state === "playing" (see frame() below), so this new state
+  // needs no extra guard there - it simply never matches that branch.
+  function startOpening() {
+    state = "opening";
+    openingStartTs = null; // set on frame()'s first tick while opening (rAF ts)
+    suppressTapStartOnce = false;
+    overlay.classList.add("hidden"); // the scene is drawn on canvas, not in #overlay
+  }
+
+  // Ends the intro - naturally (auto-advance, ~9s, see frame()) or via
+  // requestOpeningDismiss() below (any key/pointer/touch) - either way it
+  // lands on exactly the same normal "menu" state the old "loading"->"menu"
+  // jump used to.
+  function endOpening() {
+    if (state !== "opening") return;
+    state = "menu";
+    showOverlayMenu();
+    maybeShowMobileHelp();
+  }
+
+  // Any key press, or any pointer/touch press ANYWHERE (wired below, near
+  // the existing keyboard/touch handlers), dismisses straight to the menu.
+  // suppressTapStartOnce swallows the SAME physical tap/click once more (the
+  // browser still fires the trailing click/touchend for it) so it can't also
+  // fall through to the existing "tap the board to start" convenience and
+  // skip straight into a new game, bypassing the menu screen the dismissal
+  // is supposed to land on. NOTE: a tap that happens to land exactly where
+  // the freshly-shown #playBtn renders can still reach that button's own
+  // click listener directly (target-phase, before bubbling reaches the
+  // suppress check) and start a game one gesture early - a narrow, harmless
+  // edge case (one tap = dismiss AND start), not worth the extra plumbing to
+  // fully close off.
+  function requestOpeningDismiss() {
+    if (state !== "opening") return;
+    endOpening();
+    suppressTapStartOnce = true;
+  }
+
+  function openingElapsedMs() {
+    if (openingStartTs === null) return 0;
+    return Math.max(0, animTs - openingStartTs);
+  }
+
+  // Same lazy-capture pattern as openingElapsedMs() above, for the
+  // "get ready" countdown (Change 2). Returns 0 (renders as "3") for the one
+  // render() pass that can happen before frame() has captured
+  // countdownStartTs on its first "countdown" tick.
+  function countdownElapsedMs() {
+    if (countdownStartTs === null) return 0;
+    return Math.max(0, animTs - countdownStartTs);
+  }
+
+  // Reveal (0-3s): the head sprite pops in at board center (ease-out-back),
+  // then a few food sprites fade in around it.
+  function renderOpeningReveal(p) {
+    var cx = boardCssPx / 2, cy = boardCssPx / 2;
+    var headP = Math.min(1, p / 0.6);
+    var headScale = openingEaseOutBack(headP);
+    var hSize = cellPx * 2.4 * Math.max(0, headScale);
+    if (hSize > 0.5) {
+      var headImg = assetStore.drawable(currentHeadKey());
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, headP * 1.4);
+      ctx.beginPath();
+      ctx.arc(cx, cy, hSize / 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(headImg, cx - hSize / 2, cy - hSize / 2, hSize, hSize);
+      ctx.restore();
+    }
+    var foodP = Math.max(0, (p - 0.5) / 0.5);
+    if (foodP > 0) {
+      var foodImg = assetStore.drawable("food");
+      var fSize = cellPx * 0.9;
+      var spots = [
+        { x: cx - cellPx * 2.6, y: cy - cellPx * 1.8 },
+        { x: cx + cellPx * 2.6, y: cy - cellPx * 1.4 },
+        { x: cx + cellPx * 1.8, y: cy + cellPx * 2.4 }
+      ];
+      for (var i = 0; i < spots.length; i++) {
+        var a = Math.max(0, Math.min(1, foodP * 3 - i));
+        if (a <= 0) continue;
+        ctx.save();
+        ctx.globalAlpha = a;
+        ctx.drawImage(foodImg, spots[i].x - fSize / 2, spots[i].y - fSize / 2, fSize, fSize);
+        ctx.restore();
+      }
+    }
+  }
+
+  // Chase (3-6.5s): the head glides left->right along a gentle sine curve
+  // (a stand-in for the reference's smooth curved path, adapted to a square
+  // board instead of the portrait stage), a short body trail follows, and
+  // the three ghosts descend from above the board and converge into a chase
+  // line behind it.
+  function renderOpeningChase(p) {
+    var travel = p;
+    var hx = travel * boardCssPx;
+    var hy = boardCssPx * 0.5 + Math.sin(travel * Math.PI * 2) * boardCssPx * 0.12;
+    var headImg = assetStore.drawable(currentHeadKey());
+    var hSize = cellPx * 1.3;
+    var heading = Math.atan2(Math.cos(travel * Math.PI * 2) * 0.7, 1);
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.rotate(heading);
+    ctx.beginPath();
+    ctx.arc(0, 0, hSize / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(headImg, -hSize / 2, -hSize / 2, hSize, hSize);
+    ctx.restore();
+
+    var tint = currentTint();
+    for (var i = 1; i <= 4; i++) {
+      var bt = Math.max(0, travel - i * 0.05);
+      var bx = bt * boardCssPx;
+      var by = boardCssPx * 0.5 + Math.sin(bt * Math.PI * 2) * boardCssPx * 0.12;
+      var bSize = Math.max(0, cellPx * (0.8 - i * 0.08));
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 0.9 - i * 0.15);
+      ctx.beginPath();
+      ctx.arc(bx, by, bSize / 2, 0, Math.PI * 2);
+      ctx.fillStyle = tint.core;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    for (var ci = 0; ci < 3; ci++) {
+      var descend = Math.min(1, Math.max(0, (p - ci * 0.12) / 0.7));
+      var targetX = hx - (ci + 1.4) * cellPx * 1.1;
+      var targetY = hy + (ci - 1) * cellPx * 0.9;
+      var startY = -cellPx * 2;
+      var gx = targetX;
+      var gy = startY + (targetY - startY) * openingEaseOutBack(descend);
+      var gImg = assetStore.drawable("ghost" + (ci + 1));
+      var gSize = cellPx * 1.14;
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, descend * 2);
+      ctx.drawImage(gImg, gx - gSize / 2, gy - gSize / 2, gSize, gSize);
+      ctx.restore();
+    }
+  }
+
+  // Ready (6.5-9s): everything settles into the exact formation newGame()
+  // itself spawns (3-segment snake centered, facing right), with the ghosts
+  // parked in their far corners and (motion allowing) a gentle idle bob
+  // reusing the Task A GHOST_IDLE motion - a literal "get ready" preview of
+  // the real board.
+  function renderOpeningReady(p) {
+    var cx = Math.floor(GRID_N / 2), cy = Math.floor(GRID_N / 2);
+    var settle = openingEaseOutCubic(Math.min(1, p / 0.5));
+    var startCells = [
+      { x: cx, y: cy }, { x: cx - 1, y: cy }, { x: cx - 2, y: cy }
+    ];
+    var fromX = boardCssPx, fromY = boardCssPx * 0.5;
+
+    var headImg = assetStore.drawable(currentHeadKey());
+    var hSize = cellPx * 0.95;
+    var toX = startCells[0].x * cellPx + cellPx / 2, toY = startCells[0].y * cellPx + cellPx / 2;
+    var hx = fromX + (toX - fromX) * settle;
+    var hy = fromY + (toY - fromY) * settle;
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.beginPath();
+    ctx.arc(0, 0, hSize / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(headImg, -hSize / 2, -hSize / 2, hSize, hSize);
+    ctx.restore();
+
+    var tint = currentTint();
+    for (var i = 1; i < startCells.length; i++) {
+      var seg = startCells[i];
+      var segToX = seg.x * cellPx + cellPx / 2, segToY = seg.y * cellPx + cellPx / 2;
+      var sx = fromX + (segToX - fromX) * settle;
+      var sy = fromY + (segToY - fromY) * settle;
+      var size = cellPx * (0.82 - 0.22 * (i / (startCells.length - 1)));
+      ctx.save();
+      ctx.globalAlpha = 0.95;
+      ctx.beginPath();
+      ctx.arc(sx, sy, size / 2, 0, Math.PI * 2);
+      ctx.fillStyle = tint.core;
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, cellPx * 0.05);
+      ctx.strokeStyle = tint.edge;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // QA fix: the two bottom ghosts used to sit at the literal grid corners
+    // ((GRID_N-1,GRID_N-1) and (0,GRID_N-1)), which put their glow directly
+    // over the first/last letters of the "PRESS ANY KEY" band drawn at
+    // boardCssPx*0.88 (renderPressAnyKey()). Inset them up and inward so the
+    // sprite (plus its idle glow) clears the text band while still reading
+    // as "parked near the corner". Top-right is untouched - it's far enough
+    // from the bottom text band already.
+    var restSpots = [
+      { x: GRID_N - 1, y: 0 }, { x: GRID_N - 2.3, y: GRID_N - 2.9 }, { x: 1.3, y: GRID_N - 2.9 }
+    ];
+    for (var ci = 0; ci < 3; ci++) {
+      var spot = restSpots[ci];
+      var rx = spot.x * cellPx + cellPx / 2, ry = spot.y * cellPx + cellPx / 2;
+      var idle = GHOST_IDLE[ci % 3];
+      var gSize = cellPx * 1.14;
+      var ox = 0, oy = 0, glow = idle.glowBase;
+      if (!GHOST_IDLE_STILL) {
+        var pp = ((animTs / GHOST_IDLE_PERIOD_MS) + ci / 3) % 1;
+        var m = idle.motion(pp * GHOST_IDLE_TAU, pp * 2 * GHOST_IDLE_TAU, GHOST_IDLE_SCRATCH[ci]);
+        var norm = gSize / GHOST_IDLE_GS;
+        ox = m.dx * norm * settle;
+        oy = m.dy * norm * settle;
+        glow = m.glow;
+      }
+      var gImg = assetStore.drawable("ghost" + (ci + 1));
+      ctx.save();
+      ctx.globalAlpha = settle;
+      ctx.shadowColor = idle.color;
+      ctx.shadowBlur = cellPx * Math.max(0, glow) * 0.6;
+      ctx.drawImage(gImg, rx + ox - gSize / 2, ry + oy - gSize / 2, gSize, gSize);
+      ctx.restore();
+    }
+  }
+
+  // prefers-reduced-motion fallback: a single static composed frame (the
+  // fully-settled "ready" formation, no idle bob since GHOST_IDLE_STILL
+  // already zeroes it above) plus the still (non-pulsing) PRESS ANY KEY text
+  // - see renderPressAnyKey(). No motion is ever computed in this branch.
+  function renderOpeningStill() {
+    renderOpeningReady(1);
+  }
+
+  // Retro pulsing "PRESS ANY KEY" text (Hebrew equivalent via STRINGS),
+  // drawn directly on the board canvas rather than as a DOM overlay so it
+  // shares the exact same coordinate space/scaling as the rest of the scene
+  // and needs no extra element in #wrap's flow (measureReservePx()/
+  // resizeCanvas()'s sizing budget stays untouched). ctx.direction follows
+  // the current language's reading direction, same as document.dir
+  // elsewhere.
+  function renderPressAnyKey(elapsed) {
+    var text = S().pressAnyKey;
+    if (!text) return;
+    var alpha;
+    if (OPENING_STILL) {
+      alpha = 0.9; // static - no pulsing under prefers-reduced-motion
+    } else {
+      var fadeIn = Math.min(1, elapsed / 1000);
+      alpha = fadeIn * (0.55 + 0.45 * Math.sin(elapsed / 260));
+      alpha = Math.max(0.15 * fadeIn, alpha);
+    }
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+    // Stage-coloured (dark green L1 / yellow L2 / red L3) - the opener plays at
+    // level 1, so this reads dark green at first launch.
+    var pakColor = currentStageColor();
+    ctx.fillStyle = pakColor;
+    ctx.shadowColor = pakColor;
+    ctx.shadowBlur = cellPx * 0.5;
+    var fontPx = Math.round(cellPx * 1.05);
+    var fontStack = "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    ctx.font = "900 " + fontPx + fontStack;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.direction = S().dir;
+    // QA fix: the Hebrew string measures ~100% of the board width at this
+    // font size (vs ~90% for English), clipping its leftmost letter at the
+    // board edge. Measure the actual string and shrink the font to fit a
+    // safe max width instead of assuming English's narrower proportions -
+    // this keeps a real margin for every language/board size, not just the
+    // one QA happened to measure.
+    var maxTextWidth = boardCssPx * 0.86;
+    var textWidth = ctx.measureText(text).width;
+    if (textWidth > maxTextWidth && textWidth > 0) {
+      fontPx = Math.max(1, Math.floor(fontPx * (maxTextWidth / textWidth)));
+      ctx.font = "900 " + fontPx + fontStack;
+    }
+    ctx.fillText(text, boardCssPx / 2, boardCssPx * 0.88);
+    ctx.restore();
+  }
+
+  // Top-level opening render dispatch, called from render() while
+  // state === "opening". Draws the same board backdrop/grid as the real
+  // game (drawBoardBackdrop(), shared with render() below) so the
+  // transition into "menu"/"playing" reads as one continuous board rather
+  // than a jump cut.
+  function renderOpening(elapsed) {
+    drawBoardBackdrop();
+    if (OPENING_STILL) {
+      renderOpeningStill();
+    } else if (elapsed < OPENING_REVEAL_MS) {
+      renderOpeningReveal(elapsed / OPENING_REVEAL_MS);
+    } else if (elapsed < OPENING_REVEAL_MS + OPENING_CHASE_MS) {
+      renderOpeningChase((elapsed - OPENING_REVEAL_MS) / OPENING_CHASE_MS);
+    } else {
+      renderOpeningReady(Math.min(1, (elapsed - OPENING_REVEAL_MS - OPENING_CHASE_MS) / OPENING_READY_MS));
+    }
+    renderPressAnyKey(elapsed);
+  }
+
+  // ===== animation: get-ready countdown number =====
+  // Big 3 -> 2 -> 1, one second each, reusing the PRESS-ANY-KEY/level-banner
+  // retro text conventions (system font, board-relative size, cyan glow).
+  // GHOST_IDLE_STILL doubles as the countdown's reduced-motion flag - same
+  // boot-time media-query cache as the rest of the file - so under
+  // prefers-reduced-motion the number still shows and the full 3s still
+  // elapses, just without the per-tick scale/fade.
+  //
+  // Deliberately NOT drawn at board-center: positionForLevel() always
+  // re-centres the snake head at grid (floor(GRID_N/2), floor(GRID_N/2)),
+  // which on the odd-sized GRID_N=9 board IS board-center in pixel space, so
+  // a centred number would sit directly on top of the head for the full 3s
+  // freeze - exactly the orientation window the countdown exists to protect.
+  // Rendered in the upper third of the board instead, well clear of the
+  // centred head's row (and its body trailing left of it on the same row),
+  // independent of board size.
+  var COUNTDOWN_NUMBER_Y_FRAC = 0.22; // fraction of boardCssPx down from top
+  function renderCountdown(elapsed) {
+    // elapsed in [0,1000) -> 3, [1000,2000) -> 2, [2000,3000) -> 1; clamp to
+    // 1 so a frame landing exactly on/after 3000 (the tick frame() flips to
+    // "playing" on) never renders a stray 0.
+    var n = Math.max(1, 3 - Math.floor(elapsed / 1000));
+    var tickElapsed = elapsed % 1000; // ms into the current number, for the pulse
+    var scale = 1, alpha = 1;
+    if (!GHOST_IDLE_STILL) {
+      var p = tickElapsed / 1000; // 0..1 within this number's one-second slot
+      scale = 1.15 - 0.15 * p;    // pops in slightly large, settles to 1
+      alpha = Math.min(1, p * 4); // quick fade-in, avoids a hard pop on entry
+    }
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(boardCssPx / 2, boardCssPx * COUNTDOWN_NUMBER_Y_FRAC);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = "#00e5ff";
+    ctx.shadowColor = "rgba(0,229,255,0.65)";
+    ctx.shadowBlur = cellPx * 0.9;
+    ctx.font = "900 " + Math.round(cellPx * 2.6) + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(n), 0, 0);
+    ctx.restore();
+  }
+
+  // ---------- rendering ----------
+  // Shared by the normal in-game render() below and renderOpening() above -
+  // the translucent Nokia-LCD board fill plus the dimmed guide grid, exactly
+  // as before this was factored out (Task C) - no visual change.
+  function drawBoardBackdrop() {
+    var w = boardCssPx, h = boardCssPx;
+    ctx.clearRect(0, 0, w, h);
+    // light Nokia-LCD board, deliberately semi-transparent (alpha 0.82) so a
+    // hint of the dark phone body underneath shows through - per request.
+    // clearRect above wipes each frame, so the translucent fill can never
+    // accumulate across frames.
+    ctx.fillStyle = "rgba(204, 217, 163, 0.82)";
+    ctx.fillRect(0, 0, w, h);
+
+    // grid: kept for guidance but dimmed well down - per request
+    ctx.strokeStyle = "rgba(46, 61, 26, 0.09)";
+    ctx.lineWidth = 1;
+    for (var g = 1; g < GRID_N; g++) {
+      var p = Math.round(g * cellPx) + 0.5;
+      ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(w, p); ctx.stroke();
+    }
+  }
+
+  function render() {
+    if (state === "opening") {
+      renderOpening(openingElapsedMs());
+      return;
+    }
+    drawBoardBackdrop();
+
+    if (!snake) return;
+
+    // food, slightly larger than a cell, soft shadow
+    // (food can legitimately be null once the board is completely full - win())
+    if (food) {
+      var foodImg = assetStore.drawable("food");
+      var fSize = cellPx * 1.3;
+      var fx = food.x * cellPx + cellPx / 2;
+      var fy = food.y * cellPx + cellPx / 2;
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.55)";
+      ctx.shadowBlur = cellPx * 0.4;
+      ctx.shadowOffsetY = cellPx * 0.12;
+      if (assetStore.image("food")) {
+        ctx.drawImage(foodImg, fx - fSize / 2, fy - fSize / 2, fSize, fSize);
+      } else {
+        ctx.beginPath();
+        ctx.arc(fx, fy, fSize / 2, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffd166";
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // body, warm per-level tint circles, fading toward tail, smaller than head
+    var tint = currentTint();
+    var bodyLen = snake.length - 1;
+    for (var i = snake.length - 1; i >= 1; i--) {
+      var seg = snake[i];
+      var t = bodyLen > 1 ? (i - 1) / (bodyLen - 1) : 0; // 0 near head, 1 near tail
+      var size = cellPx * (0.82 - 0.22 * t);
+      var alpha = 0.95 - 0.45 * t;
+      var cxp = seg.x * cellPx + cellPx / 2;
+      var cyp = seg.y * cellPx + cellPx / 2;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(cxp, cyp, size / 2, 0, Math.PI * 2);
+      ctx.fillStyle = tint.core;
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, cellPx * 0.05);
+      ctx.strokeStyle = tint.edge;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // head: circular photo rotated toward travel direction
+    var headSeg = snake[0];
+    var hx = headSeg.x * cellPx + cellPx / 2;
+    var hy = headSeg.y * cellPx + cellPx / 2;
+    var hSize = cellPx * 0.95;
+    var angle = Math.atan2(dir.y, dir.x);
+    var headKey = currentHeadKey();
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.arc(0, 0, hSize / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.save();
+    ctx.clip();
+    if (assetStore.image(headKey)) {
+      ctx.drawImage(assetStore.image(headKey), -hSize / 2, -hSize / 2, hSize, hSize);
+    } else {
+      ctx.fillStyle = tint.core;
+      ctx.fillRect(-hSize / 2, -hSize / 2, hSize, hSize);
+    }
+    ctx.restore();
+    ctx.lineWidth = Math.max(1, cellPx * 0.06);
+    ctx.strokeStyle = "rgba(0,0,0,0.35)";
+    ctx.stroke();
+    ctx.restore();
+
+    // chasers: drawn last so the threat is always visible on top. Sprite
+    // per index (ghost1/2/3 = red/pink/cyan), same soft shadow as the food.
+    // assetStore.drawable() returns either the loaded ghost image or the colored-
+    // circle fallback canvas - drawImage accepts both.
+    // Idle float/rotate/pulse/glow (Task A) is layered on with a canvas
+    // transform around this draw only - ch.x/ch.y (the values chaserAt() and
+    // every hit test read) are never touched.
+    for (var ci = 0; ci < chaserField.cells.length; ci++) {
+      var ch = chaserField.cells[ci];
+      var idle = GHOST_IDLE[ci % 3];
+      var gImg = assetStore.drawable("ghost" + ((ci % 3) + 1));
+      var gSize = cellPx * 1.14;
+      var gx2 = ch.x * cellPx + cellPx / 2;
+      var gy2 = ch.y * cellPx + cellPx / 2;
+      var ox = 0, oy = 0, rotRad = 0, scaleMul = 1, glow = idle.glowBase;
+      if (!GHOST_IDLE_STILL) {
+        // own phase per chaser index so the three never pulse in lockstep
+        var p = ((animTs / GHOST_IDLE_PERIOD_MS) + ci / 3) % 1;
+        var m = idle.motion(p * GHOST_IDLE_TAU, p * 2 * GHOST_IDLE_TAU, GHOST_IDLE_SCRATCH[ci % 3]);
+        var norm = gSize / GHOST_IDLE_GS; // raw amplitudes were tuned to a 130px reference sprite
+        ox = m.dx * norm;
+        oy = m.dy * norm;
+        rotRad = m.rot * Math.PI / 180;
+        // reference baseline scale is 1.15; only the oscillating part is kept
+        // so mean scale stays 1.0 and the collision-read draw size never changes
+        scaleMul = 1 + m.scaleOsc;
+        glow = m.glow;
+      }
+      ctx.save();
+      ctx.translate(gx2 + ox, gy2 + oy);
+      ctx.rotate(rotRad);
+      ctx.scale(scaleMul, scaleMul);
+      ctx.shadowColor = idle.color;
+      ctx.shadowBlur = cellPx * Math.max(0, glow) * 0.6; // kept subtle - never enough to smear the board
+      ctx.shadowOffsetY = cellPx * 0.1;
+      ctx.drawImage(gImg, -gSize / 2, -gSize / 2, gSize, gSize);
+      ctx.restore();
+    }
+
+    // "get ready" countdown (Change 2): drawn on top of the fully-frozen
+    // board (snake/food/chasers already drawn above at their positionForLevel()
+    // positions) so the player can see exactly where everything is before
+    // play starts.
+    if (state === "countdown") renderCountdown(countdownElapsedMs());
+  }
+
+  // ---------- fixed-timestep rAF loop ----------
+  function frame(ts) {
+    if (!lastTs) lastTs = ts;
+    var dt = ts - lastTs;
+    lastTs = ts;
+    animTs = ts;
+    if (dt > 250) dt = 250; // clamp huge gaps (tab backgrounded)
+
+    if (state === "opening") {
+      // Auto-advance to the menu if the player never dismisses it (see
+      // requestOpeningDismiss() for the dismiss path) - timed from this same
+      // rAF timestamp, never Date.now(), so it stays consistent with the
+      // rest of the file's animation conventions (see animTs above). step()
+      // is never called here, same as every other non-"playing" state.
+      if (openingStartTs === null) openingStartTs = ts;
+      if (ts - openingStartTs >= OPENING_TOTAL_MS) endOpening();
+    } else if (state === "countdown") {
+      // Blocking "get ready" freeze (Change 2): advances nothing but its own
+      // timer - no step(), no snake/chaser movement - so the board stays
+      // exactly as positionForLevel() left it for the whole 3s. Same lazy
+      // rAF-ts capture as openingStartTs above, never Date.now().
+      if (countdownStartTs === null) countdownStartTs = ts;
+      if (ts - countdownStartTs >= COUNTDOWN_MS) {
+        state = "playing";
+        acc = 0; // no catch-up burst: the freeze must not bank real time
+      }
+    } else if (state === "playing") {
+      acc += dt;
+      // Snapshot stepMs for this frame: step() can call levelUp(), which
+      // mutates stepMs mid-loop. Without the snapshot, a single frame could
+      // execute an extra step at the newly-faster rate right at a level
+      // boundary (an uncommanded burst of movement).
+      var stepSnapshot = stepMs;
+      while (acc >= stepSnapshot) {
+        acc -= stepSnapshot;
+        if (state === "playing") step();
+        else break;
+      }
+    }
+
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- keyboard ----------
+  // WASD intentionally removed per spec - arrow keys only. (Was previously
+  // mapped alongside ArrowUp/Down/Left/Right.)
+  var KEY_DIR = {
+    ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right"
+  };
+
+  window.addEventListener("keydown", function (e) {
+    if (state === "opening") {
+      requestOpeningDismiss();
+      return;
+    }
+    if (KEY_DIR[e.key]) {
+      e.preventDefault();
+      // Countdown may still buffer a turn for when play starts (Pac-Man-
+      // style input readiness) - requestTurn() only ever sets queuedDir, it
+      // never touches `state`, so this can't shorten or skip the freeze.
+      if (state === "playing" || state === "countdown") requestTurn(KEY_DIR[e.key]);
+      return;
+    }
+    // Non-skippable (Change 2): Space/Enter must do nothing during the
+    // countdown, not even fall through to pause/resume/start below.
+    if (state === "countdown") return;
+    if (state === "levelbanner" && (e.key === " " || e.key === "Enter")) {
+      e.preventDefault();
+      dismissLevelBanner();
+      return;
+    }
+    if (e.key === " ") {
+      e.preventDefault();
+      if (state === "playing" || state === "paused") togglePause();
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      startOrResume();
+    }
+  }, { passive: false });
+
+  // Any pointer press or touch, ANYWHERE in the document (not just the
+  // board/canvas), also dismisses the opening scene straight to the menu -
+  // see requestOpeningDismiss(). Registered on the initiating press event
+  // (not a later "click"/"touchend") so it fires and flips `state` before
+  // any trailing click/touchend for the same physical gesture can reach the
+  // existing "tap to start" handlers further below - see the comment on
+  // requestOpeningDismiss() and suppressTapStartOnce for why that ordering
+  // matters. Both listeners are idempotent no-ops once state isn't
+  // "opening" any more (requestOpeningDismiss() checks that itself), so
+  // having both pointerdown and touchstart wired is harmless belt-and-
+  // suspenders, not a double-fire risk.
+  document.addEventListener("pointerdown", function () {
+    requestOpeningDismiss();
+  });
+  document.addEventListener("touchstart", function () {
+    requestOpeningDismiss();
+  }, { passive: true });
+
+  // ---------- touch: swipe on canvas ----------
+  var touchStart = null;
+
+  // Shared by the touchmove and touchend handlers below: if the drag from
+  // `touchStart` to (x,y) crosses SWIPE_THRESHOLD, request the turn and
+  // re-anchor touchStart to (x,y) so a continued drag (finger still down)
+  // can chain further turns without lifting. Returns nothing useful - the
+  // re-anchor IS the state change. requestTurn() already owns queueing and
+  // anti-reversal, exactly as for repeated keyboard input.
+  function maybeSwipeTurn(x, y) {
+    if (!touchStart) return;
+    var dx = x - touchStart.x;
+    var dy = y - touchStart.y;
+    if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) return;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      requestTurn(dx > 0 ? "right" : "left");
+    } else {
+      requestTurn(dy > 0 ? "down" : "up");
+    }
+    touchStart = { x: x, y: y };
+  }
+
+  canvas.addEventListener("touchstart", function (e) {
+    if (e.touches.length !== 1) return;
+    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    e.preventDefault();
+  }, { passive: false });
+
+  canvas.addEventListener("touchmove", function (e) {
+    e.preventDefault(); // block scroll/zoom even where touch-action is imperfect
+    // Mobile responsiveness: recognize the swipe the moment the finger
+    // crosses the threshold, DURING the drag - not only on touchend. The
+    // old lift-to-turn behavior added the whole remaining finger-down time
+    // as input latency on every single turn, which is the main reason
+    // touch controls felt sluggish next to a keyboard's instant keydown.
+    // Countdown may also buffer a swipe turn for when play starts, same
+    // reasoning as the keydown handler above - maybeSwipeTurn()/requestTurn()
+    // never touch `state`, so this can't shorten or skip the freeze.
+    if ((state === "playing" || state === "countdown") && e.touches.length === 1) {
+      maybeSwipeTurn(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, { passive: false });
+
+  canvas.addEventListener("touchend", function (e) {
+    e.preventDefault();
+    if (suppressTapStartOnce) {
+      // This touchend belongs to the SAME tap that just dismissed the
+      // opening scene (see requestOpeningDismiss()) - consume the flag and
+      // stop here instead of also starting a new game.
+      suppressTapStartOnce = false;
+      touchStart = null;
+      return;
+    }
+    if (state === "menu" || state === "dead" || state === "won") {
+      startOrResume();
+      touchStart = null;
+      return;
+    }
+    // Tail segment of the drag (post-last-re-anchor): still honored, so a
+    // short flick that never fired during touchmove turns on release just
+    // like before - touchmove recognition above is additive, not replacing.
+    if (touchStart) {
+      var t = e.changedTouches[0];
+      maybeSwipeTurn(t.clientX, t.clientY);
+    }
+    touchStart = null;
+  }, { passive: false });
+
+  // block long-press context menu / selection on canvas
+  canvas.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+  // On-screen D-pad removed per spec - touch devices are swipe-on-canvas
+  // only now (see the canvas touchstart/touchmove/touchend handlers above).
+  function isCoarsePointer() {
+    return !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+  }
+
+  // ---------- mobile-only "how to play" popup ----------
+  // Shown once (localStorage-gated) the first time a coarse-pointer (touch)
+  // device reaches the menu, since swipe-to-move isn't otherwise self-
+  // explanatory the way visible D-pad arrows were. Icon-first/text-minimal
+  // per spec. Never shown on mouse/trackpad devices.
+  function maybeShowMobileHelp() {
+    if (!mobileHelp) return;
+    if (!isCoarsePointer()) return;
+    var seen = false;
+    try { seen = localStorage.getItem(MOBILE_HELP_SEEN_KEY) === "1"; } catch (e) { /* storage unavailable - fall through, show it */ }
+    if (seen) return;
+    mobileHelp.classList.add("show");
+  }
+  function dismissMobileHelp() {
+    if (!mobileHelp) return;
+    mobileHelp.classList.remove("show");
+    try { localStorage.setItem(MOBILE_HELP_SEEN_KEY, "1"); } catch (e) { /* best-effort only */ }
+  }
+  if (mobileHelpClose) {
+    mobileHelpClose.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dismissMobileHelp();
+    });
+  }
+  if (mobileHelp) {
+    // Tapping the dimmed backdrop also dismisses it; tapping the card itself
+    // must not (stopPropagation below), so a stray tap while reading it
+    // doesn't close it prematurely.
+    mobileHelp.addEventListener("click", function (e) {
+      if (e.target === mobileHelp) dismissMobileHelp();
+    });
+    var mobileHelpCardEl = document.getElementById("mobileHelpCard");
+    if (mobileHelpCardEl) {
+      mobileHelpCardEl.addEventListener("click", function (e) { e.stopPropagation(); });
+    }
+  }
+
+  // tap board to restart/resume when overlay hidden but state not playing (defensive)
+  wrap.addEventListener("click", function () {
+    if (suppressTapStartOnce) {
+      // This click belongs to the SAME tap/click that just dismissed the
+      // opening scene (see requestOpeningDismiss()) - consume the flag and
+      // stop here instead of also starting a new game.
+      suppressTapStartOnce = false;
+      return;
+    }
+    if (state === "menu" || state === "dead" || state === "won") startOrResume();
+  });
+
+  playBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    startOrResume();
+  });
+
+  // ---------- language toggle ----------
+  if (langToggleBtn) {
+    langToggleBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      applyLanguage(i18n.lang === "he" ? "en" : "he");
+    });
+    // The global keydown handler below (Space -> pause, Enter -> start/
+    // resume) is bound on `window` and fires on ANY keypress regardless of
+    // focus, including a native Space/Enter activation of this button - that
+    // would pause/resume the game as an unwanted side effect of toggling the
+    // language. stopPropagation() here (bubble phase, before the event
+    // reaches window) isolates this button's own keyboard activation from
+    // that global handler, without touching the handler itself.
+    langToggleBtn.addEventListener("keydown", function (e) {
+      if (e.key === " " || e.key === "Enter") e.stopPropagation();
+    });
+  }
+
+  // ---------- boot ----------
+  loadHi();
+  updateHud();
+  applyLanguage(i18n.lang); // corrects the static pre-boot markup (loading
+                               // label, mobile-help caption, meta description,
+                               // HUD labels, footer) to match a previously-
+                               // stored language choice before first paint
+
+  // Coalesce resize/orientationchange bursts (e.g. iOS Safari's chrome
+  // auto-hide/show firing repeated resize events) into one rAF-scheduled
+  // pass.
+  var resizeScheduled = false;
+  function scheduleResize() {
+    if (resizeScheduled) return;
+    resizeScheduled = true;
+    requestAnimationFrame(function () {
+      resizeScheduled = false;
+      resizeCanvas();
+    });
+  }
+  window.addEventListener("resize", scheduleResize);
+  window.addEventListener("orientationchange", scheduleResize);
+  // iOS Safari's toolbar collapse/expand and Android Chrome's URL-bar hide
+  // change the *visual* viewport without always firing a window resize (or
+  // firing it with stale innerHeight on older iOS). visualViewport's own
+  // resize event is the authoritative signal there; scheduleResize is
+  // rAF-coalesced so the extra listener costs nothing when both fire.
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleResize);
+  }
+
+  // rAF is paused/throttled while a tab is backgrounded, so a resize that
+  // fires while hidden can leave scheduleResize()'s queued rAF callback
+  // sitting unresolved (resizeScheduled stays true, so a synthetic resize
+  // dispatched in the meantime is silently ignored) until the tab is
+  // foregrounded again. Recompute directly - bypassing the rAF gate - the
+  // moment the tab becomes visible, instead of waiting on whatever resize
+  // event happens to arrive next.
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) {
+      resizeScheduled = false;
+      resizeCanvas();
+    }
+  });
+
+  // Re-check devicePixelRatio when it changes (moving a window between
+  // displays with different DPR, or OS-level scale changes) - these don't
+  // fire a window resize event, so without this the canvas stays blurry
+  // until some unrelated resize happens.
+  function watchDprChange() {
+    if (!window.matchMedia) return;
+    var mq = window.matchMedia("(resolution: " + (window.devicePixelRatio || 1) + "dppx)");
+    function handler() {
+      scheduleResize();
+      watchDprChange(); // re-subscribe at the new dpr
+    }
+    if (mq.addEventListener) mq.addEventListener("change", handler, { once: true });
+    else if (mq.addListener) mq.addListener(handler); // older Safari fallback
+  }
+  watchDprChange();
+
+  resizeCanvas();
+
+  assetStore.preload(function () {
+    // Guard rather than unconditionally reset: state can only still be
+    // "loading" here in the current code (Play is disabled/no-op until this
+    // fires), but this keeps a future change from silently reintroducing a
+    // bug where finishing asset load stomps an already-started game back to
+    // the menu and pops the overlay over live play. Goes to the "opening"
+    // intro scene (Task C) rather than straight to "menu" - see
+    // startOpening()/endOpening() above.
+    if (state === "loading") {
+      startOpening();
+    }
+    updateAvatarHud(); // always-visible avatar HUD: show it as soon as assets
+                        // are ready, even before the first game starts
+    render();
+    requestAnimationFrame(frame);
+  });
+})();
+</script>
+</body>
+</html>

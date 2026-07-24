@@ -1,0 +1,145 @@
+  /* Level banner: a retro arcade "LEVEL n" screen shown at the start of
+     every level (including level 1). Unlike the old auto-timing-out flash
+     card this one is BLOCKING - it sets state to "levelbanner", which the
+     fixed-timestep loop treats as not-playing, so the snake holds still
+     until OK is pressed. The monsters in play at this level are shown at
+     exactly 2x2 board cells each, in a row, and carry the meaning on their
+     own: the only text is the level number. */
+  #levelFlash {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    border-radius: 10px;
+    overflow: hidden;
+    background: rgba(7, 10, 5, 0.86);
+    z-index: 6;
+  }
+  /* pointer-events flips to auto only while shown, so the hidden banner can
+     never swallow a swipe/tap meant for the board underneath. */
+  #levelFlash.show { opacity: 1; pointer-events: auto; }
+  #levelFlashCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Every size below is the smaller of a vmin-based value and a
+       --board-px-derived one, the same pattern the rest of this file uses,
+       so the card shrinks with the real container instead of clipping
+       against #boardWrap's overflow:hidden on small/landscape boards. */
+    /* Stretched to a fixed share of the board rather than hugging its
+       contents, so it reads as a proper level *screen*. Both width and the
+       ceiling are board-relative and box-sizing is border-box (below), so the
+       card scales with whatever device is playing and can never spill past
+       #boardWrap - the row of three monsters at 2x2 cells each comes to
+       ~0.67 of the board, against ~0.80 of usable width inside the padding,
+       so it always has slack. */
+    width: calc(var(--board-px, 300px) * 0.92);
+    max-width: 96%;
+    gap: min(18px, calc(var(--board-px, 300px) * 0.05));
+    padding: min(26px, calc(var(--board-px, 300px) * 0.07)) min(22px, calc(var(--board-px, 300px) * 0.06));
+    border-radius: min(20px, calc(var(--board-px, 300px) * 0.05));
+    background: linear-gradient(180deg, #18200f 0%, #0a0e06 100%);
+    border: 3px solid #00e5ff; /* recoloured per level from JS (level tint) */
+    text-align: center;
+    box-sizing: border-box;
+  }
+  #levelFlashTitle {
+    font-size: min(clamp(19px, 4.8vmin, 34px), calc(var(--board-px, 300px) * 0.1));
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #ffd166;
+    text-shadow: 0 0 10px rgba(255,209,102,0.5), 0 2px 0 #6d4f10;
+  }
+  #levelMonsters {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: min(10px, calc(var(--board-px, 300px) * 0.026));
+  }
+  /* Exactly 2x2 board cells per monster, as specified. Three of them plus
+     gaps and the card's padding comes to ~0.82 of the board's width (the
+     board is 9 cells across), so the row still fits inside the card's
+     max-width above without wrapping or shrinking. */
+  #levelMonsters img {
+    width: calc(var(--cell-px, 40px) * 2);
+    height: calc(var(--cell-px, 40px) * 2);
+    object-fit: contain;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6));
+  }
+  /* Animate the level-card monsters with the solo-ghost float/glow motion
+     (ported from new-assets/animations/solo-scenes.jsx) - each ghost gets its
+     own 2.5s loop and glow colour: ghost 1 smooth circular (blue), ghost 2
+     lazy sway (red), ghost 3 energetic wobble (green). Motion is a small
+     sub-sprite offset so they never leave the card. The base drop-shadow is
+     repeated in every keyframe so the animated `filter` keeps it while the
+     coloured glow pulses. */
+  .lvl-mon {
+    animation-duration: 2.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+    will-change: transform, filter;
+  }
+  .lvl-mon-1 { animation-name: lvlMon1; }
+  .lvl-mon-2 { animation-name: lvlMon2; }
+  .lvl-mon-3 { animation-name: lvlMon3; }
+  @keyframes lvlMon1 { /* ghost 1 - smooth circular float, blue #4a9eff */
+    0%, 100% { transform: translate(0, -7px) rotate(0deg) scale(1);      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 6px rgba(74,158,255,0.55)); }
+    25%      { transform: translate(7px, 0) rotate(3deg) scale(1.03);    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(74,158,255,0.85)); }
+    50%      { transform: translate(0, 7px) rotate(0deg) scale(1);       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 6px rgba(74,158,255,0.55)); }
+    75%      { transform: translate(-7px, 0) rotate(-3deg) scale(1.03);  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(74,158,255,0.85)); }
+  }
+  @keyframes lvlMon2 { /* ghost 2 - lazy sway + double bob, red #ff4444 */
+    0%, 100% { transform: translate(-6px, 0) rotate(-2deg) scale(1);     filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(255,68,68,0.55)); }
+    25%      { transform: translate(0, 6px) rotate(0deg) scale(1.04);    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(255,68,68,0.85)); }
+    50%      { transform: translate(6px, 0) rotate(2deg) scale(1);       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(255,68,68,0.55)); }
+    75%      { transform: translate(0, 6px) rotate(0deg) scale(1.04);    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 13px rgba(255,68,68,0.85)); }
+  }
+  @keyframes lvlMon3 { /* ghost 3 - energetic wobble, green #00e5a0 */
+    0%, 100% { transform: translate(0, 7px) rotate(0deg) scale(1);       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(0,229,160,0.6)); }
+    25%      { transform: translate(6px, -6px) rotate(5deg) scale(1.05); filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 14px rgba(0,229,160,0.9)); }
+    50%      { transform: translate(0, -7px) rotate(0deg) scale(1);      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(0,229,160,0.6)); }
+    75%      { transform: translate(-6px, -6px) rotate(-5deg) scale(1.05); filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 14px rgba(0,229,160,0.9)); }
+  }
+  /* Motion-sensitive users: hold the monsters still (same convention as the
+     ghost idle / opener / tutorials elsewhere). */
+  @media (prefers-reduced-motion: reduce) {
+    .lvl-mon { animation: none; }
+  }
+  #levelOkBtn {
+    min-height: 44px;
+    padding: 0 min(38px, calc(var(--board-px, 300px) * 0.11));
+    font-size: min(clamp(15px, 3.4vmin, 21px), calc(var(--board-px, 300px) * 0.062));
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    font-family: inherit;
+    border: 2px solid #06343a;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #00e5ff, #00a3b8);
+    color: #05242a;
+    cursor: pointer;
+    touch-action: none;
+  }
+  #levelOkBtn:active { filter: brightness(0.88); }
+  .splashPic {
+    /* QA fix: unlike #overlay's h1/p/.stat (which already min() against
+       --board-px, see the comment above #overlay h1), this used to be
+       vmin-only, so on a small/landscape board it did not shrink to match
+       the actual (clipped-down) #boardWrap container - one of the
+       contributors to the dead/won overlay overflowing #boardWrap's box
+       (see #overlay comment). Now capped the same way as its siblings. */
+    width: min(clamp(56px, 14vmin, 96px), calc(var(--board-px, 300px) * 0.3));
+    height: min(clamp(56px, 14vmin, 96px), calc(var(--board-px, 300px) * 0.3));
+    object-fit: contain;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.45));
+  }
+  /* On-screen D-pad intentionally removed per spec - touch devices use
+     swipe-on-canvas only now (see the mobileHelp popup below for the
+     swipe-direction hint shown to touch users). Removing it also means
+     #wrap always has exactly 3 flex children (hud/boardWrap/footer), so
+     measureReservePx()/resizeCanvas() no longer need a coarse-pointer
+     branch for a 4th child's reserved height. */

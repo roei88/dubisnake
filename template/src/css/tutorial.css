@@ -1,0 +1,176 @@
+  /* Menu-only "how to play" demo loop, replacing the old written controls
+     line: a hand glyph swipes out along each of the four directions in
+     turn, the matching cartoon arrow lights up, and a mini snake rotates
+     to face that way - the pattern mobile games use on first launch.
+     Deliberately pure CSS keyframes: no JS, no timers, no rAF, so it can
+     neither interact with the fixed-timestep game loop nor add work to it,
+     and nothing needs teardown when the overlay's innerHTML is rebuilt
+     (language switch / state change). Sizes all derive from --board-px
+     (already published by resizeCanvas()) so it scales with the board
+     instead of introducing a new fixed-px block into the overlay stack. */
+  .howto {
+    --ht-stage: min(146px, calc(var(--board-px, 300px) * 0.44));
+    --ht-travel: calc(var(--ht-stage) * 0.30);
+    --ht-nudge: calc(var(--ht-stage) * 0.055);
+    --ht-keydrop: calc(var(--ht-stage) * 0.028);
+    position: relative;
+    width: var(--ht-stage);
+    height: var(--ht-stage);
+    flex: none;
+  }
+  /* Base centering for every child; the arrows then override with their own
+     offset transforms. Keyframes below re-declare the full transform
+     (including this translate) because animating `transform` replaces it. */
+  .howto > * { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+  .htArrow {
+    font-size: calc(var(--ht-stage) * 0.22);
+    line-height: 1;
+    color: #00e5ff;
+    text-shadow: 0 0 8px rgba(0,229,255,0.45);
+    opacity: 0.16;
+    animation: htArrowPulse 8s linear infinite;
+  }
+  /* 8s loop = four 2s phases. Each arrow runs the SAME keyframe (lit during
+     its first quarter) offset by a negative delay, so exactly one is lit at
+     a time, in the order right -> down -> left -> up. */
+  .htRight { transform: translate(calc(-50% + var(--ht-stage) * 0.38), -50%); animation-delay: 0s; }
+  .htDown  { transform: translate(-50%, calc(-50% + var(--ht-stage) * 0.38)); animation-delay: -6s; }
+  .htLeft  { transform: translate(calc(-50% - var(--ht-stage) * 0.38), -50%); animation-delay: -4s; }
+  .htUp    { transform: translate(-50%, calc(-50% - var(--ht-stage) * 0.38)); animation-delay: -2s; }
+  @keyframes htArrowPulse {
+    0%   { opacity: 0.16; }
+    6%   { opacity: 1; }
+    20%  { opacity: 1; }
+    26%  { opacity: 0.16; }
+    100% { opacity: 0.16; }
+  }
+  .htSnake {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--ht-stage) * 0.02);
+    animation: htSnakeTurn 8s linear infinite;
+  }
+  .htSnake i {
+    display: block;
+    border-radius: 50%;
+    background: #00e676;
+    border: 1px solid #00693e;
+  }
+  .htSnake i:nth-child(1) { width: calc(var(--ht-stage)*0.10); height: calc(var(--ht-stage)*0.10); opacity: 0.55; }
+  .htSnake i:nth-child(2) { width: calc(var(--ht-stage)*0.125); height: calc(var(--ht-stage)*0.125); opacity: 0.8; }
+  .htSnake i:nth-child(3) { width: calc(var(--ht-stage)*0.155); height: calc(var(--ht-stage)*0.155); background: #ffd166; border-color: #7a5a12; }
+  /* Near-instant snaps between phases (the 1% ramps), matching how the real
+     snake turns on a grid rather than sweeping around. */
+  /* The rotate comes BEFORE the nudge, so translateX always moves the snake
+     along the direction it is currently facing - one small "step" per phase,
+     timed to land with the arrow/keycap lighting up. */
+  @keyframes htSnakeTurn {
+    0%,   3%   { transform: translate(-50%, -50%) rotate(0deg)   translateX(0); }
+    9%,  20%   { transform: translate(-50%, -50%) rotate(0deg)   translateX(var(--ht-nudge)); }
+    24%        { transform: translate(-50%, -50%) rotate(0deg)   translateX(0); }
+    25%, 28%   { transform: translate(-50%, -50%) rotate(90deg)  translateX(0); }
+    34%, 45%   { transform: translate(-50%, -50%) rotate(90deg)  translateX(var(--ht-nudge)); }
+    49%        { transform: translate(-50%, -50%) rotate(90deg)  translateX(0); }
+    50%, 53%   { transform: translate(-50%, -50%) rotate(180deg) translateX(0); }
+    59%, 70%   { transform: translate(-50%, -50%) rotate(180deg) translateX(var(--ht-nudge)); }
+    74%        { transform: translate(-50%, -50%) rotate(180deg) translateX(0); }
+    75%, 78%   { transform: translate(-50%, -50%) rotate(270deg) translateX(0); }
+    84%, 95%   { transform: translate(-50%, -50%) rotate(270deg) translateX(var(--ht-nudge)); }
+    99%, 100%  { transform: translate(-50%, -50%) rotate(270deg) translateX(0); }
+  }
+  .htHand {
+    font-size: calc(var(--ht-stage) * 0.30);
+    line-height: 1;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.55));
+    animation: htHandSwipe 8s ease-in-out infinite;
+  }
+  @keyframes htHandSwipe {
+    0%   { transform: translate(-50%, -50%); opacity: 0; }
+    4%   { transform: translate(-50%, -50%); opacity: 1; }
+    20%  { transform: translate(calc(-50% + var(--ht-travel)), -50%); opacity: 1; }
+    24%  { transform: translate(calc(-50% + var(--ht-travel)), -50%); opacity: 0; }
+    25%  { transform: translate(-50%, -50%); opacity: 0; }
+    29%  { transform: translate(-50%, -50%); opacity: 1; }
+    45%  { transform: translate(-50%, calc(-50% + var(--ht-travel))); opacity: 1; }
+    49%  { transform: translate(-50%, calc(-50% + var(--ht-travel))); opacity: 0; }
+    50%  { transform: translate(-50%, -50%); opacity: 0; }
+    54%  { transform: translate(-50%, -50%); opacity: 1; }
+    70%  { transform: translate(calc(-50% - var(--ht-travel)), -50%); opacity: 1; }
+    74%  { transform: translate(calc(-50% - var(--ht-travel)), -50%); opacity: 0; }
+    75%  { transform: translate(-50%, -50%); opacity: 0; }
+    79%  { transform: translate(-50%, -50%); opacity: 1; }
+    95%  { transform: translate(-50%, calc(-50% - var(--ht-travel))); opacity: 1; }
+    99%  { transform: translate(-50%, calc(-50% - var(--ht-travel))); opacity: 0; }
+    100% { transform: translate(-50%, -50%); opacity: 0; }
+  }
+  /* Desktop variant of the same demo: a cartoon arrow-key cluster in the
+     real inverted-T layout, each keycap pressing down and lighting up in
+     the same right/down/left/up order while the mini snake turns to match.
+     Which variant is shown is decided purely by the pointer media query
+     below - CSS, not JS - so it also follows a mouse being docked or
+     undocked at runtime with no page reload. */
+  .howtoKeys .htSnake { top: 24%; }
+  .htKeys {
+    top: 70%;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    grid-template-rows: repeat(2, auto);
+    gap: calc(var(--ht-stage) * 0.03);
+  }
+  .htKey {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(var(--ht-stage) * 0.24);
+    height: calc(var(--ht-stage) * 0.24);
+    font-size: calc(var(--ht-stage) * 0.15);
+    font-weight: 700;
+    line-height: 1;
+    border-radius: calc(var(--ht-stage) * 0.05);
+    border: 2px solid #4a6b3a;
+    background: #22301a;
+    color: #cfe8c0;
+    box-shadow: 0 var(--ht-keydrop) 0 #0d1408, 0 0 0 rgba(0,229,255,0);
+    animation: htKeyPress 8s linear infinite;
+  }
+  /* Inverted-T, i.e. how the keys physically sit on a keyboard. */
+  .htkUp    { grid-column: 2; grid-row: 1; animation-delay: -2s; }
+  .htkLeft  { grid-column: 1; grid-row: 2; animation-delay: -4s; }
+  .htkDown  { grid-column: 2; grid-row: 2; animation-delay: -6s; }
+  .htkRight { grid-column: 3; grid-row: 2; animation-delay: 0s; }
+  /* Solid colours (not gradients) so every animated property interpolates
+     reliably; the keycap "presses" by dropping onto its own shadow. */
+  @keyframes htKeyPress {
+    0%, 4%     { transform: translateY(0) scale(1); background: #22301a; color: #cfe8c0;
+                 border-color: #4a6b3a;
+                 box-shadow: 0 var(--ht-keydrop) 0 #0d1408, 0 0 0 rgba(0,229,255,0); }
+    9%, 20%    { transform: translateY(var(--ht-keydrop)) scale(0.95); background: #00e5ff; color: #05242a;
+                 border-color: #7ff4ff;
+                 box-shadow: 0 0 0 #0d1408, 0 0 calc(var(--ht-stage) * 0.09) rgba(0,229,255,0.75); }
+    26%, 100%  { transform: translateY(0) scale(1); background: #22301a; color: #cfe8c0;
+                 border-color: #4a6b3a;
+                 box-shadow: 0 var(--ht-keydrop) 0 #0d1408, 0 0 0 rgba(0,229,255,0); }
+  }
+  /* Touch devices get the swipe demo, everything else the key cluster. */
+  .howtoTouch { display: none; }
+  @media (pointer: coarse) {
+    .howtoTouch { display: block; }
+    .howtoKeys { display: none; }
+  }
+  /* Motion-sensitive users still get the meaning: all four arrows lit and
+     the hand parked in the middle, just held still. */
+  @media (prefers-reduced-motion: reduce) {
+    .htArrow, .htSnake, .htHand, .htKey { animation: none; }
+    .htArrow { opacity: 0.9; }
+    /* Parked off-centre so the still hand doesn't sit on top of the mini
+       snake (they only overlap for an instant mid-animation). */
+    .htHand {
+      opacity: 1;
+      transform: translate(calc(-50% + var(--ht-travel) * 0.55), calc(-50% + var(--ht-travel) * 0.55));
+    }
+  }
+  /* Very short viewports (landscape phones): drop the demo entirely rather
+     than push the Play button into #overlay's scroll region. */
+  @media (max-height: 460px) {
+    .howto { display: none; }
+  }

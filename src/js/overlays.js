@@ -5,9 +5,13 @@
   // new language, with no separate template to keep in sync.
   function showOverlayMenu() {
     overlay.classList.remove("hidden");
+    // Menu-only: the banner art becomes a dimmed, aspect-preserved backdrop
+    // (see #overlay.menuBanner in overlay.css) IN PLACE OF the brand-title
+    // text, which the banner already carries. Every other overlay removes the
+    // class so the backdrop is the start screen's alone.
+    overlay.classList.add("menuBanner");
     overlay.innerHTML =
       '<div class="overlayInner">' +
-      '<h1>' + S().brandTitle + '</h1>' +
       '<p class="tagline">' + S().menuInstructions + '</p>' +
       // Language-independent (icons only), so it needs no S() lookup and
       // survives applyLanguage()'s rebuild unchanged. dir="ltr" pins the
@@ -21,6 +25,7 @@
 
   function showOverlayDead() {
     overlay.classList.remove("hidden");
+    overlay.classList.remove("menuBanner");
     overlay.innerHTML =
       '<div class="overlayInner">' +
       '<img class="splashPic" src="' + assetStore.src("splash") + '" alt="">' +
@@ -35,6 +40,7 @@
 
   function showOverlayWon() {
     overlay.classList.remove("hidden");
+    overlay.classList.remove("menuBanner");
     overlay.innerHTML =
       '<div class="overlayInner">' +
       '<img class="splashPic" src="' + assetStore.src("splash") + '" alt="">' +
@@ -49,6 +55,7 @@
 
   function showOverlayPaused() {
     overlay.classList.remove("hidden");
+    overlay.classList.remove("menuBanner");
     overlay.innerHTML =
       '<div class="overlayInner">' +
       '<h1>' + S().pausedTitle + '</h1>' +
@@ -67,6 +74,7 @@
   // prefers-reduced-motion in the stylesheet.
   function showOverlayGameWon() {
     overlay.classList.remove("hidden");
+    overlay.classList.remove("menuBanner");
     var confetti = "";
     for (var c = 0; c < 12; c++) confetti += '<span class="gwc"></span>';
     overlay.innerHTML =
@@ -109,6 +117,7 @@
 
   function hideOverlay() {
     overlay.classList.add("hidden");
+    overlay.classList.remove("menuBanner");
   }
 
   if (levelOkBtn) {

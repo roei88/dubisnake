@@ -392,6 +392,22 @@
     -webkit-overflow-scrolling: touch;
   }
   #overlay.hidden { display: none; }
+  /* Start-screen only: the banner art fills the board behind the menu content
+     IN PLACE OF the old brand-title text. background-size:cover keeps the
+     banner's own aspect ratio (its snake/head/text are never squashed to fit
+     the square board - it is cropped, not stretched), and the flat dark scrim
+     layered on top dims it so the control demo and Play button stay clearly
+     legible. Same-origin asset, so it is allowed by the locked img-src CSP.
+     Added/removed per state by the showOverlay and hideOverlay functions so
+     only the menu carries it. */
+  #overlay.menuBanner {
+    background-image:
+      linear-gradient(rgba(10, 8, 7, 0.66), rgba(10, 8, 7, 0.66)),
+      url("assets/banner.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
   /* Centers vertically via margin:auto instead of justify-content:center on
      #overlay. This is the standard fix for "can't scroll to see overflowing
      centered flex content": auto margins consume any extra space when there
@@ -2263,9 +2279,13 @@
   // new language, with no separate template to keep in sync.
   function showOverlayMenu() {
     overlay.classList.remove("hidden");
+    // Menu-only: the banner art becomes a dimmed, aspect-preserved backdrop
+    // (see #overlay.menuBanner in overlay.css) IN PLACE OF the brand-title
+    // text, which the banner already carries. Every other overlay removes the
+    // class so the backdrop is the start screen's alone.
+    overlay.classList.add("menuBanner");
     overlay.innerHTML =
       '<div class="overlayInner">' +
-      '<h1>' + S().brandTitle + '</h1>' +
       '<p class="tagline">' + S().menuInstructions + '</p>' +
       // Language-independent (icons only), so it needs no S() lookup and
       // survives applyLanguage()'s rebuild unchanged. dir="ltr" pins the
@@ -2279,6 +2299,7 @@
 
   function showOverlayDead() {
     overlay.classList.remove("hidden");
+    overlay.classList.remove("menuBanner");
     overlay.innerHTML =
       '<div class="overlayInner">' +
       '<img class="splashPic" src="' + assetStore.src("splash") + '" alt="">' +
@@ -2293,6 +2314,7 @@
 
   function showOverlayWon() {
     overlay.classList.remove("hidden");
+    overlay.classList.remove("menuBanner");
     overlay.innerHTML =
       '<div class="overlayInner">' +
       '<img class="splashPic" src="' + assetStore.src("splash") + '" alt="">' +
@@ -2307,6 +2329,7 @@
 
   function showOverlayPaused() {
     overlay.classList.remove("hidden");
+    overlay.classList.remove("menuBanner");
     overlay.innerHTML =
       '<div class="overlayInner">' +
       '<h1>' + S().pausedTitle + '</h1>' +
@@ -2325,6 +2348,7 @@
   // prefers-reduced-motion in the stylesheet.
   function showOverlayGameWon() {
     overlay.classList.remove("hidden");
+    overlay.classList.remove("menuBanner");
     var confetti = "";
     for (var c = 0; c < 12; c++) confetti += '<span class="gwc"></span>';
     overlay.innerHTML =
@@ -2367,6 +2391,7 @@
 
   function hideOverlay() {
     overlay.classList.add("hidden");
+    overlay.classList.remove("menuBanner");
   }
 
   if (levelOkBtn) {

@@ -404,7 +404,12 @@
     background-image:
       linear-gradient(rgba(10, 8, 7, 0.66), rgba(10, 8, 7, 0.66)),
       url("assets/banner.png");
-    background-size: cover;
+    /* `contain` (not cover): fit the whole 1.9:1 banner inside the ~square board
+       so the wordmark is never zoomed past the frame and cropped on tall phone
+       viewports. The flat scrim gradient (no intrinsic size) still fills the
+       whole overlay, so the letterbox area above/below the art stays uniformly
+       dimmed. */
+    background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
   }

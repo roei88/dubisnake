@@ -11,13 +11,17 @@
     // class so the backdrop is the start screen's alone.
     overlay.classList.add("menuBanner");
     overlay.innerHTML =
-      '<div class="overlayInner">' +
-      // Language-independent (icons only), so it needs no S() lookup and
-      // survives applyLanguage()'s rebuild unchanged. dir="ltr" pins the
-      // flex-row snake against RTL reversal - see the static markup comment.
+      '<div class="overlayInner menuInner">' +
+      '<div class="menuLogo">DubiSnake</div>' +
+      '<p class="menuTag">' + S().menuInstructions + '</p>' +
+      // The how-to-play demo (icons only, language-independent; dir="ltr" pins
+      // the flex-row snake against RTL reversal). Wrapped in a subtle chip so it
+      // reads as one tidy "controls" hint on the redesigned start screen.
+      '<div class="menuHint">' +
       '<div class="howto howtoTouch" dir="ltr" aria-hidden="true"><span class="htArrow htUp">&#8593;</span><span class="htArrow htRight">&#8594;</span><span class="htArrow htDown">&#8595;</span><span class="htArrow htLeft">&#8592;</span><span class="htSnake"><i></i><i></i><i></i></span><span class="htHand">&#128070;</span></div>' +
       '<div class="howto howtoKeys" dir="ltr" aria-hidden="true"><span class="htSnake"><i></i><i></i><i></i></span><span class="htKeys"><b class="htKey htkUp">&#8593;</b><b class="htKey htkLeft">&#8592;</b><b class="htKey htkDown">&#8595;</b><b class="htKey htkRight">&#8594;</b></span></div>' +
-      '<button id="playBtn" type="button">' + S().playBtn + '</button>' +
+      '</div>' +
+      '<button id="playBtn" type="button" class="menuPlay">' + S().playBtn + '</button>' +
       '</div>';
     bindPlayBtn();
   }

@@ -400,22 +400,67 @@
      legible. Same-origin asset, so it is allowed by the locked img-src CSP.
      Added/removed per state by the showOverlay and hideOverlay functions so
      only the menu carries it. */
+  /* Redesigned start screen: NO busy art backdrop. A calm dark ground with two
+     soft accent glows (cyan up top for the logo/controls, a warm one behind the
+     Play button) gives depth without clutter - the content carries the screen. */
   #overlay.menuBanner {
-    background-image:
-      linear-gradient(rgba(10, 8, 7, 0.66), rgba(10, 8, 7, 0.66)),
-      url("assets/menu-backdrop.png");
-    /* TRANSPARENT backdrop art (no dark banner box/frame) so it blends into the
-       screen uniformly, like the README hero. `contain` fits the whole 1.9:1
-       art inside the ~square board (never zoomed/cropped on tall phones); the
-       flat scrim gradient dims the whole overlay so the controls + Play button
-       stay legible. The "Eat the popcorn!" wording is the DOM .tagline, so this
-       art carries only the DubiSnake wordmark + snake/head/popcorn. */
-    background-size: contain;
-    /* Art-only backdrop (snake + head + popcorn, no wordmark): sit it LOW so it
-       reads as a faint decorative footer well below the highlighted control
-       demo. Heavy scrim above keeps it subtle/transparent. */
-    background-position: center 74%;
-    background-repeat: no-repeat;
+    background:
+      radial-gradient(115% 75% at 50% 30%, rgba(0, 229, 255, 0.10), rgba(0, 0, 0, 0) 60%),
+      radial-gradient(90% 55% at 50% 88%, rgba(255, 61, 129, 0.10), rgba(0, 0, 0, 0) 60%),
+      radial-gradient(140% 120% at 50% 50%, #12161a 0%, #0a0c0e 70%, #070809 100%);
+  }
+  /* ---------- redesigned menu (logo / tagline / control chip / Play) ---------- */
+  .overlayInner.menuInner {
+    gap: min(20px, calc(var(--board-px, 300px) * 0.06));
+    justify-content: center;
+  }
+  .menuLogo {
+    font-weight: 900;
+    font-size: min(clamp(36px, 9.5vmin, 62px), calc(var(--board-px, 300px) * 0.2));
+    line-height: 1;
+    letter-spacing: -0.015em;
+    background: linear-gradient(180deg, #fff1cf 0%, #ffd074 46%, #f4a825 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter:
+      drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55))
+      drop-shadow(0 0 22px rgba(244, 168, 37, 0.3));
+  }
+  .menuTag {
+    margin: 0;
+    font-size: min(clamp(13px, 2.8vmin, 18px), calc(var(--board-px, 300px) * 0.058));
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: rgba(224, 236, 242, 0.66);
+  }
+  /* A subtle glass chip that gives the how-to-play demo one tidy home. */
+  .menuHint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: min(14px, calc(var(--board-px, 300px) * 0.04));
+    border-radius: min(22px, calc(var(--board-px, 300px) * 0.06));
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 20px rgba(0, 0, 0, 0.3);
+  }
+  /* Play is the one dominant CTA: bigger on the menu than on the other overlays,
+     with a gentle breathing glow (motion-gated below). */
+  .menuInner #playBtn.menuPlay {
+    margin-top: min(4px, calc(var(--board-px, 300px) * 0.012));
+    padding: min(16px, calc(var(--board-px, 300px) * 0.05)) min(52px, calc(var(--board-px, 300px) * 0.17));
+    font-size: min(clamp(20px, 4.6vmin, 28px), calc(var(--board-px, 300px) * 0.095));
+    letter-spacing: 0.04em;
+    animation: menuPlayPulse 2.6s ease-in-out infinite;
+  }
+  @keyframes menuPlayPulse {
+    0%, 100% { box-shadow: 0 8px 22px rgba(255, 45, 126, 0.42), 0 0 0 rgba(255, 45, 126, 0); }
+    50%      { box-shadow: 0 10px 26px rgba(255, 45, 126, 0.5), 0 0 34px rgba(255, 45, 126, 0.45); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .menuInner #playBtn.menuPlay { animation: none; }
   }
   /* Centers vertically via margin:auto instead of justify-content:center on
      #overlay. This is the standard fix for "can't scroll to see overflowing
@@ -604,7 +649,7 @@
      (already published by resizeCanvas()) so it scales with the board
      instead of introducing a new fixed-px block into the overlay stack. */
   .howto {
-    --ht-stage: min(178px, calc(var(--board-px, 300px) * 0.54));
+    --ht-stage: min(150px, calc(var(--board-px, 300px) * 0.46));
     --ht-travel: calc(var(--ht-stage) * 0.30);
     --ht-nudge: calc(var(--ht-stage) * 0.055);
     --ht-keydrop: calc(var(--ht-stage) * 0.028);
@@ -612,10 +657,6 @@
     width: var(--ht-stage);
     height: var(--ht-stage);
     flex: none;
-    /* Highlight the how-to-play demo on the menu: a soft cyan glow disc lifts
-       it off the (now faint) backdrop so the controls are the clear focus. */
-    background: radial-gradient(closest-side, rgba(0, 229, 255, 0.18), rgba(0, 229, 255, 0) 76%);
-    border-radius: 50%;
   }
   /* Base centering for every child; the arrows then override with their own
      offset transforms. Keyframes below re-declare the full transform
@@ -792,13 +833,21 @@
     min-height: 44px;
     border: none;
     border-radius: 999px;
-    background: linear-gradient(180deg, #ff3d81, #c9006b);
-    color: #2a0714;
-    box-shadow: 0 6px 16px rgba(201,0,107,0.4);
+    /* Glossy CTA: bright pink gradient, a top inset highlight + bottom inset
+       shadow for a tactile 3D read, and white text with a soft shadow. */
+    background: linear-gradient(180deg, #ff6aad 0%, #ff2d7e 52%, #e10d6b 100%);
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(120, 0, 60, 0.45);
+    box-shadow:
+      0 8px 22px rgba(255, 45, 126, 0.42),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -2px 6px rgba(150, 0, 74, 0.35);
     cursor: pointer;
     touch-action: none;
+    transition: transform 0.08s ease, filter 0.15s ease;
   }
-  #playBtn:active { transform: translateY(1px); }
+  #playBtn:hover { filter: brightness(1.06); }
+  #playBtn:active { transform: translateY(1px) scale(0.99); }
   #playBtn:disabled { opacity: 0.55; cursor: default; }
   /* Level banner: a retro arcade "LEVEL n" screen shown at the start of
      every level (including level 1). Unlike the old auto-timing-out flash
@@ -2306,13 +2355,17 @@
     // class so the backdrop is the start screen's alone.
     overlay.classList.add("menuBanner");
     overlay.innerHTML =
-      '<div class="overlayInner">' +
-      // Language-independent (icons only), so it needs no S() lookup and
-      // survives applyLanguage()'s rebuild unchanged. dir="ltr" pins the
-      // flex-row snake against RTL reversal - see the static markup comment.
+      '<div class="overlayInner menuInner">' +
+      '<div class="menuLogo">DubiSnake</div>' +
+      '<p class="menuTag">' + S().menuInstructions + '</p>' +
+      // The how-to-play demo (icons only, language-independent; dir="ltr" pins
+      // the flex-row snake against RTL reversal). Wrapped in a subtle chip so it
+      // reads as one tidy "controls" hint on the redesigned start screen.
+      '<div class="menuHint">' +
       '<div class="howto howtoTouch" dir="ltr" aria-hidden="true"><span class="htArrow htUp">&#8593;</span><span class="htArrow htRight">&#8594;</span><span class="htArrow htDown">&#8595;</span><span class="htArrow htLeft">&#8592;</span><span class="htSnake"><i></i><i></i><i></i></span><span class="htHand">&#128070;</span></div>' +
       '<div class="howto howtoKeys" dir="ltr" aria-hidden="true"><span class="htSnake"><i></i><i></i><i></i></span><span class="htKeys"><b class="htKey htkUp">&#8593;</b><b class="htKey htkLeft">&#8592;</b><b class="htKey htkDown">&#8595;</b><b class="htKey htkRight">&#8594;</b></span></div>' +
-      '<button id="playBtn" type="button">' + S().playBtn + '</button>' +
+      '</div>' +
+      '<button id="playBtn" type="button" class="menuPlay">' + S().playBtn + '</button>' +
       '</div>';
     bindPlayBtn();
   }

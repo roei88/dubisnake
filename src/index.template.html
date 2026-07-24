@@ -32,81 +32,12 @@
 <button id="langToggle" type="button">English</button>
 <div id="wrap">
   <div id="speakerGrille" aria-hidden="true"></div>
-  <div id="hud">
-    <div class="hud-stats">
-      <div class="hud-stat">
-        <span class="hud-label" id="scoreLabel">ניקוד</span>
-        <b class="hud-value" id="scoreVal">0</b>
-        <div class="hud-bar-track"><div class="hud-bar-fill" id="scoreBarFill"></div></div>
-      </div>
-      <div class="hud-divider"></div>
-      <div class="hud-stat">
-        <span class="hud-label" id="levelLabel">רמה</span>
-        <b class="hud-value" id="levelVal">1</b>
-        <div class="hud-pips">
-          <span class="hud-pip" id="levelPip3"></span>
-          <span class="hud-pip" id="levelPip2"></span>
-          <span class="hud-pip" id="levelPip1"></span>
-        </div>
-      </div>
-      <div class="hud-divider"></div>
-      <div class="hud-stat">
-        <span class="hud-label" id="hiLabel">שיא</span>
-        <div class="hud-hi-row">
-          <span class="hud-trophy" aria-hidden="true">🏆</span>
-          <b class="hud-value" id="hiVal">0</b>
-        </div>
-      </div>
-    </div>
-    <div id="avatarHud"><img id="avatarHudImg" alt=""></div>
-  </div>
-  <div id="boardWrap" style="position:relative; overflow:hidden;">
-    <canvas id="game"></canvas>
-    <div id="boardBezel" aria-hidden="true"></div>
-    <div id="levelFlash">
-      <div id="levelFlashCard">
-        <div id="levelFlashTitle">רמה 1</div>
-        <!-- filled from JS: one <img> per monster in play at this level -->
-        <div id="levelMonsters"></div>
-        <button id="levelOkBtn" type="button">OK</button>
-      </div>
-    </div>
-    <div id="overlay">
-      <div class="overlayInner">
-        <h1>דוביסנייק</h1>
-        <p class="tagline">אכלו את הפופקורן!</p>
-        <!-- dir="ltr" is load-bearing: .htSnake is a flex row, and flex rows
-             reverse under an inherited dir="rtl" - that would put the snake's
-             head on the wrong end and contradict the rotation keyframes. Same
-             reasoning as the #mobileHelp arrows. -->
-        <div class="howto howtoTouch" dir="ltr" aria-hidden="true"><span class="htArrow htUp">&#8593;</span><span class="htArrow htRight">&#8594;</span><span class="htArrow htDown">&#8595;</span><span class="htArrow htLeft">&#8592;</span><span class="htSnake"><i></i><i></i><i></i></span><span class="htHand">&#128070;</span></div>
-        <div class="howto howtoKeys" dir="ltr" aria-hidden="true"><span class="htSnake"><i></i><i></i><i></i></span><span class="htKeys"><b class="htKey htkUp">&#8593;</b><b class="htKey htkLeft">&#8592;</b><b class="htKey htkDown">&#8595;</b><b class="htKey htkRight">&#8594;</b></span></div>
-        <button id="playBtn" type="button" disabled>טוען&hellip;</button>
-      </div>
-    </div>
-  </div>
+<!--INCLUDE:html/hud.html-->
+<!--INCLUDE:html/board.html-->
   <div id="footer">השיא נשמר מקומית במכשיר</div>
 </div>
 
-<!-- dir="ltr" is deliberate and load-bearing here for the same reason it
-     was on the old #dpad: CSS Grid mirrors track order under an inherited
-     dir="rtl" (like flex row does), which would swap the physical
-     left/right arrow positions even though only in-page *text* is meant
-     to localize. Fixed/full-viewport and outside #wrap (see the CSS
-     comment) so it's never measured by measureReservePx(). -->
-<div id="mobileHelp" role="dialog" aria-modal="true">
-  <div id="mobileHelpCard">
-    <div id="mobileHelpArrows" dir="ltr">
-      <span class="mh-cell mh-up" aria-hidden="true">&#8593;</span>
-      <span class="mh-cell mh-left" aria-hidden="true">&#8592;</span>
-      <span class="mh-cell mh-hand" aria-hidden="true">&#128070;</span>
-      <span class="mh-cell mh-right" aria-hidden="true">&#8594;</span>
-      <span class="mh-cell mh-down" aria-hidden="true">&#8595;</span>
-    </div>
-    <p id="mobileHelpText">החליקו כדי לזוז</p>
-    <button id="mobileHelpClose" type="button">&#10003;</button>
-  </div>
-</div>
+<!--INCLUDE:html/mobile-help.html-->
 
 <script>
 /*BUILD:SCRIPT*/

@@ -1,0 +1,26 @@
+  #langToggle {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
+    z-index: 20;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
+    background: rgba(28,22,19,0.78);
+    color: #f2e9dd;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    cursor: pointer;
+    touch-action: none;
+  }
+  #langToggle:active { background: rgba(0,229,255,0.35); }
+
+  /* Mobile-only "how to play" hint: fixed/full-viewport, outside #wrap's
+     flow (same reasoning as #langToggle above) so it can never feed back
+     into resizeCanvas()'s size budget. Shown once (first visit, gated by
+     localStorage) only on coarse-pointer devices - see maybeShowMobileHelp()
+     in the script below. Deliberately icon-first/text-minimal per spec:
+     the arrow+hand glyph cross conveys "swipe any direction" faster than
+     a sentence would. */

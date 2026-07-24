@@ -1,0 +1,27 @@
+  #playBtn {
+    /* QA fix: same board-px-based shrink pattern as the rest of #overlay's
+       children (see comment above #overlay h1 and .splashPic) - these three
+       were previously fixed px regardless of how small the board got, which
+       contributed to the dead/won overlay overflowing #boardWrap. */
+    margin-top: min(8px, calc(var(--board-px, 300px) * 0.025));
+    padding: min(12px, calc(var(--board-px, 300px) * 0.035)) min(34px, calc(var(--board-px, 300px) * 0.1));
+    font-size: min(clamp(16px, 3.2vmin, 20px), calc(var(--board-px, 300px) * 0.075));
+    font-weight: 700;
+    /* QA fix: unlike its sibling overlay buttons (#levelOkBtn, #mobileHelpClose),
+       this had no floor and was entirely board-px-relative, so it shrank below
+       the 44px touch-target minimum on ordinary small/landscape viewports
+       (e.g. 568x320, 667x375, 896x414, even 320x568 portrait). Give it the
+       same explicit floor the others already have - buttons are border-box
+       by default (UA stylesheet), so this bounds the actual tappable box,
+       not just the content area. */
+    min-height: 44px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #ff3d81, #c9006b);
+    color: #2a0714;
+    box-shadow: 0 6px 16px rgba(201,0,107,0.4);
+    cursor: pointer;
+    touch-action: none;
+  }
+  #playBtn:active { transform: translateY(1px); }
+  #playBtn:disabled { opacity: 0.55; cursor: default; }

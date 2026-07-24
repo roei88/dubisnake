@@ -49,19 +49,25 @@ lives split by concern under `src/`:
 
 ```
 src/
-  index.template.html   page shell, with /*BUILD:STYLES*/ and /*BUILD:SCRIPT*/ markers
-  styles.css            all CSS
-  js/                   the game, split into ordered files (concatenated in the
-                        order listed in build.mjs):
-    00-open.js            IIFE open
-    10-constants-dom.js   grid/speed/colour constants, DOM refs
-    20-strings.js         i18n strings (he/en)
-    30-assets.js          image preload + fallback, head cycle / level tint
-    40-layout.js          responsive board sizing
-    50-core.js            game state, level flow, chasers, input, step()
-    60-overlays.js        menu/dead/won/paused/banner/countdown + opening intro
-    70-render.js          canvas rendering + fixed-timestep loop
-    80-events-boot.js     keyboard/touch/UI handlers, boot, IIFE close
+  index.template.html   page shell: <!--INCLUDE:html/...--> partials plus
+                        /*BUILD:STYLES*/ and /*BUILD:SCRIPT*/ markers
+  html/                 markup partials spliced in at their INCLUDE marker
+    hud.html              score header
+    board.html            board, canvas, level banner, overlay
+    mobile-help.html      first-visit swipe popup
+  css/                  CSS, concatenated in cascade order (see build.mjs):
+    base / frame / hud / board / overlay / tutorial / buttons /
+    level-banner / footer / lang-toggle / mobile-help .css
+  js/                   the game, concatenated in load order (see build.mjs):
+    _open.js              IIFE open
+    constants.js          grid/speed/colour constants, DOM refs
+    strings.js            i18n strings (he/en)
+    assets.js             AssetStore class, head cycle / level tint
+    layout.js             responsive board sizing
+    core.js               game state, level flow, chasers, input, step()
+    overlays.js           menu/dead/won/paused/banner/countdown + opening intro
+    render.js             canvas rendering + fixed-timestep loop
+    _boot.js              keyboard/touch/UI handlers, boot, IIFE close
 build.mjs                zero-dependency build (Node, no npm packages)
 ```
 

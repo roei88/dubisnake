@@ -1,0 +1,19 @@
+<!-- dir="ltr" is deliberate and load-bearing here for the same reason it
+     was on the old #dpad: CSS Grid mirrors track order under an inherited
+     dir="rtl" (like flex row does), which would swap the physical
+     left/right arrow positions even though only in-page *text* is meant
+     to localize. Fixed/full-viewport and outside #wrap (see the CSS
+     comment) so it's never measured by measureReservePx(). -->
+<div id="mobileHelp" role="dialog" aria-modal="true">
+  <div id="mobileHelpCard">
+    <div id="mobileHelpArrows" dir="ltr">
+      <span class="mh-cell mh-up" aria-hidden="true">&#8593;</span>
+      <span class="mh-cell mh-left" aria-hidden="true">&#8592;</span>
+      <span class="mh-cell mh-hand" aria-hidden="true">&#128070;</span>
+      <span class="mh-cell mh-right" aria-hidden="true">&#8594;</span>
+      <span class="mh-cell mh-down" aria-hidden="true">&#8595;</span>
+    </div>
+    <p id="mobileHelpText">החליקו כדי לזוז</p>
+    <button id="mobileHelpClose" type="button">&#10003;</button>
+  </div>
+</div>

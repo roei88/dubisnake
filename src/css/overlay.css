@@ -1,0 +1,86 @@
+  #overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: rgba(10, 8, 7, 0.82);
+    border-radius: 10px;
+    padding: 20px;
+    box-sizing: border-box;
+    /* QA fix: the dead/won content stack (splash image + h1 + 2 stat lines +
+       instructions + button) can be taller than #boardWrap on cramped/
+       landscape viewports even after every child's own board-px-based clamp
+       below - #boardWrap's own overflow:hidden then clips it, and since
+       #overlay used to be vertically centered via justify-content:center,
+       there was no way to scroll to the clipped part: #wrap's outer
+       overflow-y:auto only moves the whole (already internally-clipped)
+       #boardWrap block, it can't reveal more of #overlay's own clipped
+       content. Verified live at a real 568x326 viewport: #boardWrap
+       bottom~306-308px, #playBtn bottom~324.7-334.3px - ~60% of the "שחק שוב"
+       button (its entire label) invisible and untappable, at scrollTop 0,
+       with nothing to trigger a fix. Making #overlay itself the scrollable
+       box (its own overflow-y:auto, independent of #boardWrap's) means any
+       remaining overflow is always reachable by a normal scroll-down
+       gesture - see .overlayInner below for how vertical centering still
+       works in the common (non-overflowing) case. */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #overlay.hidden { display: none; }
+  /* Centers vertically via margin:auto instead of justify-content:center on
+     #overlay. This is the standard fix for "can't scroll to see overflowing
+     centered flex content": auto margins consume any extra space when there
+     is room (identical visual result to justify-content:center in the
+     everyday case), but resolve to 0 - not negative - when there isn't,
+     which is exactly flex-start: content starts flush at the top of #overlay
+     and any overflow lands entirely at the bottom, inside the normal
+     scroll-down direction #overlay's own overflow-y:auto (above) now
+     provides. justify-content:center could not be scrolled past on the
+     "before" side in any browser, which is exactly what made the button
+     unreachable at 568x326 (see #overlay comment). */
+  .overlayInner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: min(10px, calc(var(--board-px, 300px) * 0.03));
+    margin: auto 0;
+  }
+  /* h1/p/.stat below are each clamped with the same min(vmin-clamp,
+     --board-px-derived) pattern already used by #levelFlashCard's children
+     (see the comment on #levelFlashCard). Without this, text sized purely
+     from vmin ignores how narrow the *actual* #boardWrap container (which
+     clips via overflow:hidden) can get once resizeCanvas() has to shrink the
+     board below what vmin assumed (small/landscape viewports) - confirmed
+     clipping the "dubisnake" <h1> (rendered ~181px wide inside a 104px-wide
+     container) before this fix. */
+  #overlay h1 {
+    margin: 0;
+    font-size: min(clamp(28px, 7vmin, 46px), calc(var(--board-px, 300px) * 0.16));
+    color: #ffd27a;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  }
+  #overlay p {
+    margin: 2px 0;
+    font-size: min(clamp(13px, 2.6vmin, 16px), calc(var(--board-px, 300px) * 0.055));
+    max-width: min(32ch, calc(var(--board-px, 300px) * 0.88));
+    line-height: 1.4;
+    color: #e8dcc8;
+  }
+  #overlay .stat { font-size: min(clamp(15px, 3vmin, 20px), calc(var(--board-px, 300px) * 0.065)); color: #fff; }
+  /* The menu screen's one-line tagline (not the retry-instruction <p> on the
+     dead/won/paused screens, which stay on the plain #overlay p rule above) -
+     bigger and bolder than body copy, in the cyan accent already used for
+     the HUD/avatar ring, for a punchier "cool" read rather than plain
+     instructional text. Same board-px-clamp pattern as its siblings so it
+     still shrinks correctly on small/landscape viewports (see the comment
+     above #overlay h1). */
+  #overlay .tagline {
+    margin: 4px 0;
+    font-size: min(clamp(20px, 4.4vmin, 30px), calc(var(--board-px, 300px) * 0.1));
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: #00e5ff;
+    text-shadow: 0 2px 10px rgba(0,229,255,0.35);
+  }

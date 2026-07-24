@@ -1,0 +1,56 @@
+  /* Nostalgic "candybar phone" frame around the existing #wrap - deliberately
+     decorating the element already used for the flex-centering/sizing math
+     (not a NEW wrapping element) so the fixed, known border/padding added
+     here is trivial to account for in resizeCanvas()'s margin constant (see
+     that comment), rather than introducing a fresh box whose size could feed
+     back into the layout the way #hud's own avatar sizing once did. Border/
+     padding are small fixed px values, not derived from cellPx or anything
+     else computed - no circular dependency risk. */
+  #wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    max-height: 100vh;
+    /* iOS Safari: 100vh includes the space behind the collapsible toolbar,
+       so the frame could exceed the actually-visible viewport and force a
+       small scroll while the toolbar is expanded. dvh tracks the *dynamic*
+       visible height; browsers without dvh support ignore this line and
+       keep the 100vh above (progressive enhancement, no risk). */
+    max-height: 100dvh;
+    overflow-y: auto;
+    padding-top: 22px;
+    padding-bottom: 12px;
+    padding-left: calc(14px + env(safe-area-inset-left));
+    padding-right: calc(14px + env(safe-area-inset-right));
+    box-sizing: border-box;
+    border: 3px solid #2f271f;
+    border-radius: 28px;
+    background: linear-gradient(165deg, #221b16, #14100e 65%);
+    box-shadow:
+      0 24px 55px rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.07),
+      inset 0 -2px 8px rgba(0,0,0,0.55);
+  }
+  /* Small decorative "earpiece speaker" dots, evoking the grille above an
+     old candybar phone's screen - position:absolute inside #wrap (already
+     position:relative) so it adds zero flow height/width and can never be
+     measured by measureReservePx() or affect the board's sizing budget. */
+  #speakerGrille {
+    position: absolute;
+    top: 9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #0a0806;
+    box-shadow:
+      -14px 0 0 #0a0806,
+      -7px 0 0 #0a0806,
+      7px 0 0 #0a0806,
+      14px 0 0 #0a0806;
+    opacity: 0.6;
+    pointer-events: none;
+  }

@@ -1,0 +1,16 @@
+{
+  "name": "dubisnake",
+  "version": "1.0.0",
+  "description": "Nokia-style Snake game with a profile-photo head, popcorn food, and Pac-Man-style monster chasers. Ships as one self-contained index.html built from split sources under src/.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "verify": "node build.mjs && git diff --exit-code -- index.html || (echo 'index.html is stale - run: node build.mjs, then commit' && exit 1)"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roei88/dubisnake.git"
+  },
+  "license": "MIT"
+}

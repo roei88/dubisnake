@@ -52,27 +52,28 @@ solid-color monster placeholders, so you can see exactly which slots to fill.
 
 ## Install
 
-### From GitHub Packages
-
-> **Auth is required even for public GitHub Packages.** `npm install` against
-> `npm.pkg.github.com` returns **401** without a token. Create a GitHub personal
-> access token (classic) with the **`read:packages`** scope, then:
+### From npm (public registry)
 
 ```bash
-# in your project's .npmrc:
-@roei88:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_READ_PACKAGES_TOKEN
-
 npm install @roei88/customsnake
 ```
 
-(You can instead `export GITHUB_TOKEN=...` to match the shipped `.npmrc`, which
-reads `${GITHUB_TOKEN}`.)
+That drops the package under `node_modules/@roei88/customsnake` - a read-only
+dependency copy. To actually build a game, **scaffold a working project** with the
+CLI (below) or **copy the `template/` folder** into your own repo.
 
-`npm install` places the package under `node_modules/@roei88/customsnake`. That
-is a read-only dependency copy - to actually build a game, **scaffold a working
-project** with the CLI (below) or just **copy the template folder** into your own
-repo.
+### From GitHub Packages (alternative)
+
+GitHub Packages requires auth even for public packages, so create a GitHub token
+with the **`read:packages`** scope and add to your `.npmrc`:
+
+```
+@roei88:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=YOUR_READ_PACKAGES_TOKEN
+```
+```bash
+npm install @roei88/customsnake
+```
 
 ### Or copy the folder
 

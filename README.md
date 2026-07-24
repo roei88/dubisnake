@@ -2,7 +2,7 @@
 
 <img src="assets/banner.png" width="100%" alt="DubiSnake - a cartoon snake with a profile-photo head chasing popcorn">
 
-# [ click the popcorn to play ](https://roei88.github.io/dubisnake/)
+### [ click the popcorn to play ](https://roei88.github.io/dubisnake/)
 
 ### ⬇️ &nbsp;&nbsp; ⬇️ &nbsp;&nbsp; ⬇️
 
@@ -100,7 +100,7 @@ clears the level. Clear all three and you win the crown 👑.
 
 <div align="center">
 
-# [ click the popcorn to play ](https://roei88.github.io/dubisnake/)
+### [ click the popcorn to play ](https://roei88.github.io/dubisnake/)
 
 ### ⬇️ &nbsp;&nbsp; ⬇️ &nbsp;&nbsp; ⬇️
 

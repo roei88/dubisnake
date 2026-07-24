@@ -9,7 +9,7 @@
      (already published by resizeCanvas()) so it scales with the board
      instead of introducing a new fixed-px block into the overlay stack. */
   .howto {
-    --ht-stage: min(150px, calc(var(--board-px, 300px) * 0.46));
+    --ht-stage: clamp(148px, calc(var(--board-px, 300px) * 0.3), 185px);
     --ht-travel: calc(var(--ht-stage) * 0.30);
     --ht-nudge: calc(var(--ht-stage) * 0.055);
     --ht-keydrop: calc(var(--ht-stage) * 0.028);

@@ -21,6 +21,11 @@
       '<div class="howto howtoTouch" dir="ltr" aria-hidden="true"><span class="htArrow htUp">&#8593;</span><span class="htArrow htRight">&#8594;</span><span class="htArrow htDown">&#8595;</span><span class="htArrow htLeft">&#8592;</span><span class="htSnake"><i></i><i></i><i></i></span><span class="htHand">&#128070;</span></div>' +
       '<div class="howto howtoKeys" dir="ltr" aria-hidden="true"><span class="htSnake"><i></i><i></i><i></i></span><span class="htKeys"><b class="htKey htkUp">&#8593;</b><b class="htKey htkLeft">&#8592;</b><b class="htKey htkDown">&#8595;</b><b class="htKey htkRight">&#8594;</b></span></div>' +
       '</div>' +
+      // Mobile (coarse pointer) shows a "tap anywhere" hint instead of the Play
+      // button - the existing tap-to-start handler already begins the game, and
+      // dropping the button keeps the stack short enough to fit without scroll.
+      // Hidden on desktop via CSS; the button is hidden on mobile via CSS.
+      '<p class="menuTapHint">' + S().tapToPlay + '</p>' +
       '<button id="playBtn" type="button" class="menuPlay">' + S().playBtn + '</button>' +
       '</div>';
     bindPlayBtn();

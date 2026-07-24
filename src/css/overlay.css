@@ -47,13 +47,17 @@
       radial-gradient(140% 120% at 50% 50%, #12161a 0%, #0a0c0e 70%, #070809 100%);
   }
   /* ---------- redesigned menu (logo / tagline / control chip / Play) ---------- */
+  /* Everything below sizes off --board-px directly (which itself caps at the
+     board's max size) so the start screen FLEXES with the resolution - large
+     and full on desktop, proportionally smaller on a phone - instead of being
+     pinned to small fixed-px caps that left desktop with big empty margins. */
   .overlayInner.menuInner {
-    gap: min(20px, calc(var(--board-px, 300px) * 0.06));
+    gap: clamp(10px, calc(var(--board-px, 300px) * 0.04), 26px);
     justify-content: center;
   }
   .menuLogo {
     font-weight: 900;
-    font-size: min(clamp(36px, 9.5vmin, 62px), calc(var(--board-px, 300px) * 0.2));
+    font-size: clamp(32px, calc(var(--board-px, 300px) * 0.145), 90px);
     line-height: 1;
     letter-spacing: -0.015em;
     background: linear-gradient(180deg, #fff1cf 0%, #ffd074 46%, #f4a825 100%);
@@ -65,30 +69,33 @@
       drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55))
       drop-shadow(0 0 22px rgba(244, 168, 37, 0.3));
   }
-  .menuTag {
+  /* The tagline and the mobile "tap to play" hint deliberately share ONE style
+     so they are the same font/size (per request). */
+  #overlay .menuTag,
+  #overlay .menuTapHint {
     margin: 0;
-    font-size: min(clamp(13px, 2.8vmin, 18px), calc(var(--board-px, 300px) * 0.058));
+    font-size: clamp(13px, calc(var(--board-px, 300px) * 0.048), 24px);
     font-weight: 600;
     letter-spacing: 0.06em;
     color: rgba(224, 236, 242, 0.66);
   }
+  #overlay .menuTapHint { display: none; }   /* desktop: hidden (Play shows instead) */
   /* A subtle glass chip that gives the how-to-play demo one tidy home. */
   .menuHint {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: min(14px, calc(var(--board-px, 300px) * 0.04));
-    border-radius: min(22px, calc(var(--board-px, 300px) * 0.06));
+    padding: clamp(10px, calc(var(--board-px, 300px) * 0.038), 22px);
+    border-radius: clamp(16px, calc(var(--board-px, 300px) * 0.055), 30px);
     background: rgba(255, 255, 255, 0.035);
     border: 1px solid rgba(255, 255, 255, 0.07);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 20px rgba(0, 0, 0, 0.3);
   }
-  /* Play is the one dominant CTA: bigger on the menu than on the other overlays,
-     with a gentle breathing glow (motion-gated below). */
+  /* Play is the one dominant CTA (desktop): scales with the board, gentle glow. */
   .menuInner #playBtn.menuPlay {
-    margin-top: min(4px, calc(var(--board-px, 300px) * 0.012));
-    padding: min(16px, calc(var(--board-px, 300px) * 0.05)) min(52px, calc(var(--board-px, 300px) * 0.17));
-    font-size: min(clamp(20px, 4.6vmin, 28px), calc(var(--board-px, 300px) * 0.095));
+    margin-top: clamp(2px, calc(var(--board-px, 300px) * 0.01), 8px);
+    padding: clamp(12px, calc(var(--board-px, 300px) * 0.045), 22px) clamp(30px, calc(var(--board-px, 300px) * 0.14), 72px);
+    font-size: clamp(18px, calc(var(--board-px, 300px) * 0.078), 32px);
     letter-spacing: 0.04em;
     animation: menuPlayPulse 2.6s ease-in-out infinite;
   }
@@ -98,6 +105,15 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .menuInner #playBtn.menuPlay { animation: none; }
+  }
+  /* MOBILE (touch / coarse pointer): drop the Play button - tapping anywhere
+     already starts the game - and show the "tap to play" hint under the control
+     demo instead, with tighter gaps so the whole start screen fits with no
+     scroll on a phone. */
+  @media (pointer: coarse) {
+    .menuInner #playBtn.menuPlay { display: none; }
+    #overlay .menuTapHint { display: block; }
+    .overlayInner.menuInner { gap: clamp(7px, calc(var(--board-px, 300px) * 0.03), 16px); }
   }
   /* Centers vertically via margin:auto instead of justify-content:center on
      #overlay. This is the standard fix for "can't scroll to see overflowing

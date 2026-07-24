@@ -6,13 +6,17 @@
 
 &nbsp;
 
-## 👇 &nbsp;&nbsp; 👇 &nbsp;&nbsp; 👇
+### 👇 &nbsp; Ready? &nbsp; 👇
 
-# [ ▶️ &nbsp; P L A Y &nbsp; H E R E &nbsp; ◀️ ](https://roei88.github.io/dubisnake/)
+# [ click here to play ](https://roei88.github.io/dubisnake/)
 
-### `roei88.github.io/dubisnake`
+# [ ▶️ ](https://roei88.github.io/dubisnake/)
 
-## 👆 &nbsp;&nbsp; 👆 &nbsp;&nbsp; 👆
+&nbsp;
+
+*Made with popcorn.*
+
+# 🍿
 
 &nbsp;
 
@@ -100,11 +104,15 @@ you clear the level. Clear all three and you win the crown 👑.
 
 ### 👇 &nbsp; Ready? &nbsp; 👇
 
-# [ ▶️ &nbsp; P L A Y &nbsp; H E R E &nbsp; ◀️ ](https://roei88.github.io/dubisnake/)
+# [ click here to play ](https://roei88.github.io/dubisnake/)
+
+# [ ▶️ ](https://roei88.github.io/dubisnake/)
 
 &nbsp;
 
-*Made with popcorn. 🍿*
+*Made with popcorn.*
+
+# 🍿
 
 </div>
 

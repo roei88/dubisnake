@@ -7,7 +7,7 @@
   var STRINGS = {
     he: {
       dir: "rtl",
-      metaDescription: "Customized retro snake game.",
+      metaDescription: "Play Now!",
       scoreLabel: "ניקוד",
       levelLabel: "רמה",
       hiLabel: "שיא",
@@ -51,7 +51,7 @@
     },
     en: {
       dir: "ltr",
-      metaDescription: "Customized retro snake game.",
+      metaDescription: "Play Now!",
       scoreLabel: "Score",
       levelLabel: "Level",
       hiLabel: "Best",

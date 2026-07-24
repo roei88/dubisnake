@@ -134,15 +134,17 @@
     pointer-events: none;
   }
   #hud {
+    position: relative; /* anchors the top-edge glow pseudo-element below */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: min(10px, calc(var(--cell-px, 16px) * 0.6));
     width: 100%;
-    font-size: clamp(13px, 2.6vmin, 18px);
-    letter-spacing: 0.02em;
-    padding: 0 2px;
     box-sizing: border-box;
+    padding: min(10px, calc(var(--cell-px, 16px) * 0.6)) min(12px, calc(var(--cell-px, 16px) * 0.75));
+    border-radius: 0 0 min(20px, calc(var(--cell-px, 16px) * 1.25)) min(20px, calc(var(--cell-px, 16px) * 1.25));
+    background: linear-gradient(180deg, #1e1c1a 0%, #2a2725 60%, #252220 100%);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     /* Defense-in-depth alongside #boardWrap's flex-shrink:0 (see comment
        above it): #hud/#footer don't have overflow:hidden so they
        aren't vulnerable to the zero-automatic-min-size flex behavior that
@@ -169,40 +171,131 @@
        them - it is not independently derived. */
     --avatar-px: min(calc(var(--cell-px, 16px) * 2.25), 180px);
   }
-  #hud span b { color: #00e5ff; }
+  /* Top-edge cyan glow line, 1px tall with a 10%-inset transparent-to-opaque-
+     to-transparent gradient - decorative only, position:absolute so it can't
+     add flow height (measureReservePx() reads #hud's own rect, unaffected). */
+  #hud::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(34,211,238,0.25), transparent);
+    pointer-events: none;
+  }
+  /* Row of the three stat groups (Score | Level | Best) plus their dividers.
+     Kept as ONE flex item of #hud, with #avatarHud as the OTHER (and, per the
+     comment on #avatarHud below, placed AFTER this in DOM) so #hud only ever
+     has to balance two children between its edges regardless of language. */
+  .hud-stats {
+    display: flex;
+    align-items: center;
+    gap: min(14px, calc(var(--cell-px, 16px) * 0.9));
+    min-width: 0;
+  }
+  .hud-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: min(4px, calc(var(--cell-px, 16px) * 0.25));
+  }
+  .hud-hi-row {
+    display: flex;
+    align-items: baseline;
+    gap: min(4px, calc(var(--cell-px, 16px) * 0.2));
+  }
+  /* 11px/700/uppercase(EN)/1.5px-tracking in the source design, all re-based
+     off --cell-px per the no-fixed-px HUD-height rule (see MANDATORY
+     deviations #2 in local/NEWASSETS_SPEC.md) - letter-spacing is kept in em
+     so it scales with the font-size instead of going fixed-px stale at
+     small/large cellPx. */
+  .hud-label {
+    font-size: min(clamp(8px, 1.6vmin, 11px), calc(var(--cell-px, 16px) * 0.6));
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.4);
+    white-space: nowrap;
+  }
+  /* Hebrew is NOT uppercased - only the EN strings ("SCORE"/"LEVEL"/"BEST")
+     get the design's all-caps treatment; document.documentElement.lang is
+     kept in sync with currentLang by applyLanguage(). */
+  html[lang="en"] .hud-label { text-transform: uppercase; }
+  .hud-value {
+    font-size: min(clamp(16px, 3.6vmin, 26px), calc(var(--cell-px, 16px) * 1.5));
+    font-weight: 900;
+    line-height: 1;
+  }
+  #scoreVal { color: #22d3ee; text-shadow: 0 0 10px rgba(34,211,238,0.3); }
+  #levelVal { color: #f59e0b; text-shadow: 0 0 10px rgba(245,158,11,0.25); }
+  #hiVal { color: #a78bfa; text-shadow: 0 0 10px rgba(167,139,250,0.25); }
+  .hud-trophy {
+    font-size: min(clamp(8px, 1.6vmin, 14px), calc(var(--cell-px, 16px) * 0.8));
+    color: rgba(167,139,250,0.5);
+    line-height: 1;
+  }
+  /* Score progress track: 60x3px in the source design. The 3px height is a
+     hairline (like the 1px divider below and the avatar's own box-shadow
+     rings) - not a HUD-height driver, so it stays literal px; the width
+     still follows the --cell-px pattern. Fill width is JS-driven, see
+     updateHud(). */
+  .hud-bar-track {
+    width: min(clamp(40px, 9vmin, 64px), calc(var(--cell-px, 16px) * 3.5));
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+  .hud-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #22d3ee, #06b6d4);
+  }
+  /* Level pips: 3 stacked 4x4px dots, DOM order top-to-bottom is pip3/pip2/
+     pip1 per spec, lit state is JS-driven (level >= n), see updateHud(). */
+  .hud-pips {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hud-pip {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+  }
+  .hud-pip.is-lit { background: #f59e0b; }
+  .hud-divider {
+    width: 1px;
+    height: calc(var(--avatar-px, 64px) * 0.6);
+    flex-shrink: 0;
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent);
+  }
   /* Always-visible avatar HUD element (menu/playing/paused/dead/won - never
-     gated to "after first play"). A genuine flex item now (NOT
-     position:absolute). It used to be pinned top:0;left:0 on the theory that
-     "top-left is the one corner not already claimed by the RTL-anchored
-     score/level/hi-score text, which visually sits toward the right" - that
-     theory only held for the FIRST of the three <span> children. Under
-     dir="rtl" with justify-content:space-between, the LAST DOM span (the
-     high-score "שיא" one) is the one flexbox pushes to the physical LEFT
-     edge - the exact corner the avatar was pinned to. Confirmed by measuring
-     real layout: avatar rect x:108-204/y:0-96 vs the "שיא" span's rect
-     x:110-152/y:38-58 - a dead overlap, and not an edge case, since the
-     avatar's own minimum width (48px, see --avatar-px above) already exceeds
-     the ~2px inner padding where that span starts, at every achievable
-     cellPx. Making #avatarHud a real flex item instead removes the collision
-     structurally: flexbox distributes all 4 items (avatar + 3 spans) with
-     guaranteed non-overlap, instead of trusting a manually reasoned absolute
-     offset that only covered one of the three spans. #avatarHud is placed
-     LAST in DOM source order (after the three spans) specifically because,
-     under dir="rtl" row flex, the last DOM child lands at the physical LEFT
-     edge (mirror image of LTR, where the last child lands on the right) -
-     putting it first would land it at the physical top-RIGHT instead, which
-     was tried and confirmed wrong. This ordering is what actually keeps the
-     avatar in the intended top-left corner, with real gap between every
-     item and no overlap. */
+     gated to "after first play"). A genuine flex item of #hud (NOT
+     position:absolute), placed LAST in DOM source order, after .hud-stats -
+     under dir="rtl" row flex the last DOM child lands at the physical LEFT
+     edge, and under dir="ltr" it lands at the physical RIGHT edge, so the
+     avatar mirrors sides with the language exactly like every other
+     direction-dependent piece of this file (see applyLanguage()) with zero
+     extra JS: pure flex + DOM order. Do not reorder these two children or
+     switch #hud to justify-content:flex-start/flex-end without re-deriving
+     this. */
   #avatarHud {
     width: var(--avatar-px, 36px);
     height: var(--avatar-px, 36px);
     flex-shrink: 0;
+    box-sizing: border-box; /* keep the 3px border inside --avatar-px, not added on top */
     border-radius: 50%;
+    border: 3px solid #22d3ee;
     /* small dark chip behind the image so it doesn't float directly against
        the light HUD text */
     background: #1c1815;
-    box-shadow: 0 0 0 2px #00e5ff, 0 2px 8px rgba(0,0,0,0.4);
+    box-shadow:
+      0 0 12px rgba(34,211,238,0.3),
+      0 0 24px rgba(34,211,238,0.1),
+      inset 0 0 0 3px rgba(0,0,0,0.35);
     overflow: hidden;
     pointer-events: none;
   }
@@ -531,6 +624,14 @@
     padding: min(12px, calc(var(--board-px, 300px) * 0.035)) min(34px, calc(var(--board-px, 300px) * 0.1));
     font-size: min(clamp(16px, 3.2vmin, 20px), calc(var(--board-px, 300px) * 0.075));
     font-weight: 700;
+    /* QA fix: unlike its sibling overlay buttons (#levelOkBtn, #mobileHelpClose),
+       this had no floor and was entirely board-px-relative, so it shrank below
+       the 44px touch-target minimum on ordinary small/landscape viewports
+       (e.g. 568x320, 667x375, 896x414, even 320x568 portrait). Give it the
+       same explicit floor the others already have - buttons are border-box
+       by default (UA stylesheet), so this bounds the actual tappable box,
+       not just the content area. */
+    min-height: 44px;
     border: none;
     border-radius: 999px;
     background: linear-gradient(180deg, #ff3d81, #c9006b);
@@ -759,9 +860,31 @@
 <div id="wrap">
   <div id="speakerGrille" aria-hidden="true"></div>
   <div id="hud">
-    <span><span class="hud-label" id="scoreLabel">ניקוד</span> <b id="scoreVal">0</b></span>
-    <span><span class="hud-label" id="levelLabel">רמה</span> <b id="levelVal">1</b></span>
-    <span><span class="hud-label" id="hiLabel">שיא</span> <b id="hiVal">0</b></span>
+    <div class="hud-stats">
+      <div class="hud-stat">
+        <span class="hud-label" id="scoreLabel">ניקוד</span>
+        <b class="hud-value" id="scoreVal">0</b>
+        <div class="hud-bar-track"><div class="hud-bar-fill" id="scoreBarFill"></div></div>
+      </div>
+      <div class="hud-divider"></div>
+      <div class="hud-stat">
+        <span class="hud-label" id="levelLabel">רמה</span>
+        <b class="hud-value" id="levelVal">1</b>
+        <div class="hud-pips">
+          <span class="hud-pip" id="levelPip3"></span>
+          <span class="hud-pip" id="levelPip2"></span>
+          <span class="hud-pip" id="levelPip1"></span>
+        </div>
+      </div>
+      <div class="hud-divider"></div>
+      <div class="hud-stat">
+        <span class="hud-label" id="hiLabel">שיא</span>
+        <div class="hud-hi-row">
+          <span class="hud-trophy" aria-hidden="true">🏆</span>
+          <b class="hud-value" id="hiVal">0</b>
+        </div>
+      </div>
+    </div>
     <div id="avatarHud"><img id="avatarHudImg" alt=""></div>
   </div>
   <div id="boardWrap" style="position:relative; overflow:hidden;">
@@ -854,6 +977,10 @@
   var hudScore = document.getElementById("scoreVal");
   var hudLevel = document.getElementById("levelVal");
   var hudHi = document.getElementById("hiVal");
+  var scoreBarFill = document.getElementById("scoreBarFill");
+  var levelPip1 = document.getElementById("levelPip1");
+  var levelPip2 = document.getElementById("levelPip2");
+  var levelPip3 = document.getElementById("levelPip3");
   var avatarHudImg = document.getElementById("avatarHudImg");
   var overlay = document.getElementById("overlay");
   var playBtn = document.getElementById("playBtn");
@@ -908,6 +1035,11 @@
       pausedResume: "רווח / הקישו המשך כדי להמשיך.",
       resumeBtn: "המשך",
       levelFlashLabel: function (n) { return "רמה " + n; },
+      // Retro opening-scene overlay text (Task C) - pulsing, drawn on the
+      // board canvas itself (see renderPressAnyKey()), not uppercased (this
+      // isn't a HUD label - see the Hebrew-not-uppercased note on hud-label
+      // above, which doesn't apply here anyway since Hebrew has no case).
+      pressAnyKey: "הקישו על מקש כלשהו",
       toggleLabel: "English",
       toggleAria: "Switch to English"
     },
@@ -916,7 +1048,7 @@
       metaDescription: "Customized retro snake game.",
       scoreLabel: "Score",
       levelLabel: "Level",
-      hiLabel: "High",
+      hiLabel: "Best",
       footerHi: "High score saved locally on this device",
       footerHiFail: "High score not saved this time (storage unavailable)",
       // English keeps the Latin brand name as-is.
@@ -938,6 +1070,9 @@
       pausedResume: "Space / tap Resume to continue.",
       resumeBtn: "Resume",
       levelFlashLabel: function (n) { return "Level " + n; },
+      // Retro opening-scene overlay text (Task C) - pulsing, drawn on the
+      // board canvas itself (see renderPressAnyKey()).
+      pressAnyKey: "PRESS ANY KEY",
       toggleLabel: "עברית",
       toggleAria: "עבור לעברית"
     }
@@ -1052,6 +1187,77 @@
     { core: "#2979ff", edge: "#0d3f9e" }, // electric blue
     { core: "#ff3d81", edge: "#8f0046" }  // hot magenta
   ];
+  // Ghost idle animation (Task A - port of new-assets/animations/solo-scenes.jsx):
+  // each chaser floats/rotates/pulses/glows on its own phase, as a purely
+  // visual sub-cell offset applied only at draw time in render(). Nothing
+  // here ever touches ch.x/ch.y - chaserAt() and every hit test keep reading
+  // the plain integer grid cell.
+  // Raw dx/dy amplitudes below are ported verbatim from the reference, which
+  // was tuned against a GS=130px sprite box on a 2.5s loop; they're rescaled
+  // by (in-game ghost size / GS) at draw time so they read as sub-cell drift,
+  // never raw pixels.
+  var GHOST_IDLE_GS = 130;
+  var GHOST_IDLE_PERIOD_MS = 2500;
+  var GHOST_IDLE_TAU = Math.PI * 2;
+  var GHOST_IDLE = [
+    { // 1 Curly - blue
+      color: "#4a9eff",
+      glowBase: 0.30,
+      // QA fix: writes onto the caller-supplied scratch object instead of
+      // returning a new object literal, so render()'s per-frame ghost loop
+      // (up to 3 ghosts * ~60fps) does no per-frame allocation - see
+      // GHOST_IDLE_SCRATCH below.
+      motion: function (a, b, out) {
+        out.dx = Math.sin(a) * 30;
+        out.dy = -Math.cos(a) * 20;
+        out.rot = Math.sin(a) * 6;
+        out.scaleOsc = Math.sin(b) * 0.05;
+        out.glow = 0.30 + Math.sin(a) * 0.25;
+        return out;
+      }
+    },
+    { // 2 Smokey - red
+      color: "#ff4444",
+      glowBase: 0.30,
+      motion: function (a, b, out) {
+        out.dx = Math.sin(a) * 25;
+        out.dy = Math.sin(b) * 22;
+        out.rot = Math.sin(a) * 4;
+        out.scaleOsc = Math.sin(a) * 0.06;
+        out.glow = 0.30 + Math.cos(a) * 0.25;
+        return out;
+      }
+    },
+    { // 3 Screamer - green
+      color: "#00e5a0",
+      glowBase: 0.35,
+      motion: function (a, b, out) {
+        out.dx = Math.sin(b) * 20;
+        out.dy = -Math.cos(a) * 25;
+        out.rot = Math.sin(b) * 8;
+        out.scaleOsc = Math.sin(b) * 0.07;
+        out.glow = 0.35 + Math.sin(b) * 0.30;
+        return out;
+      }
+    }
+  ];
+  // Pre-allocated scratch objects for GHOST_IDLE[*].motion() output, one per
+  // ghost slot (index = chaser index % 3). renderOpeningReady() and the main
+  // chasers-render loop in render() never run in the same frame (opening vs
+  // playing are mutually exclusive states), so sharing one pool across both
+  // call sites is safe and avoids a second allocation site.
+  var GHOST_IDLE_SCRATCH = [
+    { dx: 0, dy: 0, rot: 0, scaleOsc: 0, glow: 0 },
+    { dx: 0, dy: 0, rot: 0, scaleOsc: 0, glow: 0 },
+    { dx: 0, dy: 0, rot: 0, scaleOsc: 0, glow: 0 }
+  ];
+  // Cached once at load, same convention as the CSS prefers-reduced-motion
+  // rule elsewhere in this file: motion-sensitive users get idle ghosts held
+  // still, glow parked at its non-pulsing baseline.
+  var GHOST_IDLE_STILL = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  // Same boot-time prefers-reduced-motion check, reused by the opening intro
+  // scene (Task C) below - one flag, one convention, file-wide.
+  var OPENING_STILL = GHOST_IDLE_STILL;
   // ---------- responsive canvas sizing ----------
   var dpr = 1;
   var boardCssPx = 0;
@@ -1219,7 +1425,7 @@
   // Play button must not be able to do anything before that - see the
   // disabled attribute on the static #playBtn and the guard at the top of
   // startOrResume(). Only preloadAssets()'s callback advances "loading" -> "menu".
-  var state = "loading"; // loading | menu | levelbanner | playing | paused | dead | won
+  var state = "loading"; // loading | opening | menu | levelbanner | playing | paused | dead | won
   var snake = null, dir = { x: 1, y: 0 }, queuedDir = null, food = null;
   // Pac-Man-style chasers: one per level, capped at 3. They pursue the
   // snake's head at HALF the snake's speed (they move once per two snake
@@ -1230,6 +1436,20 @@
   var score = 0, popcornCount = 0, level = 1, stepMs = BASE_STEP_MS, hi = 0;
   var acc = 0;
   var lastTs = 0;
+  var animTs = 0; // rAF timestamp mirror, used only for the ghosts' idle-animation phase - never read by game logic
+
+  // Opening intro scene (Task C) state - see the "opening intro scene"
+  // section below, right before render(). openingStartTs is captured from
+  // the rAF timestamp frame() already receives (never Date.now()), exactly
+  // like animTs above, so the scene's timing stays consistent with the rest
+  // of the file's animation conventions.
+  var openingStartTs = null;
+  // Consumes the SAME physical tap/click that just dismissed the opening
+  // scene (the browser still fires a trailing click/touchend for it) so it
+  // can't also fall through to the existing "tap the board to start"
+  // convenience and skip straight into a new game, bypassing the menu screen
+  // the dismissal is supposed to land on - see requestOpeningDismiss().
+  var suppressTapStartOnce = false;
 
   // The level banner is BLOCKING (it owns `state`), so unlike the old
   // auto-timing-out flash card it can't still be on screen when the player
@@ -1444,6 +1664,18 @@
     hudScore.textContent = String(score);
     hudLevel.textContent = String(level);
     hudHi.textContent = String(hi);
+    // Score bar fill % - min(100, round(score / max(highScore,1) * 100)),
+    // per spec; max(hi,1) avoids a div-by-zero flash to 100% before any
+    // high score exists.
+    if (scoreBarFill) {
+      var pct = Math.min(100, Math.round((score / Math.max(hi, 1)) * 100));
+      scoreBarFill.style.width = pct + "%";
+    }
+    // Level pips light up cumulatively (level >= n); DOM order is pip3/pip2/
+    // pip1 top-to-bottom but the lit test is the same for all three.
+    if (levelPip1) levelPip1.classList.toggle("is-lit", level >= 1);
+    if (levelPip2) levelPip2.classList.toggle("is-lit", level >= 2);
+    if (levelPip3) levelPip3.classList.toggle("is-lit", level >= 3);
   }
 
   // ---------- language switch: everything below is re-derived from S(),
@@ -1763,8 +1995,333 @@
     }
   }
 
+  // ---------- opening intro scene (Task C - adapted port of
+  // new-assets/animations/opener-scenes.jsx) ----------
+  // Plays once, automatically, right after preloadAssets() finishes and
+  // before the normal "menu" state - see startOpening() (called from the
+  // preloadAssets callback near the bottom of this file) and endOpening().
+  // Entirely canvas-driven from the SAME fixed-timestep frame()/render()
+  // pair the rest of the game already uses: no second rAF loop, no
+  // setInterval, no Date.now()-based timing (openingStartTs/animTs are both
+  // captured from the rAF timestamp frame() already receives). Reuses the
+  // already-loaded ghost1/2/3, head1/2/3 and food sprites - no new assets.
+  // The reference stage (720x1080 portrait, separate banner+board) doesn't
+  // map 1:1 onto this game's square board, so every coordinate below is
+  // expressed in board-relative fractions/cellPx, not copied from the
+  // reference pixel values (see local/NEWASSETS_SPEC.md, Task C: "adapt,
+  // don't copy coordinates").
+  var OPENING_REVEAL_MS = 3000;
+  var OPENING_CHASE_MS = 3500;
+  var OPENING_READY_MS = 2500;
+  var OPENING_TOTAL_MS = OPENING_REVEAL_MS + OPENING_CHASE_MS + OPENING_READY_MS; // ~9s, per spec
+
+  // Cheap ease-out-back / ease-out-cubic helpers for the scene's motion -
+  // plain math, no library.
+  function openingEaseOutBack(t) {
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    var c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+  function openingEaseOutCubic(t) {
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  // Starts the intro: called once, from the preloadAssets() callback,
+  // instead of jumping straight "loading" -> "menu". frame() only ever calls
+  // step() while state === "playing" (see frame() below), so this new state
+  // needs no extra guard there - it simply never matches that branch.
+  function startOpening() {
+    state = "opening";
+    openingStartTs = null; // set on frame()'s first tick while opening (rAF ts)
+    suppressTapStartOnce = false;
+    overlay.classList.add("hidden"); // the scene is drawn on canvas, not in #overlay
+  }
+
+  // Ends the intro - naturally (auto-advance, ~9s, see frame()) or via
+  // requestOpeningDismiss() below (any key/pointer/touch) - either way it
+  // lands on exactly the same normal "menu" state the old "loading"->"menu"
+  // jump used to.
+  function endOpening() {
+    if (state !== "opening") return;
+    state = "menu";
+    showOverlayMenu();
+    maybeShowMobileHelp();
+  }
+
+  // Any key press, or any pointer/touch press ANYWHERE (wired below, near
+  // the existing keyboard/touch handlers), dismisses straight to the menu.
+  // suppressTapStartOnce swallows the SAME physical tap/click once more (the
+  // browser still fires the trailing click/touchend for it) so it can't also
+  // fall through to the existing "tap the board to start" convenience and
+  // skip straight into a new game, bypassing the menu screen the dismissal
+  // is supposed to land on. NOTE: a tap that happens to land exactly where
+  // the freshly-shown #playBtn renders can still reach that button's own
+  // click listener directly (target-phase, before bubbling reaches the
+  // suppress check) and start a game one gesture early - a narrow, harmless
+  // edge case (one tap = dismiss AND start), not worth the extra plumbing to
+  // fully close off.
+  function requestOpeningDismiss() {
+    if (state !== "opening") return;
+    endOpening();
+    suppressTapStartOnce = true;
+  }
+
+  function openingElapsedMs() {
+    if (openingStartTs === null) return 0;
+    return Math.max(0, animTs - openingStartTs);
+  }
+
+  // Reveal (0-3s): the head sprite pops in at board center (ease-out-back),
+  // then a few food sprites fade in around it.
+  function renderOpeningReveal(p) {
+    var cx = boardCssPx / 2, cy = boardCssPx / 2;
+    var headP = Math.min(1, p / 0.6);
+    var headScale = openingEaseOutBack(headP);
+    var hSize = cellPx * 2.4 * Math.max(0, headScale);
+    if (hSize > 0.5) {
+      var headImg = drawable(currentHeadKey());
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, headP * 1.4);
+      ctx.beginPath();
+      ctx.arc(cx, cy, hSize / 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(headImg, cx - hSize / 2, cy - hSize / 2, hSize, hSize);
+      ctx.restore();
+    }
+    var foodP = Math.max(0, (p - 0.5) / 0.5);
+    if (foodP > 0) {
+      var foodImg = drawable("food");
+      var fSize = cellPx * 0.9;
+      var spots = [
+        { x: cx - cellPx * 2.6, y: cy - cellPx * 1.8 },
+        { x: cx + cellPx * 2.6, y: cy - cellPx * 1.4 },
+        { x: cx + cellPx * 1.8, y: cy + cellPx * 2.4 }
+      ];
+      for (var i = 0; i < spots.length; i++) {
+        var a = Math.max(0, Math.min(1, foodP * 3 - i));
+        if (a <= 0) continue;
+        ctx.save();
+        ctx.globalAlpha = a;
+        ctx.drawImage(foodImg, spots[i].x - fSize / 2, spots[i].y - fSize / 2, fSize, fSize);
+        ctx.restore();
+      }
+    }
+  }
+
+  // Chase (3-6.5s): the head glides left->right along a gentle sine curve
+  // (a stand-in for the reference's smooth curved path, adapted to a square
+  // board instead of the portrait stage), a short body trail follows, and
+  // the three ghosts descend from above the board and converge into a chase
+  // line behind it.
+  function renderOpeningChase(p) {
+    var travel = p;
+    var hx = travel * boardCssPx;
+    var hy = boardCssPx * 0.5 + Math.sin(travel * Math.PI * 2) * boardCssPx * 0.12;
+    var headImg = drawable(currentHeadKey());
+    var hSize = cellPx * 1.3;
+    var heading = Math.atan2(Math.cos(travel * Math.PI * 2) * 0.7, 1);
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.rotate(heading);
+    ctx.beginPath();
+    ctx.arc(0, 0, hSize / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(headImg, -hSize / 2, -hSize / 2, hSize, hSize);
+    ctx.restore();
+
+    var tint = currentTint();
+    for (var i = 1; i <= 4; i++) {
+      var bt = Math.max(0, travel - i * 0.05);
+      var bx = bt * boardCssPx;
+      var by = boardCssPx * 0.5 + Math.sin(bt * Math.PI * 2) * boardCssPx * 0.12;
+      var bSize = Math.max(0, cellPx * (0.8 - i * 0.08));
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 0.9 - i * 0.15);
+      ctx.beginPath();
+      ctx.arc(bx, by, bSize / 2, 0, Math.PI * 2);
+      ctx.fillStyle = tint.core;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    for (var ci = 0; ci < 3; ci++) {
+      var descend = Math.min(1, Math.max(0, (p - ci * 0.12) / 0.7));
+      var targetX = hx - (ci + 1.4) * cellPx * 1.1;
+      var targetY = hy + (ci - 1) * cellPx * 0.9;
+      var startY = -cellPx * 2;
+      var gx = targetX;
+      var gy = startY + (targetY - startY) * openingEaseOutBack(descend);
+      var gImg = drawable("ghost" + (ci + 1));
+      var gSize = cellPx * 1.14;
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, descend * 2);
+      ctx.drawImage(gImg, gx - gSize / 2, gy - gSize / 2, gSize, gSize);
+      ctx.restore();
+    }
+  }
+
+  // Ready (6.5-9s): everything settles into the exact formation newGame()
+  // itself spawns (3-segment snake centered, facing right), with the ghosts
+  // parked in their far corners and (motion allowing) a gentle idle bob
+  // reusing the Task A GHOST_IDLE motion - a literal "get ready" preview of
+  // the real board.
+  function renderOpeningReady(p) {
+    var cx = Math.floor(GRID_N / 2), cy = Math.floor(GRID_N / 2);
+    var settle = openingEaseOutCubic(Math.min(1, p / 0.5));
+    var startCells = [
+      { x: cx, y: cy }, { x: cx - 1, y: cy }, { x: cx - 2, y: cy }
+    ];
+    var fromX = boardCssPx, fromY = boardCssPx * 0.5;
+
+    var headImg = drawable(currentHeadKey());
+    var hSize = cellPx * 0.95;
+    var toX = startCells[0].x * cellPx + cellPx / 2, toY = startCells[0].y * cellPx + cellPx / 2;
+    var hx = fromX + (toX - fromX) * settle;
+    var hy = fromY + (toY - fromY) * settle;
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.beginPath();
+    ctx.arc(0, 0, hSize / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(headImg, -hSize / 2, -hSize / 2, hSize, hSize);
+    ctx.restore();
+
+    var tint = currentTint();
+    for (var i = 1; i < startCells.length; i++) {
+      var seg = startCells[i];
+      var segToX = seg.x * cellPx + cellPx / 2, segToY = seg.y * cellPx + cellPx / 2;
+      var sx = fromX + (segToX - fromX) * settle;
+      var sy = fromY + (segToY - fromY) * settle;
+      var size = cellPx * (0.82 - 0.22 * (i / (startCells.length - 1)));
+      ctx.save();
+      ctx.globalAlpha = 0.95;
+      ctx.beginPath();
+      ctx.arc(sx, sy, size / 2, 0, Math.PI * 2);
+      ctx.fillStyle = tint.core;
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, cellPx * 0.05);
+      ctx.strokeStyle = tint.edge;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // QA fix: the two bottom ghosts used to sit at the literal grid corners
+    // ((GRID_N-1,GRID_N-1) and (0,GRID_N-1)), which put their glow directly
+    // over the first/last letters of the "PRESS ANY KEY" band drawn at
+    // boardCssPx*0.88 (renderPressAnyKey()). Inset them up and inward so the
+    // sprite (plus its idle glow) clears the text band while still reading
+    // as "parked near the corner". Top-right is untouched - it's far enough
+    // from the bottom text band already.
+    var restSpots = [
+      { x: GRID_N - 1, y: 0 }, { x: GRID_N - 2.3, y: GRID_N - 2.9 }, { x: 1.3, y: GRID_N - 2.9 }
+    ];
+    for (var ci = 0; ci < 3; ci++) {
+      var spot = restSpots[ci];
+      var rx = spot.x * cellPx + cellPx / 2, ry = spot.y * cellPx + cellPx / 2;
+      var idle = GHOST_IDLE[ci % 3];
+      var gSize = cellPx * 1.14;
+      var ox = 0, oy = 0, glow = idle.glowBase;
+      if (!GHOST_IDLE_STILL) {
+        var pp = ((animTs / GHOST_IDLE_PERIOD_MS) + ci / 3) % 1;
+        var m = idle.motion(pp * GHOST_IDLE_TAU, pp * 2 * GHOST_IDLE_TAU, GHOST_IDLE_SCRATCH[ci]);
+        var norm = gSize / GHOST_IDLE_GS;
+        ox = m.dx * norm * settle;
+        oy = m.dy * norm * settle;
+        glow = m.glow;
+      }
+      var gImg = drawable("ghost" + (ci + 1));
+      ctx.save();
+      ctx.globalAlpha = settle;
+      ctx.shadowColor = idle.color;
+      ctx.shadowBlur = cellPx * Math.max(0, glow) * 0.6;
+      ctx.drawImage(gImg, rx + ox - gSize / 2, ry + oy - gSize / 2, gSize, gSize);
+      ctx.restore();
+    }
+  }
+
+  // prefers-reduced-motion fallback: a single static composed frame (the
+  // fully-settled "ready" formation, no idle bob since GHOST_IDLE_STILL
+  // already zeroes it above) plus the still (non-pulsing) PRESS ANY KEY text
+  // - see renderPressAnyKey(). No motion is ever computed in this branch.
+  function renderOpeningStill() {
+    renderOpeningReady(1);
+  }
+
+  // Retro pulsing "PRESS ANY KEY" text (Hebrew equivalent via STRINGS),
+  // drawn directly on the board canvas rather than as a DOM overlay so it
+  // shares the exact same coordinate space/scaling as the rest of the scene
+  // and needs no extra element in #wrap's flow (measureReservePx()/
+  // resizeCanvas()'s sizing budget stays untouched). ctx.direction follows
+  // the current language's reading direction, same as document.dir
+  // elsewhere.
+  function renderPressAnyKey(elapsed) {
+    var text = S().pressAnyKey;
+    if (!text) return;
+    var alpha;
+    if (OPENING_STILL) {
+      alpha = 0.9; // static - no pulsing under prefers-reduced-motion
+    } else {
+      var fadeIn = Math.min(1, elapsed / 1000);
+      alpha = fadeIn * (0.55 + 0.45 * Math.sin(elapsed / 260));
+      alpha = Math.max(0.15 * fadeIn, alpha);
+    }
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+    ctx.fillStyle = "#00e5ff";
+    ctx.shadowColor = "rgba(0,229,255,0.65)";
+    ctx.shadowBlur = cellPx * 0.5;
+    var fontPx = Math.round(cellPx * 1.05);
+    var fontStack = "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    ctx.font = "900 " + fontPx + fontStack;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.direction = S().dir;
+    // QA fix: the Hebrew string measures ~100% of the board width at this
+    // font size (vs ~90% for English), clipping its leftmost letter at the
+    // board edge. Measure the actual string and shrink the font to fit a
+    // safe max width instead of assuming English's narrower proportions -
+    // this keeps a real margin for every language/board size, not just the
+    // one QA happened to measure.
+    var maxTextWidth = boardCssPx * 0.86;
+    var textWidth = ctx.measureText(text).width;
+    if (textWidth > maxTextWidth && textWidth > 0) {
+      fontPx = Math.max(1, Math.floor(fontPx * (maxTextWidth / textWidth)));
+      ctx.font = "900 " + fontPx + fontStack;
+    }
+    ctx.fillText(text, boardCssPx / 2, boardCssPx * 0.88);
+    ctx.restore();
+  }
+
+  // Top-level opening render dispatch, called from render() while
+  // state === "opening". Draws the same board backdrop/grid as the real
+  // game (drawBoardBackdrop(), shared with render() below) so the
+  // transition into "menu"/"playing" reads as one continuous board rather
+  // than a jump cut.
+  function renderOpening(elapsed) {
+    drawBoardBackdrop();
+    if (OPENING_STILL) {
+      renderOpeningStill();
+    } else if (elapsed < OPENING_REVEAL_MS) {
+      renderOpeningReveal(elapsed / OPENING_REVEAL_MS);
+    } else if (elapsed < OPENING_REVEAL_MS + OPENING_CHASE_MS) {
+      renderOpeningChase((elapsed - OPENING_REVEAL_MS) / OPENING_CHASE_MS);
+    } else {
+      renderOpeningReady(Math.min(1, (elapsed - OPENING_REVEAL_MS - OPENING_CHASE_MS) / OPENING_READY_MS));
+    }
+    renderPressAnyKey(elapsed);
+  }
+
   // ---------- rendering ----------
-  function render() {
+  // Shared by the normal in-game render() below and renderOpening() above -
+  // the translucent Nokia-LCD board fill plus the dimmed guide grid, exactly
+  // as before this was factored out (Task C) - no visual change.
+  function drawBoardBackdrop() {
     var w = boardCssPx, h = boardCssPx;
     ctx.clearRect(0, 0, w, h);
     // light Nokia-LCD board, deliberately semi-transparent (alpha 0.82) so a
@@ -1782,6 +2339,14 @@
       ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, h); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(w, p); ctx.stroke();
     }
+  }
+
+  function render() {
+    if (state === "opening") {
+      renderOpening(openingElapsedMs());
+      return;
+    }
+    drawBoardBackdrop();
 
     if (!snake) return;
 
@@ -1860,17 +2425,38 @@
     // per index (ghost1/2/3 = red/pink/cyan), same soft shadow as the food.
     // drawable() returns either the loaded ghost image or the colored-
     // circle fallback canvas - drawImage accepts both.
+    // Idle float/rotate/pulse/glow (Task A) is layered on with a canvas
+    // transform around this draw only - ch.x/ch.y (the values chaserAt() and
+    // every hit test read) are never touched.
     for (var ci = 0; ci < chasers.length; ci++) {
       var ch = chasers[ci];
+      var idle = GHOST_IDLE[ci % 3];
       var gImg = drawable("ghost" + ((ci % 3) + 1));
       var gSize = cellPx * 1.14;
       var gx2 = ch.x * cellPx + cellPx / 2;
       var gy2 = ch.y * cellPx + cellPx / 2;
+      var ox = 0, oy = 0, rotRad = 0, scaleMul = 1, glow = idle.glowBase;
+      if (!GHOST_IDLE_STILL) {
+        // own phase per chaser index so the three never pulse in lockstep
+        var p = ((animTs / GHOST_IDLE_PERIOD_MS) + ci / 3) % 1;
+        var m = idle.motion(p * GHOST_IDLE_TAU, p * 2 * GHOST_IDLE_TAU, GHOST_IDLE_SCRATCH[ci % 3]);
+        var norm = gSize / GHOST_IDLE_GS; // raw amplitudes were tuned to a 130px reference sprite
+        ox = m.dx * norm;
+        oy = m.dy * norm;
+        rotRad = m.rot * Math.PI / 180;
+        // reference baseline scale is 1.15; only the oscillating part is kept
+        // so mean scale stays 1.0 and the collision-read draw size never changes
+        scaleMul = 1 + m.scaleOsc;
+        glow = m.glow;
+      }
       ctx.save();
-      ctx.shadowColor = "rgba(0,0,0,0.45)";
-      ctx.shadowBlur = cellPx * 0.3;
+      ctx.translate(gx2 + ox, gy2 + oy);
+      ctx.rotate(rotRad);
+      ctx.scale(scaleMul, scaleMul);
+      ctx.shadowColor = idle.color;
+      ctx.shadowBlur = cellPx * Math.max(0, glow) * 0.6; // kept subtle - never enough to smear the board
       ctx.shadowOffsetY = cellPx * 0.1;
-      ctx.drawImage(gImg, gx2 - gSize / 2, gy2 - gSize / 2, gSize, gSize);
+      ctx.drawImage(gImg, -gSize / 2, -gSize / 2, gSize, gSize);
       ctx.restore();
     }
   }
@@ -1880,9 +2466,18 @@
     if (!lastTs) lastTs = ts;
     var dt = ts - lastTs;
     lastTs = ts;
+    animTs = ts;
     if (dt > 250) dt = 250; // clamp huge gaps (tab backgrounded)
 
-    if (state === "playing") {
+    if (state === "opening") {
+      // Auto-advance to the menu if the player never dismisses it (see
+      // requestOpeningDismiss() for the dismiss path) - timed from this same
+      // rAF timestamp, never Date.now(), so it stays consistent with the
+      // rest of the file's animation conventions (see animTs above). step()
+      // is never called here, same as every other non-"playing" state.
+      if (openingStartTs === null) openingStartTs = ts;
+      if (ts - openingStartTs >= OPENING_TOTAL_MS) endOpening();
+    } else if (state === "playing") {
       acc += dt;
       // Snapshot stepMs for this frame: step() can call levelUp(), which
       // mutates stepMs mid-loop. Without the snapshot, a single frame could
@@ -1908,6 +2503,10 @@
   };
 
   window.addEventListener("keydown", function (e) {
+    if (state === "opening") {
+      requestOpeningDismiss();
+      return;
+    }
     if (KEY_DIR[e.key]) {
       e.preventDefault();
       if (state === "playing") requestTurn(KEY_DIR[e.key]);
@@ -1928,6 +2527,24 @@
       startOrResume();
     }
   }, { passive: false });
+
+  // Any pointer press or touch, ANYWHERE in the document (not just the
+  // board/canvas), also dismisses the opening scene straight to the menu -
+  // see requestOpeningDismiss(). Registered on the initiating press event
+  // (not a later "click"/"touchend") so it fires and flips `state` before
+  // any trailing click/touchend for the same physical gesture can reach the
+  // existing "tap to start" handlers further below - see the comment on
+  // requestOpeningDismiss() and suppressTapStartOnce for why that ordering
+  // matters. Both listeners are idempotent no-ops once state isn't
+  // "opening" any more (requestOpeningDismiss() checks that itself), so
+  // having both pointerdown and touchstart wired is harmless belt-and-
+  // suspenders, not a double-fire risk.
+  document.addEventListener("pointerdown", function () {
+    requestOpeningDismiss();
+  });
+  document.addEventListener("touchstart", function () {
+    requestOpeningDismiss();
+  }, { passive: true });
 
   // ---------- touch: swipe on canvas ----------
   var touchStart = null;
@@ -1971,6 +2588,14 @@
 
   canvas.addEventListener("touchend", function (e) {
     e.preventDefault();
+    if (suppressTapStartOnce) {
+      // This touchend belongs to the SAME tap that just dismissed the
+      // opening scene (see requestOpeningDismiss()) - consume the flag and
+      // stop here instead of also starting a new game.
+      suppressTapStartOnce = false;
+      touchStart = null;
+      return;
+    }
     if (state === "menu" || state === "dead" || state === "won") {
       startOrResume();
       touchStart = null;
@@ -2035,6 +2660,13 @@
 
   // tap board to restart/resume when overlay hidden but state not playing (defensive)
   wrap.addEventListener("click", function () {
+    if (suppressTapStartOnce) {
+      // This click belongs to the SAME tap/click that just dismissed the
+      // opening scene (see requestOpeningDismiss()) - consume the flag and
+      // stop here instead of also starting a new game.
+      suppressTapStartOnce = false;
+      return;
+    }
     if (state === "menu" || state === "dead" || state === "won") startOrResume();
   });
 
@@ -2129,11 +2761,11 @@
     // "loading" here in the current code (Play is disabled/no-op until this
     // fires), but this keeps a future change from silently reintroducing a
     // bug where finishing asset load stomps an already-started game back to
-    // the menu and pops the overlay over live play.
+    // the menu and pops the overlay over live play. Goes to the "opening"
+    // intro scene (Task C) rather than straight to "menu" - see
+    // startOpening()/endOpening() above.
     if (state === "loading") {
-      state = "menu";
-      showOverlayMenu();
-      maybeShowMobileHelp();
+      startOpening();
     }
     updateAvatarHud(); // always-visible avatar HUD: show it as soon as assets
                         // are ready, even before the first game starts

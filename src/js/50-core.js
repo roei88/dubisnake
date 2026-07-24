@@ -1,9 +1,9 @@
   // ---------- game state ----------
   // "loading" is the real boot state (not "menu"): the rAF loop and the
-  // first real render() only start once preloadAssets() finishes, so the
+  // first real render() only start once assetStore.preload() finishes, so the
   // Play button must not be able to do anything before that - see the
   // disabled attribute on the static #playBtn and the guard at the top of
-  // startOrResume(). Only preloadAssets()'s callback advances "loading" -> "menu".
+  // startOrResume(). Only assetStore.preload()'s callback advances "loading" -> "menu".
   var state = "loading"; // loading | opening | menu | levelbanner | countdown | playing | paused | dead | won
   var snake = null, dir = { x: 1, y: 0 }, queuedDir = null, food = null;
   // Pac-Man-style chasers: one per level, capped at 3. They pursue the
@@ -56,10 +56,10 @@
     var count = Math.min(level, 3);
     var html = "";
     for (var i = 0; i < count; i++) {
-      // assetSrc() keeps the existing fallback chain (real image, else the
+      // assetStore.src() keeps the existing fallback chain (real image, else the
       // generated colored-circle dataURL, else a blank pixel) so a failed
       // monster download can never leave a broken-image icon here.
-      html += '<img src="' + assetSrc("ghost" + (i + 1)) + '" alt="">';
+      html += '<img src="' + assetStore.src("ghost" + (i + 1)) + '" alt="">';
     }
     levelMonsters.innerHTML = html;
     levelFlashTitle.textContent = S().levelFlashLabel(level);
@@ -261,14 +261,14 @@
 
   // Always-visible avatar HUD (#avatarHud/#avatarHudImg): shows the same
   // head1/head2/head3 image already driving the snake head and
-  // the level banner's monsters. Reuses assetSrc()'s existing fallback chain (real image
+  // the level banner's monsters. Reuses assetStore.src()'s existing fallback chain (real image
   // src, or the makeFallbackCanvas() colored-circle dataURL, or
   // BLANK_PIXEL_SRC) - no new naive <img src> that can hang/blank on a failed
   // load. Called at boot (once assets are ready) and from newGame()/levelUp()
   // so it can never drift out of sync with either the snake head or the
   // level-up flash image.
   function updateAvatarHud() {
-    if (avatarHudImg) avatarHudImg.src = assetSrc(currentHeadKey());
+    if (avatarHudImg) avatarHudImg.src = assetStore.src(currentHeadKey());
   }
 
   function updateHud() {

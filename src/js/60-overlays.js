@@ -23,7 +23,7 @@
     overlay.classList.remove("hidden");
     overlay.innerHTML =
       '<div class="overlayInner">' +
-      '<img class="splashPic" src="' + assetSrc("splash") + '" alt="">' +
+      '<img class="splashPic" src="' + assetStore.src("splash") + '" alt="">' +
       '<h1>' + S().deadTitle + '</h1>' +
       '<p class="stat">' + S().scoreStat(score) + '</p>' +
       '<p class="stat">' + S().hiStat(hi) + '</p>' +
@@ -37,7 +37,7 @@
     overlay.classList.remove("hidden");
     overlay.innerHTML =
       '<div class="overlayInner">' +
-      '<img class="splashPic" src="' + assetSrc("splash") + '" alt="">' +
+      '<img class="splashPic" src="' + assetStore.src("splash") + '" alt="">' +
       '<h1>' + S().wonTitle + '</h1>' +
       '<p class="stat">' + S().wonBoardFull(score) + '</p>' +
       '<p class="stat">' + S().hiStat(hi) + '</p>' +
@@ -120,9 +120,9 @@
 
   // ---------- opening intro scene (Task C - adapted port of
   // new-assets/animations/opener-scenes.jsx) ----------
-  // Plays once, automatically, right after preloadAssets() finishes and
+  // Plays once, automatically, right after assetStore.preload() finishes and
   // before the normal "menu" state - see startOpening() (called from the
-  // preloadAssets callback near the bottom of this file) and endOpening().
+  // assetStore.preload() callback near the bottom of this file) and endOpening().
   // Entirely canvas-driven from the SAME fixed-timestep frame()/render()
   // pair the rest of the game already uses: no second rAF loop, no
   // setInterval, no Date.now()-based timing (openingStartTs/animTs are both
@@ -152,7 +152,7 @@
     return 1 - Math.pow(1 - t, 3);
   }
 
-  // Starts the intro: called once, from the preloadAssets() callback,
+  // Starts the intro: called once, from the assetStore.preload() callback,
   // instead of jumping straight "loading" -> "menu". frame() only ever calls
   // step() while state === "playing" (see frame() below), so this new state
   // needs no extra guard there - it simply never matches that branch.
@@ -214,7 +214,7 @@
     var headScale = openingEaseOutBack(headP);
     var hSize = cellPx * 2.4 * Math.max(0, headScale);
     if (hSize > 0.5) {
-      var headImg = drawable(currentHeadKey());
+      var headImg = assetStore.drawable(currentHeadKey());
       ctx.save();
       ctx.globalAlpha = Math.min(1, headP * 1.4);
       ctx.beginPath();
@@ -226,7 +226,7 @@
     }
     var foodP = Math.max(0, (p - 0.5) / 0.5);
     if (foodP > 0) {
-      var foodImg = drawable("food");
+      var foodImg = assetStore.drawable("food");
       var fSize = cellPx * 0.9;
       var spots = [
         { x: cx - cellPx * 2.6, y: cy - cellPx * 1.8 },
@@ -253,7 +253,7 @@
     var travel = p;
     var hx = travel * boardCssPx;
     var hy = boardCssPx * 0.5 + Math.sin(travel * Math.PI * 2) * boardCssPx * 0.12;
-    var headImg = drawable(currentHeadKey());
+    var headImg = assetStore.drawable(currentHeadKey());
     var hSize = cellPx * 1.3;
     var heading = Math.atan2(Math.cos(travel * Math.PI * 2) * 0.7, 1);
     ctx.save();
@@ -288,7 +288,7 @@
       var startY = -cellPx * 2;
       var gx = targetX;
       var gy = startY + (targetY - startY) * openingEaseOutBack(descend);
-      var gImg = drawable("ghost" + (ci + 1));
+      var gImg = assetStore.drawable("ghost" + (ci + 1));
       var gSize = cellPx * 1.14;
       ctx.save();
       ctx.globalAlpha = Math.min(1, descend * 2);
@@ -310,7 +310,7 @@
     ];
     var fromX = boardCssPx, fromY = boardCssPx * 0.5;
 
-    var headImg = drawable(currentHeadKey());
+    var headImg = assetStore.drawable(currentHeadKey());
     var hSize = cellPx * 0.95;
     var toX = startCells[0].x * cellPx + cellPx / 2, toY = startCells[0].y * cellPx + cellPx / 2;
     var hx = fromX + (toX - fromX) * settle;
@@ -367,7 +367,7 @@
         oy = m.dy * norm * settle;
         glow = m.glow;
       }
-      var gImg = drawable("ghost" + (ci + 1));
+      var gImg = assetStore.drawable("ghost" + (ci + 1));
       ctx.save();
       ctx.globalAlpha = settle;
       ctx.shadowColor = idle.color;

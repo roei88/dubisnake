@@ -34,7 +34,7 @@
     // food, slightly larger than a cell, soft shadow
     // (food can legitimately be null once the board is completely full - win())
     if (food) {
-      var foodImg = drawable("food");
+      var foodImg = assetStore.drawable("food");
       var fSize = cellPx * 1.3;
       var fx = food.x * cellPx + cellPx / 2;
       var fy = food.y * cellPx + cellPx / 2;
@@ -42,7 +42,7 @@
       ctx.shadowColor = "rgba(0,0,0,0.55)";
       ctx.shadowBlur = cellPx * 0.4;
       ctx.shadowOffsetY = cellPx * 0.12;
-      if (assets.food) {
+      if (assetStore.image("food")) {
         ctx.drawImage(foodImg, fx - fSize / 2, fy - fSize / 2, fSize, fSize);
       } else {
         ctx.beginPath();
@@ -90,8 +90,8 @@
     ctx.closePath();
     ctx.save();
     ctx.clip();
-    if (assets[headKey]) {
-      ctx.drawImage(assets[headKey], -hSize / 2, -hSize / 2, hSize, hSize);
+    if (assetStore.image(headKey)) {
+      ctx.drawImage(assetStore.image(headKey), -hSize / 2, -hSize / 2, hSize, hSize);
     } else {
       ctx.fillStyle = tint.core;
       ctx.fillRect(-hSize / 2, -hSize / 2, hSize, hSize);
@@ -104,7 +104,7 @@
 
     // chasers: drawn last so the threat is always visible on top. Sprite
     // per index (ghost1/2/3 = red/pink/cyan), same soft shadow as the food.
-    // drawable() returns either the loaded ghost image or the colored-
+    // assetStore.drawable() returns either the loaded ghost image or the colored-
     // circle fallback canvas - drawImage accepts both.
     // Idle float/rotate/pulse/glow (Task A) is layered on with a canvas
     // transform around this draw only - ch.x/ch.y (the values chaserAt() and
@@ -112,7 +112,7 @@
     for (var ci = 0; ci < chasers.length; ci++) {
       var ch = chasers[ci];
       var idle = GHOST_IDLE[ci % 3];
-      var gImg = drawable("ghost" + ((ci % 3) + 1));
+      var gImg = assetStore.drawable("ghost" + ((ci % 3) + 1));
       var gSize = cellPx * 1.14;
       var gx2 = ch.x * cellPx + cellPx / 2;
       var gy2 = ch.y * cellPx + cellPx / 2;

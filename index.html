@@ -1113,81 +1113,97 @@
     { key: "ghost2", src: "./assets/ghost-2.png", fallback: "#ff7bd5" },
     { key: "ghost3", src: "./assets/ghost-3.png", fallback: "#3ed6e0" }
   ];
-  var assets = {};       // key -> HTMLImageElement (only if it loaded ok)
-  var assetFallback = {};// key -> color string, used when image failed
-  var assetsReady = 0;
-  var assetsTotal = ASSET_LIST.length;
+  // Loads the image set and keeps a colored-circle canvas fallback per key,
+  // so a failed / absent / stalled image can never blank a sprite or hang
+  // the game. Access loaded state only through image()/drawable()/src().
+  class AssetStore {
+    constructor(list) {
+      this.list = list;
+      this.images = {};    // key -> HTMLImageElement (only if it loaded ok)
+      this.fallbacks = {}; // key -> canvas, used when the image failed/absent
+      this._ready = 0;
+      this._total = list.length;
+    }
 
-  function makeFallbackCanvas(color) {
-    var c = document.createElement("canvas");
-    c.width = 64; c.height = 64;
-    var cx = c.getContext("2d");
-    cx.beginPath();
-    cx.arc(32, 32, 30, 0, Math.PI * 2);
-    cx.fillStyle = color;
-    cx.fill();
-    return c;
-  }
+    _fallbackCanvas(color) {
+      var c = document.createElement("canvas");
+      c.width = 64; c.height = 64;
+      var cx = c.getContext("2d");
+      cx.beginPath();
+      cx.arc(32, 32, 30, 0, Math.PI * 2);
+      cx.fillStyle = color;
+      cx.fill();
+      return c;
+    }
 
-  // A stalled request (neither load nor error ever fires - flaky mobile
-  // networks do this) must not be able to hang the game forever: the rAF
-  // loop only starts after all ASSET_LIST entries "settle", so one dead
-  // request would otherwise mean assetsReady never reaches assetsTotal,
-  // done() never runs, and the board never starts moving even after the
-  // static Play button is tapped. Give every image a hard deadline and fall
-  // back to the colored-circle canvas if it hasn't settled by then.
-  var ASSET_TIMEOUT_MS = 4000;
-
-  function preloadAssets(done) {
-    ASSET_LIST.forEach(function (a) {
-      var img = new Image();
-      var settled = false;
-      var timeoutId = setTimeout(function () {
-        assetFallback[a.key] = makeFallbackCanvas(a.fallback);
-        finish();
-      }, ASSET_TIMEOUT_MS);
-      function finish() {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timeoutId);
-        assetsReady++;
-        if (assetsReady >= assetsTotal) done();
-      }
-      img.onload = function () {
-        // guard against a 200-response truncated/corrupt/zero-byte image:
-        // onload can fire before naturalWidth is meaningful in some engines,
-        // so only accept it as "loaded" when it actually has pixels.
-        if (img.naturalWidth > 0) {
-          assets[a.key] = img;
-        } else {
-          assetFallback[a.key] = makeFallbackCanvas(a.fallback);
+    // A stalled request (neither load nor error ever fires - flaky mobile
+    // networks do this) must not be able to hang the game forever: the rAF
+    // loop only starts after all list entries "settle", so one dead request
+    // would otherwise mean _ready never reaches _total, done() never runs,
+    // and the board never starts moving even after the static Play button is
+    // tapped. Give every image a hard deadline and fall back to the
+    // colored-circle canvas if it hasn't settled by then.
+    preload(done) {
+      var self = this;
+      this.list.forEach(function (a) {
+        var img = new Image();
+        var settled = false;
+        var timeoutId = setTimeout(function () {
+          self.fallbacks[a.key] = self._fallbackCanvas(a.fallback);
+          finish();
+        }, AssetStore.TIMEOUT_MS);
+        function finish() {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeoutId);
+          self._ready++;
+          if (self._ready >= self._total) done();
         }
-        finish();
-      };
-      img.onerror = function () {
-        assetFallback[a.key] = makeFallbackCanvas(a.fallback);
-        finish();
-      };
-      img.src = a.src;
-    });
-  }
+        img.onload = function () {
+          // guard against a 200-response truncated/corrupt/zero-byte image:
+          // onload can fire before naturalWidth is meaningful in some engines,
+          // so only accept it as "loaded" when it actually has pixels.
+          if (img.naturalWidth > 0) {
+            self.images[a.key] = img;
+          } else {
+            self.fallbacks[a.key] = self._fallbackCanvas(a.fallback);
+          }
+          finish();
+        };
+        img.onerror = function () {
+          self.fallbacks[a.key] = self._fallbackCanvas(a.fallback);
+          finish();
+        };
+        img.src = a.src;
+      });
+    }
 
-  function drawable(key) {
-    return assets[key] || assetFallback[key];
-  }
+    // The loaded <img> for a key, or null - use where a REAL image is
+    // required and the fallback circle is drawn some other way.
+    image(key) {
+      return this.images[key] || null;
+    }
 
-  // usable <img>-src string for a key, whether it's a real loaded image or
-  // the colored-circle-canvas fallback - used for the splash.png shown on
-  // the level-up flash and the game-over screen.
-  // 1x1 transparent GIF - fail-closed placeholder so an <img src> is never
-  // set to "" (which some browsers/embedders re-request as the current doc).
-  var BLANK_PIXEL_SRC = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+    // The image if loaded, else the colored-circle fallback canvas. Both are
+    // valid CanvasRenderingContext2D.drawImage() sources.
+    drawable(key) {
+      return this.images[key] || this.fallbacks[key];
+    }
 
-  function assetSrc(key) {
-    if (assets[key]) return assets[key].src;
-    if (assetFallback[key]) return assetFallback[key].toDataURL();
-    return BLANK_PIXEL_SRC;
+    // A usable <img>-src string for a key: the real image src, else the
+    // fallback canvas as a data URL, else a 1x1 transparent GIF so an
+    // <img src> is never set to "" (which some browsers/embedders re-request
+    // as the current document). Used for splash/level-banner/avatar <img>s.
+    src(key) {
+      if (this.images[key]) return this.images[key].src;
+      if (this.fallbacks[key]) return this.fallbacks[key].toDataURL();
+      return AssetStore.BLANK_PIXEL_SRC;
+    }
   }
+  AssetStore.TIMEOUT_MS = 4000;
+  AssetStore.BLANK_PIXEL_SRC = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
+  var assetStore = new AssetStore(ASSET_LIST);
 
   // ---------- head cycle / per-level body tint (predefined, no getImageData) ----------
   var HEAD_KEYS = ["head1", "head2", "head3"];
@@ -1436,10 +1452,10 @@
 
   // ---------- game state ----------
   // "loading" is the real boot state (not "menu"): the rAF loop and the
-  // first real render() only start once preloadAssets() finishes, so the
+  // first real render() only start once assetStore.preload() finishes, so the
   // Play button must not be able to do anything before that - see the
   // disabled attribute on the static #playBtn and the guard at the top of
-  // startOrResume(). Only preloadAssets()'s callback advances "loading" -> "menu".
+  // startOrResume(). Only assetStore.preload()'s callback advances "loading" -> "menu".
   var state = "loading"; // loading | opening | menu | levelbanner | countdown | playing | paused | dead | won
   var snake = null, dir = { x: 1, y: 0 }, queuedDir = null, food = null;
   // Pac-Man-style chasers: one per level, capped at 3. They pursue the
@@ -1492,10 +1508,10 @@
     var count = Math.min(level, 3);
     var html = "";
     for (var i = 0; i < count; i++) {
-      // assetSrc() keeps the existing fallback chain (real image, else the
+      // assetStore.src() keeps the existing fallback chain (real image, else the
       // generated colored-circle dataURL, else a blank pixel) so a failed
       // monster download can never leave a broken-image icon here.
-      html += '<img src="' + assetSrc("ghost" + (i + 1)) + '" alt="">';
+      html += '<img src="' + assetStore.src("ghost" + (i + 1)) + '" alt="">';
     }
     levelMonsters.innerHTML = html;
     levelFlashTitle.textContent = S().levelFlashLabel(level);
@@ -1697,14 +1713,14 @@
 
   // Always-visible avatar HUD (#avatarHud/#avatarHudImg): shows the same
   // head1/head2/head3 image already driving the snake head and
-  // the level banner's monsters. Reuses assetSrc()'s existing fallback chain (real image
+  // the level banner's monsters. Reuses assetStore.src()'s existing fallback chain (real image
   // src, or the makeFallbackCanvas() colored-circle dataURL, or
   // BLANK_PIXEL_SRC) - no new naive <img src> that can hang/blank on a failed
   // load. Called at boot (once assets are ready) and from newGame()/levelUp()
   // so it can never drift out of sync with either the snake head or the
   // level-up flash image.
   function updateAvatarHud() {
-    if (avatarHudImg) avatarHudImg.src = assetSrc(currentHeadKey());
+    if (avatarHudImg) avatarHudImg.src = assetStore.src(currentHeadKey());
   }
 
   function updateHud() {
@@ -1969,7 +1985,7 @@
     overlay.classList.remove("hidden");
     overlay.innerHTML =
       '<div class="overlayInner">' +
-      '<img class="splashPic" src="' + assetSrc("splash") + '" alt="">' +
+      '<img class="splashPic" src="' + assetStore.src("splash") + '" alt="">' +
       '<h1>' + S().deadTitle + '</h1>' +
       '<p class="stat">' + S().scoreStat(score) + '</p>' +
       '<p class="stat">' + S().hiStat(hi) + '</p>' +
@@ -1983,7 +1999,7 @@
     overlay.classList.remove("hidden");
     overlay.innerHTML =
       '<div class="overlayInner">' +
-      '<img class="splashPic" src="' + assetSrc("splash") + '" alt="">' +
+      '<img class="splashPic" src="' + assetStore.src("splash") + '" alt="">' +
       '<h1>' + S().wonTitle + '</h1>' +
       '<p class="stat">' + S().wonBoardFull(score) + '</p>' +
       '<p class="stat">' + S().hiStat(hi) + '</p>' +
@@ -2066,9 +2082,9 @@
 
   // ---------- opening intro scene (Task C - adapted port of
   // new-assets/animations/opener-scenes.jsx) ----------
-  // Plays once, automatically, right after preloadAssets() finishes and
+  // Plays once, automatically, right after assetStore.preload() finishes and
   // before the normal "menu" state - see startOpening() (called from the
-  // preloadAssets callback near the bottom of this file) and endOpening().
+  // assetStore.preload() callback near the bottom of this file) and endOpening().
   // Entirely canvas-driven from the SAME fixed-timestep frame()/render()
   // pair the rest of the game already uses: no second rAF loop, no
   // setInterval, no Date.now()-based timing (openingStartTs/animTs are both
@@ -2098,7 +2114,7 @@
     return 1 - Math.pow(1 - t, 3);
   }
 
-  // Starts the intro: called once, from the preloadAssets() callback,
+  // Starts the intro: called once, from the assetStore.preload() callback,
   // instead of jumping straight "loading" -> "menu". frame() only ever calls
   // step() while state === "playing" (see frame() below), so this new state
   // needs no extra guard there - it simply never matches that branch.
@@ -2160,7 +2176,7 @@
     var headScale = openingEaseOutBack(headP);
     var hSize = cellPx * 2.4 * Math.max(0, headScale);
     if (hSize > 0.5) {
-      var headImg = drawable(currentHeadKey());
+      var headImg = assetStore.drawable(currentHeadKey());
       ctx.save();
       ctx.globalAlpha = Math.min(1, headP * 1.4);
       ctx.beginPath();
@@ -2172,7 +2188,7 @@
     }
     var foodP = Math.max(0, (p - 0.5) / 0.5);
     if (foodP > 0) {
-      var foodImg = drawable("food");
+      var foodImg = assetStore.drawable("food");
       var fSize = cellPx * 0.9;
       var spots = [
         { x: cx - cellPx * 2.6, y: cy - cellPx * 1.8 },
@@ -2199,7 +2215,7 @@
     var travel = p;
     var hx = travel * boardCssPx;
     var hy = boardCssPx * 0.5 + Math.sin(travel * Math.PI * 2) * boardCssPx * 0.12;
-    var headImg = drawable(currentHeadKey());
+    var headImg = assetStore.drawable(currentHeadKey());
     var hSize = cellPx * 1.3;
     var heading = Math.atan2(Math.cos(travel * Math.PI * 2) * 0.7, 1);
     ctx.save();
@@ -2234,7 +2250,7 @@
       var startY = -cellPx * 2;
       var gx = targetX;
       var gy = startY + (targetY - startY) * openingEaseOutBack(descend);
-      var gImg = drawable("ghost" + (ci + 1));
+      var gImg = assetStore.drawable("ghost" + (ci + 1));
       var gSize = cellPx * 1.14;
       ctx.save();
       ctx.globalAlpha = Math.min(1, descend * 2);
@@ -2256,7 +2272,7 @@
     ];
     var fromX = boardCssPx, fromY = boardCssPx * 0.5;
 
-    var headImg = drawable(currentHeadKey());
+    var headImg = assetStore.drawable(currentHeadKey());
     var hSize = cellPx * 0.95;
     var toX = startCells[0].x * cellPx + cellPx / 2, toY = startCells[0].y * cellPx + cellPx / 2;
     var hx = fromX + (toX - fromX) * settle;
@@ -2313,7 +2329,7 @@
         oy = m.dy * norm * settle;
         glow = m.glow;
       }
-      var gImg = drawable("ghost" + (ci + 1));
+      var gImg = assetStore.drawable("ghost" + (ci + 1));
       ctx.save();
       ctx.globalAlpha = settle;
       ctx.shadowColor = idle.color;
@@ -2431,7 +2447,7 @@
     // food, slightly larger than a cell, soft shadow
     // (food can legitimately be null once the board is completely full - win())
     if (food) {
-      var foodImg = drawable("food");
+      var foodImg = assetStore.drawable("food");
       var fSize = cellPx * 1.3;
       var fx = food.x * cellPx + cellPx / 2;
       var fy = food.y * cellPx + cellPx / 2;
@@ -2439,7 +2455,7 @@
       ctx.shadowColor = "rgba(0,0,0,0.55)";
       ctx.shadowBlur = cellPx * 0.4;
       ctx.shadowOffsetY = cellPx * 0.12;
-      if (assets.food) {
+      if (assetStore.image("food")) {
         ctx.drawImage(foodImg, fx - fSize / 2, fy - fSize / 2, fSize, fSize);
       } else {
         ctx.beginPath();
@@ -2487,8 +2503,8 @@
     ctx.closePath();
     ctx.save();
     ctx.clip();
-    if (assets[headKey]) {
-      ctx.drawImage(assets[headKey], -hSize / 2, -hSize / 2, hSize, hSize);
+    if (assetStore.image(headKey)) {
+      ctx.drawImage(assetStore.image(headKey), -hSize / 2, -hSize / 2, hSize, hSize);
     } else {
       ctx.fillStyle = tint.core;
       ctx.fillRect(-hSize / 2, -hSize / 2, hSize, hSize);
@@ -2501,7 +2517,7 @@
 
     // chasers: drawn last so the threat is always visible on top. Sprite
     // per index (ghost1/2/3 = red/pink/cyan), same soft shadow as the food.
-    // drawable() returns either the loaded ghost image or the colored-
+    // assetStore.drawable() returns either the loaded ghost image or the colored-
     // circle fallback canvas - drawImage accepts both.
     // Idle float/rotate/pulse/glow (Task A) is layered on with a canvas
     // transform around this draw only - ch.x/ch.y (the values chaserAt() and
@@ -2509,7 +2525,7 @@
     for (var ci = 0; ci < chasers.length; ci++) {
       var ch = chasers[ci];
       var idle = GHOST_IDLE[ci % 3];
-      var gImg = drawable("ghost" + ((ci % 3) + 1));
+      var gImg = assetStore.drawable("ghost" + ((ci % 3) + 1));
       var gSize = cellPx * 1.14;
       var gx2 = ch.x * cellPx + cellPx / 2;
       var gy2 = ch.y * cellPx + cellPx / 2;
@@ -2901,7 +2917,7 @@
 
   resizeCanvas();
 
-  preloadAssets(function () {
+  assetStore.preload(function () {
     // Guard rather than unconditionally reset: state can only still be
     // "loading" here in the current code (Play is disabled/no-op until this
     // fires), but this keeps a future change from silently reintroducing a

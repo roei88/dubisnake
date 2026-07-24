@@ -10,81 +10,97 @@
     { key: "ghost2", src: "./assets/ghost-2.png", fallback: "#ff7bd5" },
     { key: "ghost3", src: "./assets/ghost-3.png", fallback: "#3ed6e0" }
   ];
-  var assets = {};       // key -> HTMLImageElement (only if it loaded ok)
-  var assetFallback = {};// key -> color string, used when image failed
-  var assetsReady = 0;
-  var assetsTotal = ASSET_LIST.length;
+  // Loads the image set and keeps a colored-circle canvas fallback per key,
+  // so a failed / absent / stalled image can never blank a sprite or hang
+  // the game. Access loaded state only through image()/drawable()/src().
+  class AssetStore {
+    constructor(list) {
+      this.list = list;
+      this.images = {};    // key -> HTMLImageElement (only if it loaded ok)
+      this.fallbacks = {}; // key -> canvas, used when the image failed/absent
+      this._ready = 0;
+      this._total = list.length;
+    }
 
-  function makeFallbackCanvas(color) {
-    var c = document.createElement("canvas");
-    c.width = 64; c.height = 64;
-    var cx = c.getContext("2d");
-    cx.beginPath();
-    cx.arc(32, 32, 30, 0, Math.PI * 2);
-    cx.fillStyle = color;
-    cx.fill();
-    return c;
-  }
+    _fallbackCanvas(color) {
+      var c = document.createElement("canvas");
+      c.width = 64; c.height = 64;
+      var cx = c.getContext("2d");
+      cx.beginPath();
+      cx.arc(32, 32, 30, 0, Math.PI * 2);
+      cx.fillStyle = color;
+      cx.fill();
+      return c;
+    }
 
-  // A stalled request (neither load nor error ever fires - flaky mobile
-  // networks do this) must not be able to hang the game forever: the rAF
-  // loop only starts after all ASSET_LIST entries "settle", so one dead
-  // request would otherwise mean assetsReady never reaches assetsTotal,
-  // done() never runs, and the board never starts moving even after the
-  // static Play button is tapped. Give every image a hard deadline and fall
-  // back to the colored-circle canvas if it hasn't settled by then.
-  var ASSET_TIMEOUT_MS = 4000;
-
-  function preloadAssets(done) {
-    ASSET_LIST.forEach(function (a) {
-      var img = new Image();
-      var settled = false;
-      var timeoutId = setTimeout(function () {
-        assetFallback[a.key] = makeFallbackCanvas(a.fallback);
-        finish();
-      }, ASSET_TIMEOUT_MS);
-      function finish() {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timeoutId);
-        assetsReady++;
-        if (assetsReady >= assetsTotal) done();
-      }
-      img.onload = function () {
-        // guard against a 200-response truncated/corrupt/zero-byte image:
-        // onload can fire before naturalWidth is meaningful in some engines,
-        // so only accept it as "loaded" when it actually has pixels.
-        if (img.naturalWidth > 0) {
-          assets[a.key] = img;
-        } else {
-          assetFallback[a.key] = makeFallbackCanvas(a.fallback);
+    // A stalled request (neither load nor error ever fires - flaky mobile
+    // networks do this) must not be able to hang the game forever: the rAF
+    // loop only starts after all list entries "settle", so one dead request
+    // would otherwise mean _ready never reaches _total, done() never runs,
+    // and the board never starts moving even after the static Play button is
+    // tapped. Give every image a hard deadline and fall back to the
+    // colored-circle canvas if it hasn't settled by then.
+    preload(done) {
+      var self = this;
+      this.list.forEach(function (a) {
+        var img = new Image();
+        var settled = false;
+        var timeoutId = setTimeout(function () {
+          self.fallbacks[a.key] = self._fallbackCanvas(a.fallback);
+          finish();
+        }, AssetStore.TIMEOUT_MS);
+        function finish() {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeoutId);
+          self._ready++;
+          if (self._ready >= self._total) done();
         }
-        finish();
-      };
-      img.onerror = function () {
-        assetFallback[a.key] = makeFallbackCanvas(a.fallback);
-        finish();
-      };
-      img.src = a.src;
-    });
-  }
+        img.onload = function () {
+          // guard against a 200-response truncated/corrupt/zero-byte image:
+          // onload can fire before naturalWidth is meaningful in some engines,
+          // so only accept it as "loaded" when it actually has pixels.
+          if (img.naturalWidth > 0) {
+            self.images[a.key] = img;
+          } else {
+            self.fallbacks[a.key] = self._fallbackCanvas(a.fallback);
+          }
+          finish();
+        };
+        img.onerror = function () {
+          self.fallbacks[a.key] = self._fallbackCanvas(a.fallback);
+          finish();
+        };
+        img.src = a.src;
+      });
+    }
 
-  function drawable(key) {
-    return assets[key] || assetFallback[key];
-  }
+    // The loaded <img> for a key, or null - use where a REAL image is
+    // required and the fallback circle is drawn some other way.
+    image(key) {
+      return this.images[key] || null;
+    }
 
-  // usable <img>-src string for a key, whether it's a real loaded image or
-  // the colored-circle-canvas fallback - used for the splash.png shown on
-  // the level-up flash and the game-over screen.
-  // 1x1 transparent GIF - fail-closed placeholder so an <img src> is never
-  // set to "" (which some browsers/embedders re-request as the current doc).
-  var BLANK_PIXEL_SRC = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+    // The image if loaded, else the colored-circle fallback canvas. Both are
+    // valid CanvasRenderingContext2D.drawImage() sources.
+    drawable(key) {
+      return this.images[key] || this.fallbacks[key];
+    }
 
-  function assetSrc(key) {
-    if (assets[key]) return assets[key].src;
-    if (assetFallback[key]) return assetFallback[key].toDataURL();
-    return BLANK_PIXEL_SRC;
+    // A usable <img>-src string for a key: the real image src, else the
+    // fallback canvas as a data URL, else a 1x1 transparent GIF so an
+    // <img src> is never set to "" (which some browsers/embedders re-request
+    // as the current document). Used for splash/level-banner/avatar <img>s.
+    src(key) {
+      if (this.images[key]) return this.images[key].src;
+      if (this.fallbacks[key]) return this.fallbacks[key].toDataURL();
+      return AssetStore.BLANK_PIXEL_SRC;
+    }
   }
+  AssetStore.TIMEOUT_MS = 4000;
+  AssetStore.BLANK_PIXEL_SRC = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
+  var assetStore = new AssetStore(ASSET_LIST);
 
   // ---------- head cycle / per-level body tint (predefined, no getImageData) ----------
   var HEAD_KEYS = ["head1", "head2", "head3"];

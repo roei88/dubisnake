@@ -268,7 +268,7 @@
 
   resizeCanvas();
 
-  preloadAssets(function () {
+  assetStore.preload(function () {
     // Guard rather than unconditionally reset: state can only still be
     // "loading" here in the current code (Play is disabled/no-op until this
     // fires), but this keeps a future change from silently reintroducing a

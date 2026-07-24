@@ -262,9 +262,17 @@
   }
   /* Level pips: 3 stacked 4x4px dots, DOM order top-to-bottom is pip3/pip2/
      pip1 per spec, lit state is JS-driven (level >= n), see updateHud(). */
+  /* Level number with its pips as a horizontal row (pips to the number's left),
+     mirroring .hud-hi-row. gap/pip sizes stay tiny and fixed so this can never
+     widen the LEVEL stat enough to crowd Score/Best at any resolution. */
+  .hud-level-row {
+    display: flex;
+    align-items: center;
+    gap: min(5px, calc(var(--cell-px, 16px) * 0.3));
+  }
   .hud-pips {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 2px;
   }
   .hud-pip {
@@ -1131,11 +1139,13 @@
       <div class="hud-divider"></div>
       <div class="hud-stat">
         <span class="hud-label" id="levelLabel">רמה</span>
-        <b class="hud-value" id="levelVal">1</b>
-        <div class="hud-pips">
-          <span class="hud-pip" id="levelPip3"></span>
-          <span class="hud-pip" id="levelPip2"></span>
-          <span class="hud-pip" id="levelPip1"></span>
+        <div class="hud-level-row">
+          <div class="hud-pips">
+            <span class="hud-pip" id="levelPip1"></span>
+            <span class="hud-pip" id="levelPip2"></span>
+            <span class="hud-pip" id="levelPip3"></span>
+          </div>
+          <b class="hud-value" id="levelVal">1</b>
         </div>
       </div>
       <div class="hud-divider"></div>

@@ -1247,6 +1247,8 @@
     { core: "#2979ff", edge: "#0d3f9e" }, // electric blue
     { core: "#ff3d81", edge: "#8f0046" }  // hot magenta
   ];
+
+  // ===== animation: ghost idle float/rotate/pulse/glow =====
   // Ghost idle animation (Task A - port of new-assets/animations/solo-scenes.jsx):
   // each chaser floats/rotates/pulses/glows on its own phase, as a purely
   // visual sub-cell offset applied only at draw time in render(). Nothing
@@ -1315,9 +1317,7 @@
   // rule elsewhere in this file: motion-sensitive users get idle ghosts held
   // still, glow parked at its non-pulsing baseline.
   var GHOST_IDLE_STILL = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  // Same boot-time prefers-reduced-motion check, reused by the opening intro
-  // scene (Task C) below - one flag, one convention, file-wide.
-  var OPENING_STILL = GHOST_IDLE_STILL;
+
   // ---------- chasers: the Pac-Man-style monster field ----------
   // Owns the live set of chaser cells and their shared movement cadence.
   // Everything grid/collision-related (the snake head, the food, a
@@ -2134,6 +2134,11 @@
     }
   }
 
+  // ===== animation: opening intro scene + PRESS ANY KEY =====
+  // Same boot-time prefers-reduced-motion check, reused by the opening intro
+  // scene (Task C) below - one flag, one convention, file-wide.
+  var OPENING_STILL = GHOST_IDLE_STILL;
+
   // ---------- opening intro scene (Task C - adapted port of
   // new-assets/animations/opener-scenes.jsx) ----------
   // Plays once, automatically, right after assetStore.preload() finishes and
@@ -2465,6 +2470,49 @@
     renderPressAnyKey(elapsed);
   }
 
+  // ===== animation: get-ready countdown number =====
+  // Big 3 -> 2 -> 1, one second each, reusing the PRESS-ANY-KEY/level-banner
+  // retro text conventions (system font, board-relative size, cyan glow).
+  // GHOST_IDLE_STILL doubles as the countdown's reduced-motion flag - same
+  // boot-time media-query cache as the rest of the file - so under
+  // prefers-reduced-motion the number still shows and the full 3s still
+  // elapses, just without the per-tick scale/fade.
+  //
+  // Deliberately NOT drawn at board-center: positionForLevel() always
+  // re-centres the snake head at grid (floor(GRID_N/2), floor(GRID_N/2)),
+  // which on the odd-sized GRID_N=9 board IS board-center in pixel space, so
+  // a centred number would sit directly on top of the head for the full 3s
+  // freeze - exactly the orientation window the countdown exists to protect.
+  // Rendered in the upper third of the board instead, well clear of the
+  // centred head's row (and its body trailing left of it on the same row),
+  // independent of board size.
+  var COUNTDOWN_NUMBER_Y_FRAC = 0.22; // fraction of boardCssPx down from top
+  function renderCountdown(elapsed) {
+    // elapsed in [0,1000) -> 3, [1000,2000) -> 2, [2000,3000) -> 1; clamp to
+    // 1 so a frame landing exactly on/after 3000 (the tick frame() flips to
+    // "playing" on) never renders a stray 0.
+    var n = Math.max(1, 3 - Math.floor(elapsed / 1000));
+    var tickElapsed = elapsed % 1000; // ms into the current number, for the pulse
+    var scale = 1, alpha = 1;
+    if (!GHOST_IDLE_STILL) {
+      var p = tickElapsed / 1000; // 0..1 within this number's one-second slot
+      scale = 1.15 - 0.15 * p;    // pops in slightly large, settles to 1
+      alpha = Math.min(1, p * 4); // quick fade-in, avoids a hard pop on entry
+    }
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(boardCssPx / 2, boardCssPx * COUNTDOWN_NUMBER_Y_FRAC);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = "#00e5ff";
+    ctx.shadowColor = "rgba(0,229,255,0.65)";
+    ctx.shadowBlur = cellPx * 0.9;
+    ctx.font = "900 " + Math.round(cellPx * 2.6) + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(n), 0, 0);
+    ctx.restore();
+  }
+
   // ---------- rendering ----------
   // Shared by the normal in-game render() below and renderOpening() above -
   // the translucent Nokia-LCD board fill plus the dimmed guide grid, exactly
@@ -2613,48 +2661,6 @@
     // positions) so the player can see exactly where everything is before
     // play starts.
     if (state === "countdown") renderCountdown(countdownElapsedMs());
-  }
-
-  // Big 3 -> 2 -> 1, one second each, reusing the PRESS-ANY-KEY/level-banner
-  // retro text conventions (system font, board-relative size, cyan glow).
-  // GHOST_IDLE_STILL doubles as the countdown's reduced-motion flag - same
-  // boot-time media-query cache as the rest of the file - so under
-  // prefers-reduced-motion the number still shows and the full 3s still
-  // elapses, just without the per-tick scale/fade.
-  //
-  // Deliberately NOT drawn at board-center: positionForLevel() always
-  // re-centres the snake head at grid (floor(GRID_N/2), floor(GRID_N/2)),
-  // which on the odd-sized GRID_N=9 board IS board-center in pixel space, so
-  // a centred number would sit directly on top of the head for the full 3s
-  // freeze - exactly the orientation window the countdown exists to protect.
-  // Rendered in the upper third of the board instead, well clear of the
-  // centred head's row (and its body trailing left of it on the same row),
-  // independent of board size.
-  var COUNTDOWN_NUMBER_Y_FRAC = 0.22; // fraction of boardCssPx down from top
-  function renderCountdown(elapsed) {
-    // elapsed in [0,1000) -> 3, [1000,2000) -> 2, [2000,3000) -> 1; clamp to
-    // 1 so a frame landing exactly on/after 3000 (the tick frame() flips to
-    // "playing" on) never renders a stray 0.
-    var n = Math.max(1, 3 - Math.floor(elapsed / 1000));
-    var tickElapsed = elapsed % 1000; // ms into the current number, for the pulse
-    var scale = 1, alpha = 1;
-    if (!GHOST_IDLE_STILL) {
-      var p = tickElapsed / 1000; // 0..1 within this number's one-second slot
-      scale = 1.15 - 0.15 * p;    // pops in slightly large, settles to 1
-      alpha = Math.min(1, p * 4); // quick fade-in, avoids a hard pop on entry
-    }
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.translate(boardCssPx / 2, boardCssPx * COUNTDOWN_NUMBER_Y_FRAC);
-    ctx.scale(scale, scale);
-    ctx.fillStyle = "#00e5ff";
-    ctx.shadowColor = "rgba(0,229,255,0.65)";
-    ctx.shadowBlur = cellPx * 0.9;
-    ctx.font = "900 " + Math.round(cellPx * 2.6) + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(String(n), 0, 0);
-    ctx.restore();
   }
 
   // ---------- fixed-timestep rAF loop ----------

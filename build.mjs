@@ -44,16 +44,19 @@ const CSS_FILES = [
 // JS files, in load order. `_open.js` opens the shared IIFE (first) and
 // `_boot.js` closes it and runs boot (last).
 const JS_FILES = [
-  'js/_open.js',       // IIFE open + "use strict"
-  'js/constants.js',   // grid/speed/color constants, DOM element refs
-  'js/strings.js',     // i18n STRINGS (he/en) + S()
-  'js/assets.js',      // AssetStore class + instance, head cycle / level tint
-  'js/chasers.js',     // ChaserField class + instance (Pac-Man-style monster field)
-  'js/layout.js',      // responsive board sizing (measureReservePx/resizeCanvas)
-  'js/core.js',        // game state, newGame/positionForLevel/step/levelUp/die/win, language switch, input
-  'js/overlays.js',    // overlay screens (menu/dead/won/paused/banner/countdown) + opening intro
-  'js/render.js',      // canvas rendering + fixed-timestep rAF loop
-  'js/_boot.js',       // keyboard/touch/mobile-help/lang-toggle handlers, boot, IIFE close
+  'js/_open.js',                   // IIFE open + "use strict"
+  'js/constants.js',               // grid/speed/color constants, DOM element refs
+  'js/strings.js',                 // i18n STRINGS (he/en) + S()
+  'js/assets.js',                  // AssetStore class + instance, head cycle / level tint
+  'js/animations/ghost-idle.js',   // ghost idle float/rotate/pulse/glow (defines GHOST_IDLE_STILL)
+  'js/chasers.js',                 // ChaserField class + instance (Pac-Man-style monster field)
+  'js/layout.js',                  // responsive board sizing (measureReservePx/resizeCanvas)
+  'js/core.js',                    // game state, newGame/positionForLevel/step/levelUp/die/win, language switch, input
+  'js/overlays.js',                // static overlay screens (menu/dead/won/paused/level banner)
+  'js/animations/opener.js',       // opening intro scene + PRESS ANY KEY (needs GHOST_IDLE_STILL, so after ghost-idle)
+  'js/animations/countdown.js',    // get-ready countdown number
+  'js/render.js',                  // canvas rendering + fixed-timestep rAF loop (calls the animation renderers)
+  'js/_boot.js',                   // keyboard/touch/mobile-help/lang-toggle handlers, boot, IIFE close
 ];
 
 const STYLES_MARKER = '/*BUILD:STYLES*/';

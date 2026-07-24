@@ -66,6 +66,10 @@ src/
     layout.js             responsive board sizing
     core.js               game state, level flow, chasers, input, step()
     overlays.js           menu/dead/won/paused/banner/countdown + opening intro
+    animations/           one file per animation:
+      ghost-idle.js         ghost float/rotate/pulse/glow
+      opener.js             opening intro scene + PRESS ANY KEY
+      countdown.js          get-ready countdown number
     render.js             canvas rendering + fixed-timestep loop
     _boot.js              keyboard/touch/UI handlers, boot, IIFE close
 build.mjs                zero-dependency build (Node, no npm packages)

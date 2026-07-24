@@ -191,6 +191,12 @@
   .hud-stats {
     display: flex;
     align-items: center;
+    /* flex:1 + space-around comes straight from the supplied header design:
+       without it the group collapses to its content width and leaves a dead
+       gap between the stats and the avatar (measured ~208px of a 576px bar
+       on desktop) instead of the three stats being evenly distributed. */
+    flex: 1;
+    justify-content: space-around;
     gap: min(14px, calc(var(--cell-px, 16px) * 0.9));
     min-width: 0;
   }

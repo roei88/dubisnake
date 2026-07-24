@@ -25,16 +25,22 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 const SRC = join(ROOT, 'src');
 
 // Explicit concatenation order. Add new files here in dependency order.
+// Concatenation order. `_open.js` opens the shared IIFE and must come first;
+// `_boot.js` closes it and runs boot, so it must come last (the leading
+// underscore flags these two wrapper files). The middle files are grouped by
+// concern. This explicit order is an interim step - the OOP pass moves the
+// IIFE wrapper into the template and the boot into a single entry class so
+// the middle files become order-independent.
 const JS_FILES = [
-  'js/00-open.js',           // IIFE open + "use strict"
-  'js/10-constants-dom.js',  // grid/speed/color constants, DOM element refs
-  'js/20-strings.js',        // i18n STRINGS (he/en) + S()
-  'js/30-assets.js',         // image preload + fallback, head cycle / level tint
-  'js/40-layout.js',         // responsive board sizing (measureReservePx/resizeCanvas)
-  'js/50-core.js',           // game state, newGame/positionForLevel/step/levelUp/die/win, language switch, input
-  'js/60-overlays.js',       // overlay screens (menu/dead/won/paused/banner/countdown) + opening intro
-  'js/70-render.js',         // canvas rendering + fixed-timestep rAF loop
-  'js/80-events-boot.js',    // keyboard/touch/mobile-help/lang-toggle handlers, boot, IIFE close
+  'js/_open.js',       // IIFE open + "use strict"
+  'js/constants.js',   // grid/speed/color constants, DOM element refs
+  'js/strings.js',     // i18n STRINGS (he/en) + S()
+  'js/assets.js',      // AssetStore class + instance, head cycle / level tint
+  'js/layout.js',      // responsive board sizing (measureReservePx/resizeCanvas)
+  'js/core.js',        // game state, newGame/positionForLevel/step/levelUp/die/win, language switch, input
+  'js/overlays.js',    // overlay screens (menu/dead/won/paused/banner/countdown) + opening intro
+  'js/render.js',      // canvas rendering + fixed-timestep rAF loop
+  'js/_boot.js',       // keyboard/touch/mobile-help/lang-toggle handlers, boot, IIFE close
 ];
 
 const STYLES_MARKER = '/*BUILD:STYLES*/';

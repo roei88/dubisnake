@@ -136,3 +136,15 @@ This inlines every `src/css/*.css` and `src/js/*.js` file (in the order declared
 in `build.mjs`) into `index.html`. There is nothing to install. Edit files under
 `src/`, run the build, then commit both the sources and the regenerated
 `index.html`.
+
+#### The template package
+
+A reusable, rebrandable build of this engine - placeholder art plus a Typer CLI
+to scaffold a new game - lives in [`template/`](template/) and is published as the
+npm package **`@roei88/customsnake`** on two registries:
+
+- **GitHub Packages** - add `@roei88:registry=https://npm.pkg.github.com` to your
+  `.npmrc` (with a `read:packages` token), then `npm install @roei88/customsnake`.
+- **npm (public registry)** - `npm install @roei88/customsnake`.
+
+Full package documentation is in [`template/README.md`](template/README.md).

@@ -59,6 +59,45 @@
     bindPlayBtn();
   }
 
+  // Cartoony, colourful victory screen shown after clearing level 3 (state
+  // "gamewon"). Unlike the other overlays it has TWO actions - Reset (restart
+  // at level 1) and Keep Playing (endless mode) - so it wires its own buttons
+  // via bindGameWonBtns() instead of the single-#playBtn bindPlayBtn(). The
+  // confetti/crown are decorative (aria-hidden) and CSS-animated, gated behind
+  // prefers-reduced-motion in the stylesheet.
+  function showOverlayGameWon() {
+    overlay.classList.remove("hidden");
+    var confetti = "";
+    for (var c = 0; c < 12; c++) confetti += '<span class="gwc"></span>';
+    overlay.innerHTML =
+      '<div class="overlayInner gameWonInner">' +
+      '<div class="gwConfetti" aria-hidden="true">' + confetti + '</div>' +
+      '<div class="gwCrown" aria-hidden="true">👑</div>' +
+      '<h1 class="gwTitle">' + S().gameWonTitle + '</h1>' +
+      '<p class="gwSub">' + S().gameWonSub + '</p>' +
+      '<p class="stat">' + S().scoreStat(score) + '</p>' +
+      '<p class="stat">' + S().hiStat(hi) + '</p>' +
+      '<div class="gwBtns">' +
+      '<button id="gwResetBtn" type="button" class="gwBtn gwBtnReset">' + S().resetBtn + '</button>' +
+      '<button id="gwKeepBtn" type="button" class="gwBtn gwBtnKeep">' + S().keepPlayingBtn + '</button>' +
+      '</div>' +
+      '</div>';
+    bindGameWonBtns();
+  }
+
+  function bindGameWonBtns() {
+    var resetBtn = document.getElementById("gwResetBtn");
+    var keepBtn = document.getElementById("gwKeepBtn");
+    if (resetBtn) resetBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      resetToLevelOne();
+    });
+    if (keepBtn) keepBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      startInfinite();
+    });
+  }
+
   function bindPlayBtn() {
     var btn = document.getElementById("playBtn");
     if (!btn) return;

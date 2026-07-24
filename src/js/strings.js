@@ -26,6 +26,12 @@
       playAgainBtn: "שחק שוב",
       deadTitle: "המשחק נגמר",
       wonTitle: "ניצחת!",
+      // GAME WON screen (clearing all three levels) - the celebratory
+      // announcement plus its two action buttons (Reset / Keep Playing).
+      gameWonTitle: "ניצחת במשחק!",
+      gameWonSub: "עברת את כל שלושת השלבים!",
+      resetBtn: "התחל מחדש",
+      keepPlayingBtn: "המשך לשחק",
       scoreStat: function (n) { return "ניקוד: " + n; },
       hiStat: function (n) { return "שיא: " + n; },
       wonBoardFull: function (n) { return "הלוח מלא - ניקוד: " + n; },
@@ -61,6 +67,12 @@
       playAgainBtn: "Play Again",
       deadTitle: "Game Over",
       wonTitle: "You Win!",
+      // GAME WON screen (clearing all three levels) - the celebratory
+      // announcement plus its two action buttons (Reset / Keep Playing).
+      gameWonTitle: "GAME WON!",
+      gameWonSub: "You cleared all 3 levels!",
+      resetBtn: "Reset",
+      keepPlayingBtn: "Keep Playing",
       scoreStat: function (n) { return "Score: " + n; },
       hiStat: function (n) { return "High score: " + n; },
       wonBoardFull: function (n) { return "Board full - score: " + n; },

@@ -30,6 +30,12 @@
   // level-flow rework (small board = chasers too close to react to).
   var CHASER_MOVE_RATE = 0.4;     // chaser moves per snake step
   var COUNTDOWN_MS = 3000;        // "get ready" freeze before each level's play
+  // Endless "Keep Playing" pace after clearing level 3. Deliberately SLOWER
+  // (larger interval) than any real level - level 3 lands at BASE*0.92^2 ~=
+  // 352ms, so 470ms is an eased, FIXED cadence (no further decay in infinite
+  // mode) because a long snake plus three chasers is already hard; the point
+  // of endless mode is "manageable victory lap", not another speed ramp.
+  var INFINITE_STEP_MS = 470;     // endless-mode step interval (fixed, slower than level 1's 416)
   var SWIPE_THRESHOLD = 35;       // px
   var HI_KEY = "dubisnake_hi";
 

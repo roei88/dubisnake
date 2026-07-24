@@ -4,11 +4,18 @@
   // Play button must not be able to do anything before that - see the
   // disabled attribute on the static #playBtn and the guard at the top of
   // startOrResume(). Only assetStore.preload()'s callback advances "loading" -> "menu".
-  var state = "loading"; // loading | opening | menu | levelbanner | countdown | playing | paused | dead | won
+  var state = "loading"; // loading | opening | menu | levelbanner | countdown | playing | paused | dead | won | gamewon
   var snake = null, dir = { x: 1, y: 0 }, queuedDir = null, food = null;
   // The Pac-Man-style chaser field (its cells + cadence) lives in the
   // ChaserField class - see chasers.js and the `chaserField` instance.
   var score = 0, popcornCount = 0, level = 1, stepMs = BASE_STEP_MS, hi = 0;
+  // Endless "Keep Playing" mode, entered from the GAME WON screen after
+  // clearing level 3 (see gameWon()/startInfinite()). While true: no more
+  // level-ups (the snake just keeps growing from wherever level 3 ended),
+  // stepMs is pinned to the eased INFINITE_STEP_MS, and the HUD shows a crown
+  // in place of the level number. Reset by newGame() so a fresh run always
+  // starts as a normal levelled game.
+  var infinite = false;
   var acc = 0;
   var lastTs = 0;
   var animTs = 0; // rAF timestamp mirror, used only for the ghosts' idle-animation phase - never read by game logic
@@ -116,6 +123,8 @@
     score = 0;
     popcornCount = 0;
     level = 1;
+    infinite = false; // a fresh run is always a normal levelled game, even
+                      // when reached via Reset from the endless GAME WON screen
     stepMs = BASE_STEP_MS;
     hideLevelBanner(); // clear any banner left over from a previous run
     positionForLevel();
@@ -207,7 +216,10 @@
 
   function updateHud() {
     hudScore.textContent = String(score);
-    hudLevel.textContent = String(level);
+    // Endless mode has no level number - show a crown here instead (per
+    // spec). Set as textContent so it survives an applyLanguage() overlay
+    // rebuild untouched (that only re-renders #overlay, never #levelVal).
+    hudLevel.textContent = infinite ? "👑" : String(level); // crown
     hudHi.textContent = String(hi);
     // Score bar fill % - min(100, round(score / max(highScore,1) * 100)),
     // per spec; max(hi,1) avoids a div-by-zero flash to 100% before any
@@ -261,6 +273,7 @@
     if (state === "menu") showOverlayMenu();
     else if (state === "dead") showOverlayDead();
     else if (state === "won") showOverlayWon();
+    else if (state === "gamewon") showOverlayGameWon();
     else if (state === "paused") showOverlayPaused();
     else if (state === "loading") {
       var loadingH1 = overlay.querySelector("h1");
@@ -376,9 +389,15 @@
     if (willGrow) {
       score += 1;
       popcornCount += 1;
-      if (popcornCount % POPCORN_PER_LEVEL === 0) {
-        levelUp();
-        leveledUp = true;
+      // A level boundary (every POPCORN_PER_LEVEL eaten) normally advances a
+      // level. Two exceptions: in endless mode there are no more levels (just
+      // keep placing food), and completing level 3 is the LAST level - it wins
+      // the game (cartoony GAME WON screen) rather than advancing to a level 4
+      // that shouldn't exist.
+      if (popcornCount % POPCORN_PER_LEVEL === 0 && !infinite) {
+        if (level >= 3) gameWon(); else levelUp();
+        leveledUp = true; // freeze the board this tick, skip the chaser checks
+                          // below (same guard levelUp() already relied on)
       } else {
         placeFood();
       }
@@ -437,4 +456,42 @@
     saveHi();
     updateHud();
     showOverlayWon();
+  }
+
+  // Clearing level 3 (the last level). A blocking, celebratory "GAME WON"
+  // screen - the snake freezes exactly as level 3 left it (this fires from
+  // step() right after the final grow, before any chaser move) so "Keep
+  // Playing" can resume from that same board. Distinct from win() above, which
+  // is the rare board-completely-full terminal.
+  function gameWon() {
+    state = "gamewon";
+    hideLevelBanner(); // same bleed-through guard as die()/win()
+    saveHi();
+    updateHud();
+    showOverlayGameWon();
+  }
+
+  // GAME WON -> Reset: a full restart to level 1 (its banner + countdown),
+  // identical to pressing Play from the menu. newGame() clears the infinite
+  // flag, so the crown reverts to a level number automatically.
+  function resetToLevelOne() {
+    newGame();
+    hideOverlay();
+    render(); // paint the fresh level-1 board immediately, don't wait a tick
+  }
+
+  // GAME WON -> Keep Playing: enter endless mode from EXACTLY where level 3
+  // ended - same snake (size + position) and same three chasers, no
+  // positionForLevel()/re-centre/length reset. Only the food is re-placed
+  // (the just-eaten cell is now under the head) and the pace is eased to the
+  // fixed INFINITE_STEP_MS. Still runs the standard 3s "get ready" countdown
+  // before control resumes, and swaps the HUD level number for a crown.
+  function startInfinite() {
+    infinite = true;
+    stepMs = INFINITE_STEP_MS;
+    placeFood(); // head sits on the old food cell - give a fresh target
+    updateHud(); // repaint the crown + score now
+    hideOverlay();
+    startCountdown(); // freeze on the current board for 3s, then play resumes
+    render();
   }

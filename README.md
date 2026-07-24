@@ -1,22 +1,14 @@
 <div align="center">
 
-<img src="assets/banner.png" width="90%" alt="DubiSnake - a cartoon snake with a profile-photo head chasing popcorn">
+<img src="assets/banner.png" width="100%" alt="DubiSnake - a cartoon snake with a profile-photo head chasing popcorn">
 
-### Chase the popcorn. Dodge the monsters.
+# [ click the popcorn to play ](https://roei88.github.io/dubisnake/)
 
-&nbsp;
+### ⬇️ &nbsp;&nbsp; ⬇️ &nbsp;&nbsp; ⬇️
 
-### 👇 &nbsp; Ready? &nbsp; 👇
+<a href="https://roei88.github.io/dubisnake/"><img src="assets/food.png" width="66%" alt="Click the popcorn to play DubiSnake"></a>
 
-# [ click here to play ](https://roei88.github.io/dubisnake/)
-
-# [ ▶️ ](https://roei88.github.io/dubisnake/)
-
-&nbsp;
-
-*Made with popcorn.*
-
-# 🍿
+### ⬆️ &nbsp;&nbsp; ⬆️ &nbsp;&nbsp; ⬆️
 
 &nbsp;
 
@@ -25,8 +17,6 @@
 <img src="docs/screenshots/level2-midgame.png" width="46%" alt="Level 2 in progress: the snake winding across the board with popcorn to eat and two monsters closing in">
 
 </div>
-
----
 
 ## 📖 The Legend
 
@@ -39,8 +29,6 @@ changes with every level, because a legend deserves a wardrobe.)
 
 There is only one way out: eat every last piece of **popcorn** on the board and
 survive all three levels.
-
----
 
 ## 👹 Meet the Monsters
 
@@ -78,8 +66,6 @@ it, and you will wish you hadn't.
 
 </div>
 
----
-
 ## 🎮 How to Play
 
 The goal is simple: **eat the popcorn, dodge everything else.** Every 5 pieces
@@ -99,8 +85,6 @@ clears the level. Clear all three and you win the crown 👑.
 - **Space** to pause and resume
 - The board stays centered and crisp at any window size
 
----
-
 ## ✨ What Makes It Fun
 
 - **Three handmade levels**, then a cartoony **GAME WON** celebration - complete
@@ -114,25 +98,17 @@ clears the level. Clear all three and you win the crown 👑.
 - **Your best score is saved** locally on your device.
 - **Runs anywhere.** No installs, no accounts, no tracking, works offline.
 
----
-
 <div align="center">
 
-### 👇 &nbsp; Ready? &nbsp; 👇
+# [ click the popcorn to play ](https://roei88.github.io/dubisnake/)
 
-# [ click here to play ](https://roei88.github.io/dubisnake/)
+### ⬇️ &nbsp;&nbsp; ⬇️ &nbsp;&nbsp; ⬇️
 
-# [ ▶️ ](https://roei88.github.io/dubisnake/)
+<a href="https://roei88.github.io/dubisnake/"><img src="assets/food.png" width="66%" alt="Click the popcorn to play DubiSnake"></a>
 
-&nbsp;
-
-*Made with popcorn.*
-
-# 🍿
+### ⬆️ &nbsp;&nbsp; ⬆️ &nbsp;&nbsp; ⬆️
 
 </div>
-
----
 
 ## 🛠️ For Developers
 
